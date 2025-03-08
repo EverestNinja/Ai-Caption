@@ -1,33 +1,52 @@
+import { ReactNode } from 'react';
 import { Box } from '@mui/material';
-import { motion } from 'framer-motion';
 import Footer from './Footer/Footer';
+import { useTheme } from '../context/ThemeContext';
+
+const TRANSITION_TIMING = '0.3s ease';
+const TRANSITION_PROPERTIES = 'background-color, color, border-color';
 
 interface LayoutProps {
-  children: React.ReactNode;
-  isDarkMode: boolean;
+  children: ReactNode;
 }
 
-const Layout = ({ children, isDarkMode }: LayoutProps) => {
+const Layout = ({ children }: LayoutProps) => {
+  const { isDarkMode } = useTheme();
+
   return (
     <Box
-      component={motion.div}
-      initial={false}
-      animate={{
-        background: isDarkMode 
-          ? 'linear-gradient(135deg, #1a1a1a 0%, #262626 100%)'
-          : 'linear-gradient(135deg, #fafafa 0%, #ffffff 100%)',
-      }}
-      transition={{ duration: 0.4 }}
       sx={{
-        minHeight: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: '100vh',
+        width: '100%',
+        backgroundColor: isDarkMode ? '#121212' : '#ffffff',
+        color: isDarkMode ? '#ffffff' : '#121212',
+        transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+        position: 'relative',
+        margin: 0,
+        padding: 0,
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
       }}
     >
-      {children}
-      <Footer isDarkMode={isDarkMode} />
+      <Box 
+        sx={{ 
+          flex: 1,
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box',
+          overflowX: 'hidden'
+        }}
+      >
+        {children}
+      </Box>
+      <Footer />
     </Box>
   );
 };

@@ -7,10 +7,12 @@ import { MdOutlineDescription, MdArrowBack } from 'react-icons/md';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { generateCaptions } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 // Define transition constants (matching Landing page)
-const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, transform, opacity, filter';
+const TRANSITION_TIMING = '0.3s ease';
+const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
 
 const POST_TYPES = ['Actionable', 'Inspiring', 'Promotional', 'Reels', 'Stories'];
 const CAPTION_TONES = ['Fun', 'Poetic', 'Casual', 'Informative', 'Formal', 'Witty'];
@@ -36,9 +38,8 @@ type GeneratedCaption = {
 const Generation = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
@@ -81,8 +82,6 @@ const Generation = () => {
 
   useEffect(() => {
     setMounted(true);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDark);
   }, []);
 
   useEffect(() => {
@@ -90,12 +89,6 @@ const Generation = () => {
     document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
     document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
   }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsThemeChanging(true);
-    setIsDarkMode(!isDarkMode);
-    setTimeout(() => setIsThemeChanging(false), 400);
-  };
 
   const commonTransition = {
     transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
@@ -106,8 +99,8 @@ const Generation = () => {
     background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
     border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
     color: isDarkMode ? '#fff' : '#000',
-    filter: isThemeChanging ? 'blur(0.3px)' : 'none',
-    transform: isThemeChanging ? 'scale(0.995)' : 'scale(1)',
+    filter: isDarkMode ? 'blur(0.3px)' : 'none',
+    transform: isDarkMode ? 'scale(0.995)' : 'scale(1)',
   };
 
   // Add debug logging for form state
@@ -150,23 +143,12 @@ const Generation = () => {
         useEmojis,
       };
 
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate captions');
-      }
-
-      const { captions } = await response.json();
+      const captions = await generateCaptions(params);
       setGeneratedCaptions(captions);
       setIsDialogOpen(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Generation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate captions. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -184,12 +166,12 @@ const Generation = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Layout isDarkMode={isDarkMode}>
+      <Layout>
         {/* Back Button */}
         <IconButton
           onClick={() => navigate('/')}
           sx={{
-            position: 'fixed',
+            position: 'absolute',
             top: { xs: 12, sm: 20 },
             left: { xs: 12, sm: 20 },
             backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
@@ -207,7 +189,7 @@ const Generation = () => {
         <Paper
           elevation={3}
           sx={{
-            position: 'fixed',
+            position: 'absolute',
             top: { xs: 12, sm: 20 },
             right: { xs: 12, sm: 20 },
             borderRadius: '50px',
@@ -215,10 +197,9 @@ const Generation = () => {
             display: 'flex',
             alignItems: 'center',
             gap: { xs: 0.5, sm: 1 },
-            ...commonBoxStyles,
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
             backdropFilter: 'blur(10px)',
             zIndex: 1000,
-            transform: 'scale(1) !important',
             '&:hover': {
               background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
             }
@@ -226,11 +207,11 @@ const Generation = () => {
         >
           <IconButton 
             size="small" 
-            onClick={() => setIsDarkMode(false)}
+            onClick={toggleTheme}
             sx={{ 
               color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
               transform: `scale(${!isDarkMode ? 1.2 : 1})`,
-              ...commonTransition,
+              transition: 'all 0.3s ease',
             }}
           >
             <BsSunFill />
@@ -241,7 +222,6 @@ const Generation = () => {
             sx={{
               '& .MuiSwitch-switchBase': {
                 color: isDarkMode ? '#405DE6' : '#757575',
-                transition: TRANSITION_TIMING,
                 '&.Mui-checked': {
                   color: '#405DE6',
                 },
@@ -257,37 +237,16 @@ const Generation = () => {
           />
           <IconButton 
             size="small"
-            onClick={() => setIsDarkMode(true)}
+            onClick={toggleTheme}
             sx={{ 
               color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
               transform: `scale(${isDarkMode ? 1.2 : 1})`,
-              ...commonTransition,
+              transition: 'all 0.3s ease',
             }}
           >
             <BsMoonFill />
           </IconButton>
         </Paper>
-
-        {/* Background Gradient with Animation */}
-        <Box
-          component={motion.div}
-          animate={{
-            background: isDarkMode
-              ? 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.15) 0%, rgba(131, 58, 180, 0.08) 50%, transparent 100%)'
-              : 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.08) 0%, rgba(131, 58, 180, 0.04) 50%, transparent 100%)',
-            opacity: isThemeChanging ? 0.5 : 0.8,
-          }}
-          transition={{ duration: 0.4 }}
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 0,
-            ...commonTransition,
-          }}
-        />
 
         <Container 
           maxWidth="md"
@@ -302,6 +261,12 @@ const Generation = () => {
             px: { xs: 2, sm: 3, md: 4 },
             pb: { xs: 4, sm: 6 },
             flex: 1,
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
+            left: 'auto',
+            right: 'auto'
           }}
         >
           {/* Title with Icon */}

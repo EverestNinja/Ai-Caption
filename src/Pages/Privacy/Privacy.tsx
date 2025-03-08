@@ -12,31 +12,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
+import { useTheme } from '../../context/ThemeContext';
 
 // Constants for transition
-const TRANSITION_TIMING = '0.4s';
-const TRANSITION_PROPERTIES = 'all';
+const TRANSITION_TIMING = '0.3s ease';
+const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
 
 const Privacy = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDark);
   }, []);
-
-  useEffect(() => {
-    document.body.style.transition = `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`;
-    document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-    document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
-  }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const handleGoBack = () => {
     navigate(-1);
@@ -46,12 +35,12 @@ const Privacy = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Layout isDarkMode={isDarkMode}>
+      <Layout>
         {/* Back Button */}
         <IconButton
           onClick={handleGoBack}
           sx={{
-            position: 'fixed',
+            position: 'absolute',
             top: { xs: 12, sm: 20 },
             left: { xs: 12, sm: 20 },
             zIndex: 1000,
@@ -60,7 +49,7 @@ const Privacy = () => {
             '&:hover': {
               background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
             },
-            transition: 'all 0.3s ease',
+            transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
           }}
           aria-label="Go back"
         >
@@ -68,75 +57,69 @@ const Privacy = () => {
         </IconButton>
 
         {/* Theme Toggle */}
-        <Box
+        <Paper
+          elevation={3}
           sx={{
-            position: 'fixed',
+            position: 'absolute',
             top: { xs: 12, sm: 20 },
             right: { xs: 12, sm: 20 },
-            zIndex: 1000,
+            borderRadius: '50px',
+            p: { xs: '2px', sm: '4px' },
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            gap: { xs: 0.5, sm: 1 },
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 1000,
+            transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+            '&:hover': {
+              background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+            }
           }}
         >
-          <IconButton
-            sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#FDB813',
-              padding: 1,
+          <IconButton 
+            size="small" 
+            onClick={toggleTheme}
+            sx={{ 
+              color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
+              transform: `scale(${!isDarkMode ? 1.2 : 1})`,
+              transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
             <BsSunFill />
           </IconButton>
-          
           <Switch
             checked={isDarkMode}
             onChange={toggleTheme}
-            color="default"
             sx={{
-              width: 42,
-              height: 26,
-              padding: 0,
               '& .MuiSwitch-switchBase': {
-                padding: 0,
-                margin: '3px',
-                transitionDuration: '300ms',
+                color: isDarkMode ? '#405DE6' : '#757575',
+                transition: TRANSITION_TIMING,
                 '&.Mui-checked': {
-                  transform: 'translateX(16px)',
-                  color: '#fff',
-                  '& + .MuiSwitch-track': {
-                    backgroundColor: '#2ECA45',
-                    opacity: 1,
-                    border: 0,
-                  },
+                  color: '#405DE6',
                 },
-                '&.Mui-focusVisible .MuiSwitch-thumb': {
-                  color: '#33cf4d',
-                  border: '6px solid #fff',
+                '&.Mui-checked + .MuiSwitch-track': {
+                  backgroundColor: '#405DE6 !important',
                 },
-              },
-              '& .MuiSwitch-thumb': {
-                boxSizing: 'border-box',
-                width: 20,
-                height: 20,
               },
               '& .MuiSwitch-track': {
-                borderRadius: 26 / 2,
-                backgroundColor: '#366EFF',
-                opacity: 1,
-                transition: 'background-color 500ms',
+                backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
+                opacity: '1 !important',
               },
             }}
           />
-          
-          <IconButton
-            sx={{
-              color: isDarkMode ? '#fff' : 'rgba(0,0,0,0.3)',
-              padding: 1,
+          <IconButton 
+            size="small"
+            onClick={toggleTheme}
+            sx={{ 
+              color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
+              transform: `scale(${isDarkMode ? 1.2 : 1})`,
+              transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
             <BsMoonFill />
           </IconButton>
-        </Box>
+        </Paper>
 
         {/* Privacy Policy Content */}
         <Container 
@@ -148,6 +131,13 @@ const Privacy = () => {
           sx={{ 
             py: { xs: 6, sm: 8 },
             mt: { xs: 4, sm: 6 },
+            px: { xs: 2, sm: 3 },
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
+            left: 'auto',
+            right: 'auto'
           }}
         >
           <Paper
@@ -156,7 +146,7 @@ const Privacy = () => {
               borderRadius: '12px',
               boxShadow: isDarkMode ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.1)',
               background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#fff',
-              transition: 'all 0.3s ease',
+              transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
             <Typography

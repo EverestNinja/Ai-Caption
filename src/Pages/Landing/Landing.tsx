@@ -5,22 +5,34 @@ import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
+import { useTheme } from '../../context/ThemeContext';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
 const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, transform, opacity, filter';
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut"
+    }
+  }
+};
+
 const Landing = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDark);
   }, []);
 
   useEffect(() => {
@@ -30,9 +42,9 @@ const Landing = () => {
     document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
+  const handleThemeToggle = () => {
     setIsThemeChanging(true);
-    setIsDarkMode(!isDarkMode);
+    toggleTheme();
     setTimeout(() => setIsThemeChanging(false), 400); // Match transition duration
   };
 
@@ -81,7 +93,7 @@ const Landing = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Layout isDarkMode={isDarkMode}>
+      <Layout>
         {/* Theme Toggle - Adjusted for mobile */}
         <Paper
           elevation={3}
@@ -105,7 +117,7 @@ const Landing = () => {
         >
           <IconButton 
             size="small" 
-            onClick={() => setIsDarkMode(false)}
+            onClick={toggleTheme}
             sx={{ 
               color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
               transform: `scale(${!isDarkMode ? 1.2 : 1})`,
@@ -116,7 +128,7 @@ const Landing = () => {
           </IconButton>
           <Switch
             checked={isDarkMode}
-            onChange={toggleTheme}
+            onChange={handleThemeToggle}
             sx={{
               '& .MuiSwitch-switchBase': {
                 color: isDarkMode ? '#405DE6' : '#757575',
@@ -136,7 +148,7 @@ const Landing = () => {
           />
           <IconButton 
             size="small"
-            onClick={() => setIsDarkMode(true)}
+            onClick={toggleTheme}
             sx={{ 
               color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
               transform: `scale(${isDarkMode ? 1.2 : 1})`,
@@ -169,19 +181,24 @@ const Landing = () => {
         />
 
         <Container 
-          component={motion.div}
-          animate={{ 
-            scale: isThemeChanging ? 0.998 : 1,
-            opacity: isThemeChanging ? 0.95 : 1,
-          }}
-          transition={{ duration: 0.4 }}
           maxWidth="lg"
+          component={motion.div}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
           sx={{
             position: 'relative',
             zIndex: 1,
+            pt: { xs: 16, sm: 12 },
             px: { xs: 2, sm: 3, md: 4 },
+            pb: { xs: 4, sm: 6 },
             flex: 1,
-            ...commonTransition,
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
+            left: 'auto',
+            right: 'auto'
           }}
         >
           {/* Hero Section - Enhanced for mobile */}

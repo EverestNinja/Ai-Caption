@@ -2,10 +2,7 @@ import { ReactElement } from 'react';
 import { Box, Container, Typography, Link, Grid, Divider } from '@mui/material';
 import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-
-interface FooterProps {
-  isDarkMode: boolean;
-}
+import { useTheme } from '../../context/ThemeContext';
 
 interface NavLink {
   label: string;
@@ -18,8 +15,9 @@ interface SocialLink {
   label: string;
 }
 
-const Footer = ({ isDarkMode }: FooterProps) => {
+const Footer = () => {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
 
   const navigationLinks: NavLink[] = [
     {
@@ -112,55 +110,18 @@ const Footer = ({ isDarkMode }: FooterProps) => {
               >
                 Instagram Caption Generator
               </Typography>
-              
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                  flexWrap: { xs: 'wrap', md: 'nowrap' },
-                  justifyContent: { xs: 'center', md: 'flex-start' },
-                }}
-              >
-                <Typography 
-                  variant="body2"
-                  sx={{ fontSize: '0.9rem' }}
-                >
-                  Powered by AI
-                </Typography>
-                <Typography variant="body2">|</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
-                    Created with
-                  </Typography>
-                  <FaHeart 
-                    size={12} 
-                    color="#FF0000"
-                    style={{
-                      filter: 'drop-shadow(0 0 2px rgba(255, 0, 0, 0.3))',
-                    }}
-                  />
-                </Box>
-              </Box>
-              
               <Typography
-                variant="body2"
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                  lineHeight: 1.6,
+                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                   textAlign: { xs: 'center', md: 'left' },
-                  mt: 1,
-                  fontSize: '0.9rem',
                 }}
               >
-                The Instagram Caption Generator is an AI-powered tool that helps users create engaging and creative captions effortlessly. 
-                Whether you're posting a fun selfie, an inspiring quote, or a promotional ad, our tool generates high-quality captions tailored to your needs.
+                Create engaging captions for your Instagram posts with the power of AI.
               </Typography>
             </Box>
           </Grid>
 
-          {/* Middle Column - Navigation Links */}
+          {/* Middle Column - Quick Links */}
           <Grid item xs={12} md={4}>
             <Box
               sx={{
@@ -199,20 +160,9 @@ const Footer = ({ isDarkMode }: FooterProps) => {
                     sx={{
                       color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                       textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      fontSize: '0.95rem',
-                      fontWeight: 500,
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
+                      transition: 'color 0.3s ease',
                       '&:hover': {
                         color: '#405DE6',
-                        transform: 'translateY(-1px)',
-                      },
-                      '&:active': {
-                        transform: 'translateY(0)',
                       },
                     }}
                   >
@@ -223,7 +173,7 @@ const Footer = ({ isDarkMode }: FooterProps) => {
             </Box>
           </Grid>
 
-          {/* Right Column - Social Media */}
+          {/* Right Column - Social Links */}
           <Grid item xs={12} md={4}>
             <Box
               sx={{
@@ -240,7 +190,7 @@ const Footer = ({ isDarkMode }: FooterProps) => {
                   fontWeight: 600,
                   color: isDarkMode ? '#fff' : '#000',
                   mb: 2,
-                  textAlign: { xs: 'center', md: 'right' },
+                  textAlign: 'center',
                 }}
               >
                 Connect With Us
@@ -250,32 +200,22 @@ const Footer = ({ isDarkMode }: FooterProps) => {
                 sx={{
                   display: 'flex',
                   gap: 2,
-                  flexWrap: 'wrap',
-                  justifyContent: { xs: 'center', md: 'flex-end' },
+                  justifyContent: 'center',
                 }}
               >
                 {socialLinks.map((link) => (
                   <Link
-                    key={link.label}
+                    key={link.href}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={link.label}
                     sx={{
                       color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                       transition: 'all 0.3s ease',
                       '&:hover': {
-                        color: '#fff',
-                        background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                        color: '#405DE6',
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                       },
                     }}
                   >
@@ -287,31 +227,27 @@ const Footer = ({ isDarkMode }: FooterProps) => {
           </Grid>
         </Grid>
 
-        {/* Bottom - Copyright & Developed By */}
-        <Divider sx={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-        
+        <Divider sx={{ 
+          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          mb: 3 
+        }} />
+
+        {/* Copyright */}
         <Box
           sx={{
             display: 'flex',
-            justifyContent: 'center',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: 0.5,
-            mt: 3,
             color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
           }}
         >
-          <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
-            Developed with
+          <Typography variant="body2">
+            Made with
           </Typography>
-          <FaHeart 
-            size={12} 
-            color="#FF0000"
-            style={{
-              filter: 'drop-shadow(0 0 2px rgba(255, 0, 0, 0.3))',
-            }}
-          />
-          <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
-            by Deltabyte Technologies
+          <FaHeart size={12} color="#405DE6" />
+          <Typography variant="body2">
+            by Deltabyte Technologies © {new Date().getFullYear()}
           </Typography>
         </Box>
       </Container>
