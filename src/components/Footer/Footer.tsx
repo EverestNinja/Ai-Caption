@@ -41,22 +41,22 @@ const Footer = () => {
   const socialLinks: SocialLink[] = [
     {
       icon: <FaInstagram size={22} />,
-      href: 'https://instagram.com/deltabyte',
+      href: 'https://instagram.com',
       label: 'Instagram'
     },
     {
       icon: <FaTwitter size={22} />,
-      href: 'https://twitter.com/deltabyte',
+      href: 'https://twitter.com',
       label: 'Twitter'
     },
     {
       icon: <FaGithub size={22} />,
-      href: 'https://github.com/deltabyte',
+      href: 'https://github.com',
       label: 'GitHub'
     },
     {
       icon: <FaLinkedin size={22} />,
-      href: 'https://linkedin.com/company/deltabyte',
+      href: 'https://linkedin.com/company',
       label: 'LinkedIn'
     }
   ];
