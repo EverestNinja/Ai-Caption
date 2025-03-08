@@ -6,6 +6,7 @@ import { FaMagic, FaHashtag, FaRegLightbulb, FaRegSmile, FaRegCopy, FaTimes } fr
 import { MdOutlineDescription, MdArrowBack } from 'react-icons/md';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
+import Layout from '../../components/Layout';
 
 // Define transition constants (matching Landing page)
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -183,22 +184,7 @@ const Generation = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Box
-        component={motion.div}
-        initial={false}
-        animate={{
-          background: isDarkMode 
-            ? 'linear-gradient(135deg, #1a1a1a 0%, #262626 100%)'
-            : 'linear-gradient(135deg, #fafafa 0%, #ffffff 100%)',
-        }}
-        transition={{ duration: 0.4 }}
-        sx={{
-          minHeight: '100vh',
-          position: 'relative',
-          overflow: 'hidden',
-          ...commonTransition,
-        }}
-      >
+      <Layout isDarkMode={isDarkMode}>
         {/* Back Button */}
         <IconButton
           onClick={() => navigate('/')}
@@ -315,6 +301,7 @@ const Generation = () => {
             pt: { xs: 16, sm: 12 },
             px: { xs: 2, sm: 3, md: 4 },
             pb: { xs: 4, sm: 6 },
+            flex: 1,
           }}
         >
           {/* Title with Icon */}
@@ -824,7 +811,7 @@ const Generation = () => {
             {error}
           </Alert>
         </Snackbar>
-      </Box>
+      </Layout>
     </AnimatePresence>
   );
 };

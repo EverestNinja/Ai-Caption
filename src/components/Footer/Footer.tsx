@@ -1,272 +1,320 @@
-import { Box, Grid, Typography, Link, IconButton, Divider, useTheme } from '@mui/material';
-import { GitHub, LinkedIn, Instagram, BugReport, Home, Description, AutoAwesome } from '@mui/icons-material';
+import React, { ReactElement } from 'react';
+import { Box, Container, Typography, Link, Grid, Divider } from '@mui/material';
+import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
-const Footer = () => {
-  const theme = useTheme();
-  const currentYear = new Date().getFullYear();
+interface FooterProps {
+  isDarkMode: boolean;
+}
+
+interface NavLink {
+  label: string;
+  path: string;
+}
+
+interface SocialLink {
+  icon: ReactElement;
+  href: string;
+  label: string;
+}
+
+const Footer = ({ isDarkMode }: FooterProps) => {
+  const navigate = useNavigate();
+
+  const navigationLinks: NavLink[] = [
+    {
+      label: 'Home',
+      path: '/'
+    },
+    {
+      label: 'Generate Caption',
+      path: '/generate'
+    },
+    {
+      label: 'Privacy & Policy',
+      path: '/privacy'
+    },
+    {
+      label: 'Report Issues',
+      path: '/report'
+    }
+  ];
+
+  const socialLinks: SocialLink[] = [
+    {
+      icon: <FaInstagram size={22} />,
+      href: 'https://instagram.com/deltabyte',
+      label: 'Instagram'
+    },
+    {
+      icon: <FaTwitter size={22} />,
+      href: 'https://twitter.com/deltabyte',
+      label: 'Twitter'
+    },
+    {
+      icon: <FaGithub size={22} />,
+      href: 'https://github.com/deltabyte',
+      label: 'GitHub'
+    },
+    {
+      icon: <FaLinkedin size={22} />,
+      href: 'https://linkedin.com/company/deltabyte',
+      label: 'LinkedIn'
+    }
+  ];
 
   return (
     <Box
       component="footer"
       sx={{
         width: '100%',
-        py: 6,
-        backgroundColor: theme.palette.mode === 'dark' 
-          ? 'rgba(0, 0, 0, 0.95)' 
-          : 'rgba(255, 255, 255, 0.95)',
-        borderTop: '1px solid',
-        borderColor: theme.palette.mode === 'dark' 
-          ? 'rgba(255, 255, 255, 0.05)' 
-          : 'rgba(0, 0, 0, 0.05)',
-        margin: 0,
-        padding: 0
+        py: { xs: 3, sm: 4 },
+        mt: 'auto',
+        backgroundColor: isDarkMode 
+          ? 'rgba(255,255,255,0.05)' 
+          : 'rgba(0,0,0,0.02)',
+        borderTop: `1px solid ${
+          isDarkMode 
+            ? 'rgba(255,255,255,0.1)' 
+            : 'rgba(0,0,0,0.1)'
+        }`,
+        transition: 'all 0.3s ease',
       }}
     >
-      <Box
-        sx={{
-          width: '100%',
-          maxWidth: '1400px',
-          margin: '0 auto',
-          px: { xs: 2, sm: 4, md: 6 }
-        }}
-      >
-        <Grid container spacing={4} justifyContent="space-between">
-          {/* Company Info */}
-          <Grid item xs={12} sm={4}>
-            <Typography 
-              variant="h6" 
-              color="primary" 
-              sx={{ 
-                fontWeight: 600,
-                mb: 2,
-                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
+      <Container maxWidth="lg">
+        {/* Main 3-column grid */}
+        <Grid 
+          container 
+          spacing={{ xs: 4, md: 2 }}
+          sx={{ mb: 4 }}
+        >
+          {/* Left Column - Brand & Description */}
+          <Grid item xs={12} md={4}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: { xs: 'center', md: 'flex-start' },
+                gap: 1.5,
               }}
             >
-              Caption Generator
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: theme.palette.text.secondary,
-                mb: 2 
-              }}
-            >
-              Create engaging Instagram captions with AI-powered technology.
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <IconButton
-                href="https://github.com/EverestNinja/Ai-Caption"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                sx={{ 
-                  color: theme.palette.text.secondary,
-                  '&:hover': { 
-                    color: '#24292e',
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s'
-                  }
+              <Typography
+                variant="h6"
+                sx={{
+                  fontSize: { xs: '1.3rem', md: '1.4rem' },
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
                 }}
               >
-                <GitHub />
-              </IconButton>
-              <IconButton
-                href="https://instagram.com/deltabyte.tech"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                sx={{ 
-                  color: theme.palette.text.secondary,
-                  '&:hover': { 
-                    color: '#E4405F',
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s'
-                  }
+                Instagram Caption Generator
+              </Typography>
+              
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                  flexWrap: { xs: 'wrap', md: 'nowrap' },
+                  justifyContent: { xs: 'center', md: 'flex-start' },
                 }}
               >
-                <Instagram />
-              </IconButton>
-              <IconButton
-                href="https://linkedin.com/company/deltabyte-technologies"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                sx={{ 
-                  color: theme.palette.text.secondary,
-                  '&:hover': { 
-                    color: '#0077b5',
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s'
-                  }
+                <Typography 
+                  variant="body2"
+                  sx={{ fontSize: '0.9rem' }}
+                >
+                  Powered by AI
+                </Typography>
+                <Typography variant="body2">|</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                    Created with
+                  </Typography>
+                  <FaHeart 
+                    size={12} 
+                    color="#FF0000"
+                    style={{
+                      filter: 'drop-shadow(0 0 2px rgba(255, 0, 0, 0.3))',
+                    }}
+                  />
+                </Box>
+              </Box>
+              
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                  lineHeight: 1.6,
+                  textAlign: { xs: 'center', md: 'left' },
+                  mt: 1,
+                  fontSize: '0.9rem',
                 }}
               >
-                <LinkedIn />
-              </IconButton>
+                The Instagram Caption Generator is an AI-powered tool that helps users create engaging and creative captions effortlessly. 
+                Whether you're posting a fun selfie, an inspiring quote, or a promotional ad, our tool generates high-quality captions tailored to your needs.
+              </Typography>
             </Box>
           </Grid>
 
-          {/* Quick Links */}
-          <Grid item xs={12} sm={4}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600,
-                mb: 2,
-                color: theme.palette.text.primary 
-              }}
-            >
-              Quick Links
-            </Typography>
-            <Link 
-              href="/" 
-              sx={{ 
+          {/* Middle Column - Navigation Links */}
+          <Grid item xs={12} md={4}>
+            <Box
+              sx={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                color: theme.palette.text.secondary,
-                textDecoration: 'none',
-                mb: 1,
-                '&:hover': {
-                  color: theme.palette.primary.main
-                }
+                flexDirection: 'column',
+                alignItems: { xs: 'center', md: 'center' },
+                height: '100%',
+                justifyContent: { xs: 'flex-start', md: 'center' },
               }}
             >
-              <Home fontSize="small" />
-              Home
-            </Link>
-            <Link 
-              href="/generate" 
-              sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                color: theme.palette.text.secondary,
-                textDecoration: 'none',
-                mb: 1,
-                '&:hover': {
-                  color: theme.palette.primary.main
-                }
-              }}
-            >
-              <AutoAwesome fontSize="small" />
-              Generate Captions
-            </Link>
-            <Link 
-              href="/privacy-policy" 
-              sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                color: theme.palette.text.secondary,
-                textDecoration: 'none',
-                mb: 1,
-                '&:hover': {
-                  color: theme.palette.primary.main
-                }
-              }}
-            >
-              <Description fontSize="small" />
-              Privacy Policy
-            </Link>
-            <Link 
-              href="https://github.com/EverestNinja/Ai-Caption/issues" 
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                color: theme.palette.text.secondary,
-                textDecoration: 'none',
-                '&:hover': {
-                  color: theme.palette.primary.main
-                }
-              }}
-            >
-              <BugReport fontSize="small" />
-              Report Issue
-            </Link>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  color: isDarkMode ? '#fff' : '#000',
+                  mb: 2,
+                  textAlign: 'center',
+                }}
+              >
+                Quick Links
+              </Typography>
+              
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 1.5,
+                }}
+              >
+                {navigationLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    component="button"
+                    onClick={() => navigate(link.path)}
+                    sx={{
+                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      textDecoration: 'none',
+                      transition: 'all 0.3s ease',
+                      fontSize: '0.95rem',
+                      fontWeight: 500,
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      '&:hover': {
+                        color: '#405DE6',
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
+                      },
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </Box>
+            </Box>
           </Grid>
 
-          {/* Contact */}
-          <Grid item xs={12} sm={4}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600,
-                mb: 2,
-                color: theme.palette.text.primary 
-              }}
-            >
-              Contact
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: theme.palette.text.secondary,
-                mb: 1
-              }}
-            >
-              Have questions? Reach out to us:
-            </Typography>
-            <Link
-              href="mailto:contact@deltabyte.tech"
+          {/* Right Column - Social Media */}
+          <Grid item xs={12} md={4}>
+            <Box
               sx={{
-                color: theme.palette.primary.main,
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: { xs: 'center', md: 'flex-end' },
+                height: '100%',
+                justifyContent: { xs: 'flex-start', md: 'center' },
               }}
             >
-              contact@deltabyte.tech
-            </Link>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  color: isDarkMode ? '#fff' : '#000',
+                  mb: 2,
+                  textAlign: { xs: 'center', md: 'right' },
+                }}
+              >
+                Connect With Us
+              </Typography>
+              
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  justifyContent: { xs: 'center', md: 'flex-end' },
+                }}
+              >
+                {socialLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                    sx={{
+                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        color: '#fff',
+                        background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      },
+                    }}
+                  >
+                    {link.icon}
+                  </Link>
+                ))}
+              </Box>
+            </Box>
           </Grid>
         </Grid>
 
-        <Divider 
-          sx={{ 
-            my: 4,
-            opacity: 0.1
-          }} 
-        />
-
-        {/* Copyright */}
-        <Box 
-          sx={{ 
+        {/* Bottom - Copyright & Developed By */}
+        <Divider sx={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+        
+        <Box
+          sx={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 2,
-            width: '100%'
+            gap: 0.5,
+            mt: 3,
+            color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
           }}
         >
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              color: theme.palette.text.secondary,
-              fontWeight: 500,
-              opacity: 0.8
-            }}
-          >
-            © {currentYear} Deltabyte Technologies
+          <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+            Developed with
           </Typography>
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              color: theme.palette.text.secondary,
-              fontWeight: 500,
-              opacity: 0.8
+          <FaHeart 
+            size={12} 
+            color="#FF0000"
+            style={{
+              filter: 'drop-shadow(0 0 2px rgba(255, 0, 0, 0.3))',
             }}
-          >
-            Developed with ❤️ by Deltabyte Technologies
+          />
+          <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+            by Deltabyte Technologies
           </Typography>
         </Box>
-      </Box>
+      </Container>
     </Box>
   );
 };

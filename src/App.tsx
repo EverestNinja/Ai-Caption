@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Landing from './Pages/Landing/Landing';
 import Generation from './Pages/Generation/Generation';
-import Footer from './components/Footer/Footer';
+import Privacy from './Pages/Privacy/Privacy';
 
 const theme = createTheme({
   palette: {
@@ -65,8 +65,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/generate" element={<Generation />} />
+            <Route path="/privacy" element={<Privacy />} />
           </Routes>
-          <Footer />
         </div>
       </Router>
     </ThemeProvider>

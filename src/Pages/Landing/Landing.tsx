@@ -4,6 +4,7 @@ import { FaInstagram, FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Layout from '../../components/Layout';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -80,22 +81,7 @@ const Landing = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Box
-        component={motion.div}
-        initial={false}
-        animate={{
-          background: isDarkMode 
-            ? 'linear-gradient(135deg, #1a1a1a 0%, #262626 100%)'
-            : 'linear-gradient(135deg, #fafafa 0%, #ffffff 100%)',
-        }}
-        transition={{ duration: 0.4 }}
-        sx={{
-          minHeight: '100vh',
-          position: 'relative',
-          overflow: 'hidden',
-          ...commonTransition,
-        }}
-      >
+      <Layout isDarkMode={isDarkMode}>
         {/* Theme Toggle - Adjusted for mobile */}
         <Paper
           elevation={3}
@@ -194,6 +180,7 @@ const Landing = () => {
             position: 'relative',
             zIndex: 1,
             px: { xs: 2, sm: 3, md: 4 },
+            flex: 1,
             ...commonTransition,
           }}
         >
@@ -466,7 +453,7 @@ const Landing = () => {
             </Box>
           </Box>
         </Container>
-      </Box>
+      </Layout>
     </AnimatePresence>
   );
 };
