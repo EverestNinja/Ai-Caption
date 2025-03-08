@@ -48,10 +48,47 @@ cd Ai-Caption
 npm install
 ```
 
-3. Start the development server:
+3. Set up environment variables:
+   Create a `.env` file in the root directory with the following variables:
+```env
+VITE_API_KEY=your_api_key_here
+VITE_API_URL=your_api_url_here
+```
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
+
+## ⚙️ Environment Setup
+
+### Required Environment Variables
+
+Create a `.env` file in the root directory with these variables:
+
+```env
+# API Configuration
+VITE_API_KEY=your_api_key_here
+VITE_API_URL=your_api_url_here
+
+# Optional Configuration
+VITE_MAX_RETRIES=3
+VITE_TIMEOUT=30000
+```
+
+### How to Get API Keys
+
+1. Sign up at [API Provider]
+2. Go to Dashboard → API Keys
+3. Generate a new API key
+4. Copy the key to your `.env` file
+
+### Environment Files
+
+- `.env`: Default environment variables
+- `.env.local`: Local overrides (git ignored)
+- `.env.production`: Production settings
+- `.env.development`: Development settings
 
 ## 💡 Usage
 
@@ -60,6 +97,25 @@ npm run dev
 3. Enter a brief description (minimum 5 characters)
 4. Toggle hashtags and emojis as needed
 5. Click Generate to create your caption
+
+## 🔧 Troubleshooting
+
+Common issues and solutions:
+
+1. **API Key Issues**
+   - Verify your API key in the `.env` file
+   - Check if the key has proper permissions
+   - Ensure the key is active and not expired
+
+2. **Build Errors**
+   - Run `npm clean-install` to refresh dependencies
+   - Check if all environment variables are set
+   - Clear browser cache and reload
+
+3. **Generation Failures**
+   - Verify your internet connection
+   - Check API rate limits
+   - Ensure description meets minimum requirements
 
 ## 🤝 Contributing
 
