@@ -1,4 +1,4 @@
-import { Box, Button, Container, Typography, Paper, useTheme, IconButton, Switch, Fade, useMediaQuery } from '@mui/material';
+import { Box, Button, Container, Typography, Paper, IconButton, Switch, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaInstagram, FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
@@ -11,9 +11,7 @@ const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, tran
 
 const Landing = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const isTablet = useMediaQuery('(max-width:960px)');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
@@ -324,7 +322,7 @@ const Landing = () => {
                 gap: { xs: 3, sm: 4 },
               }}
             >
-              {features.map((feature, index) => (
+              {features.map((feature) => (
                 <Paper
                   key={feature.title}
                   elevation={0}
@@ -466,28 +464,6 @@ const Landing = () => {
                 </Paper>
               ))}
             </Box>
-          </Box>
-
-          {/* Footer - Enhanced for mobile */}
-          <Box
-            sx={{
-              py: { xs: 4, sm: 6 },
-              px: { xs: 2, sm: 0 },
-              mt: { xs: 4, sm: 6 },
-              textAlign: 'center',
-              borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-              ...commonTransition,
-            }}
-          >
-            <Typography 
-              sx={{ 
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                ...commonTransition,
-              }}
-            >
-              © 2024 AI Caption Generator. All rights reserved.
-            </Typography>
           </Box>
         </Container>
       </Box>

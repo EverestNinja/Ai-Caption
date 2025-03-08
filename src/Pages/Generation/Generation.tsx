@@ -1,4 +1,4 @@
-import { Box, Container, Typography, Paper, useTheme, IconButton, Switch, TextField, Button, CircularProgress, useMediaQuery, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Tooltip, Zoom, Divider, Dialog, Grid, Slide, Alert, Snackbar } from '@mui/material';
+import { Box, Container, Typography, Paper, IconButton, Switch, TextField, Button, CircularProgress, useMediaQuery, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Tooltip, Zoom, Divider, Dialog, Grid, Slide, Alert, Snackbar } from '@mui/material';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, forwardRef } from 'react';
@@ -6,7 +6,6 @@ import { FaMagic, FaHashtag, FaRegLightbulb, FaRegSmile, FaRegCopy, FaTimes } fr
 import { MdOutlineDescription, MdArrowBack } from 'react-icons/md';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { generateCaptions } from '../../services/api';
 
 // Define transition constants (matching Landing page)
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -26,31 +25,29 @@ const Transition = forwardRef(function Transition(props: any, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-interface GeneratedCaption {
+type PostType = 'Actionable' | 'Inspiring' | 'Promotional' | 'Reels' | 'Stories';
+type CaptionTone = 'Professional' | 'Casual' | 'Humorous' | 'Formal' | 'Friendly';
+type GeneratedCaption = {
   id: number;
   text: string;
-  copied?: boolean;
-}
+};
 
 const Generation = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedCaption, setGeneratedCaption] = useState('');
-  const [showCopyTooltip, setShowCopyTooltip] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   // Form States
-  const [postType, setPostType] = useState('');
-  const [captionTone, setCaptionTone] = useState('');
-  const [generationCount, setGenerationCount] = useState(1);
-  const [useHashtags, setUseHashtags] = useState(true);
-  const [useEmojis, setUseEmojis] = useState(true);
+  const [postType, setPostType] = useState<PostType | ''>('');
+  const [captionTone, setCaptionTone] = useState<CaptionTone | ''>('');
   const [postDescription, setPostDescription] = useState('');
+  const [generationCount, setGenerationCount] = useState(1);
+  const [useHashtags, setUseHashtags] = useState(false);
+  const [useEmojis, setUseEmojis] = useState(false);
 
   // Dialog States
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -125,36 +122,50 @@ const Generation = () => {
 
   // Function to generate captions using API
   const handleGenerate = async () => {
-    console.log('Generate button clicked');
-    console.log('Current form values:', {
-      postType,
-      captionTone,
-      generationCount,
-      useHashtags,
-      useEmojis,
-      postDescription,
-    });
+    if (!postType) {
+      setError('Please select a post type');
+      return;
+    }
 
-    setIsGenerating(true);
-    setError(null);
-    
+    if (!captionTone) {
+      setError('Please select a caption tone');
+      return;
+    }
+
+    if (!postDescription) {
+      setError('Please enter a post description');
+      return;
+    }
+
     try {
+      setIsGenerating(true);
+      setError('');
       const params = {
         postType,
         captionTone,
+        postDescription,
         generationCount,
         useHashtags,
         useEmojis,
-        postDescription,
       };
 
-      // Use the real API instead of mock
-      const captions = await generateCaptions(params);
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate captions');
+      }
+
+      const { captions } = await response.json();
       setGeneratedCaptions(captions);
       setIsDialogOpen(true);
-    } catch (error) {
-      console.error('Generation error:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsGenerating(false);
     }
@@ -403,7 +414,7 @@ const Generation = () => {
                 <Select
                   labelId="post-type-label"
                   value={postType}
-                  onChange={(e) => setPostType(e.target.value)}
+                  onChange={(e) => setPostType(e.target.value as PostType)}
                   label="Post Type"
                   sx={{
                     backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
@@ -443,7 +454,7 @@ const Generation = () => {
                 <Select
                   labelId="caption-tone-label"
                   value={captionTone}
-                  onChange={(e) => setCaptionTone(e.target.value)}
+                  onChange={(e) => setCaptionTone(e.target.value as CaptionTone)}
                   label="Caption Tone"
                   sx={{
                     backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
@@ -798,11 +809,11 @@ const Generation = () => {
         <Snackbar
           open={!!error}
           autoHideDuration={6000}
-          onClose={() => setError(null)}
+          onClose={() => setError('')}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
           <Alert
-            onClose={() => setError(null)}
+            onClose={() => setError('')}
             severity="error"
             sx={{
               width: '100%',
