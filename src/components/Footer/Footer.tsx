@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { Box, Container, Typography, Link, Grid, Divider } from '@mui/material';
 import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

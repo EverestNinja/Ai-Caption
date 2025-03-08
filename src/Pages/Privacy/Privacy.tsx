@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
   Typography, 
   Paper, 
   IconButton, 
-  useMediaQuery,
-  Divider,
-  Switch,
-  Button
+  Switch
 } from '@mui/material';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,9 +19,7 @@ const TRANSITION_PROPERTIES = 'all';
 
 const Privacy = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const isSmallScreen = useMediaQuery('(max-width:600px)');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,26 +35,11 @@ const Privacy = () => {
   }, [isDarkMode]);
 
   const toggleTheme = () => {
-    setIsThemeChanging(true);
     setIsDarkMode(!isDarkMode);
-    setTimeout(() => setIsThemeChanging(false), 400);
   };
 
   const handleGoBack = () => {
     navigate(-1);
-  };
-
-  const commonTransition = {
-    transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
-  };
-
-  const commonBoxStyles = {
-    ...commonTransition,
-    background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-    color: isDarkMode ? '#fff' : '#000',
-    filter: isThemeChanging ? 'blur(0.3px)' : 'none',
-    transform: isThemeChanging ? 'scale(0.995)' : 'scale(1)',
   };
 
   if (!mounted) return null;

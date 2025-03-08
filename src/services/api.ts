@@ -35,7 +35,6 @@ class APIError extends Error {
 }
 
 const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000; // 1 second
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
