@@ -67,10 +67,10 @@ const Footer = () => {
       component="footer"
       sx={{
         width: '100%',
-        py: { xs: 3, sm: 4 },
+        py: { xs: 4, sm: 5 },
         mt: 'auto',
         backgroundColor: isDarkMode 
-          ? 'rgba(255,255,255,0.05)' 
+          ? 'rgba(255,255,255,0.03)' 
           : 'rgba(0,0,0,0.02)',
         borderTop: `1px solid ${
           isDarkMode 
@@ -78,14 +78,24 @@ const Footer = () => {
             : 'rgba(0,0,0,0.1)'
         }`,
         transition: 'all 0.3s ease',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+          opacity: 0.5,
+        },
       }}
     >
       <Container maxWidth="lg">
-        {/* Main 3-column grid */}
         <Grid 
           container 
-          spacing={{ xs: 4, md: 2 }}
-          sx={{ mb: 4 }}
+          spacing={{ xs: 4, md: 6 }}
+          sx={{ mb: { xs: 4, sm: 5 } }}
         >
           {/* Left Column - Brand & Description */}
           <Grid item xs={12} md={4}>
@@ -94,7 +104,7 @@ const Footer = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'flex-start' },
-                gap: 1.5,
+                gap: 2,
               }}
             >
               <Box
@@ -102,7 +112,6 @@ const Footer = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 2,
-                  mb: 1,
                 }}
               >
                 <Box
@@ -110,17 +119,17 @@ const Footer = () => {
                   src={GlocapLogo}
                   alt="GloCap Logo"
                   sx={{
-                    width: { xs: 40, sm: 45, md: 50 },
+                    width: { xs: 45, sm: 50, md: 55 },
                     height: 'auto',
                     objectFit: 'contain',
                     filter: isDarkMode 
-                      ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.4))'
-                      : 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))',
+                      ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.4))'
+                      : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       filter: isDarkMode 
-                        ? 'brightness(1.3) drop-shadow(0 0 12px rgba(255,255,255,0.5))'
-                        : 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
+                        ? 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.5))'
+                        : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
                       transform: 'translateY(-2px)',
                     }
                   }}
@@ -129,14 +138,14 @@ const Footer = () => {
                   <Typography
                     variant="h6"
                     sx={{
-                      fontSize: { xs: '1.3rem', md: '1.4rem' },
+                      fontSize: { xs: '1.4rem', md: '1.5rem' },
                       fontWeight: 700,
                       letterSpacing: '-0.01em',
                       background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       color: 'transparent',
-                      lineHeight: 1,
+                      lineHeight: 1.1,
                     }}
                   >
                     GloCap
@@ -144,7 +153,7 @@ const Footer = () => {
                   <Typography
                     variant="subtitle2"
                     sx={{
-                      fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                      fontSize: { xs: '0.9rem', sm: '0.95rem' },
                       fontWeight: 500,
                       fontStyle: 'italic',
                       letterSpacing: '0.02em',
@@ -152,7 +161,7 @@ const Footer = () => {
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       color: 'transparent',
-                      lineHeight: 1,
+                      lineHeight: 1.1,
                     }}
                   >
                     Best Caption Generator
@@ -161,11 +170,14 @@ const Footer = () => {
               </Box>
               <Typography
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                   textAlign: { xs: 'center', md: 'left' },
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  maxWidth: { xs: '280px', md: '100%' },
+                  lineHeight: 1.6,
                 }}
               >
-                Transform your social media presence with AI-powered captions.
+                Transform your social media presence with AI-powered captions that captivate your audience.
               </Typography>
             </Box>
           </Grid>
@@ -178,7 +190,7 @@ const Footer = () => {
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'center' },
                 height: '100%',
-                justifyContent: { xs: 'flex-start', md: 'center' },
+                justifyContent: { xs: 'flex-start', md: 'flex-start' },
               }}
             >
               <Typography
@@ -186,8 +198,21 @@ const Footer = () => {
                 sx={{
                   fontWeight: 600,
                   color: isDarkMode ? '#fff' : '#000',
-                  mb: 2,
+                  mb: 2.5,
                   textAlign: 'center',
+                  fontSize: { xs: '1.1rem', sm: '1.15rem' },
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: -8,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '40px',
+                    height: '2px',
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB)',
+                    borderRadius: '2px',
+                  },
                 }}
               >
                 Quick Links
@@ -198,7 +223,7 @@ const Footer = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 1.5,
+                  gap: 2,
                 }}
               >
                 {navigationLinks.map((link) => (
@@ -207,11 +232,30 @@ const Footer = () => {
                     component="button"
                     onClick={() => navigate(link.path)}
                     sx={{
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                       textDecoration: 'none',
-                      transition: 'color 0.3s ease',
+                      transition: 'all 0.3s ease',
+                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                      position: 'relative',
                       '&:hover': {
                         color: '#405DE6',
+                        transform: 'translateX(4px)',
+                      },
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: -16,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(45deg, #405DE6, #5851DB)',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                      },
+                      '&:hover::before': {
+                        opacity: 1,
                       },
                     }}
                   >
@@ -230,7 +274,7 @@ const Footer = () => {
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'flex-end' },
                 height: '100%',
-                justifyContent: { xs: 'flex-start', md: 'center' },
+                justifyContent: { xs: 'flex-start', md: 'flex-start' },
               }}
             >
               <Typography
@@ -238,8 +282,21 @@ const Footer = () => {
                 sx={{
                   fontWeight: 600,
                   color: isDarkMode ? '#fff' : '#000',
-                  mb: 2,
+                  mb: 2.5,
                   textAlign: 'center',
+                  fontSize: { xs: '1.1rem', sm: '1.15rem' },
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: -8,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '40px',
+                    height: '2px',
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB)',
+                    borderRadius: '2px',
+                  },
                 }}
               >
                 Connect With Us
@@ -248,8 +305,9 @@ const Footer = () => {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: 2,
+                  gap: { xs: 3, sm: 4 },
                   justifyContent: 'center',
+                  flexWrap: 'wrap',
                 }}
               >
                 {socialLinks.map((link) => (
@@ -260,11 +318,23 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     aria-label={link.label}
                     sx={{
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                       transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: isDarkMode 
+                        ? 'rgba(255,255,255,0.05)' 
+                        : 'rgba(0,0,0,0.05)',
                       '&:hover': {
                         color: '#405DE6',
-                        transform: 'translateY(-2px)',
+                        transform: 'translateY(-4px)',
+                        background: isDarkMode 
+                          ? 'rgba(255,255,255,0.1)' 
+                          : 'rgba(0,0,0,0.08)',
                       },
                     }}
                   >
@@ -276,27 +346,47 @@ const Footer = () => {
           </Grid>
         </Grid>
 
-        <Divider sx={{ 
-          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-          mb: 3 
-        }} />
+        <Divider 
+          sx={{ 
+            borderColor: isDarkMode 
+              ? 'rgba(255,255,255,0.1)' 
+              : 'rgba(0,0,0,0.1)',
+            my: { xs: 3, sm: 4 },
+          }} 
+        />
 
-        {/* Copyright */}
+        {/* Copyright Section */}
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 0.5,
-            color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+            gap: { xs: 2, sm: 0 },
           }}
         >
-          <Typography variant="body2">
-            Made with
+          <Typography
+            variant="body2"
+            sx={{
+              color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              textAlign: { xs: 'center', sm: 'left' },
+              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            © {new Date().getFullYear()} GloCap. Made with <FaHeart style={{ color: '#ff4081' }} /> by Deltabyte
           </Typography>
-          <FaHeart size={12} color="#405DE6" />
-          <Typography variant="body2">
-            by Deltabyte Technologies © {new Date().getFullYear()}
+          <Typography
+            variant="body2"
+            sx={{
+              color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              textAlign: { xs: 'center', sm: 'right' },
+              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+            }}
+          >
+            All rights reserved.
           </Typography>
         </Box>
       </Container>
