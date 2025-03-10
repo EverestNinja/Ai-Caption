@@ -3,6 +3,7 @@ import { Box, Container, Typography, Link, Grid, Divider } from '@mui/material';
 import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import GlocapLogo from '../../assets/Glocap.png';
 
 interface NavLink {
   label: string;
@@ -96,20 +97,68 @@ const Footer = () => {
                 gap: 1.5,
               }}
             >
-              <Typography
-                variant="h6"
+              <Box
                 sx={{
-                  fontSize: { xs: '1.3rem', md: '1.4rem' },
-                  fontWeight: 700,
-                  letterSpacing: '-0.01em',
-                  background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  mb: 1,
                 }}
               >
-                GloCap - Best Caption Generator
-              </Typography>
+                <Box
+                  component="img"
+                  src={GlocapLogo}
+                  alt="GloCap Logo"
+                  sx={{
+                    width: { xs: 40, sm: 45, md: 50 },
+                    height: 'auto',
+                    objectFit: 'contain',
+                    filter: isDarkMode 
+                      ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.4))'
+                      : 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      filter: isDarkMode 
+                        ? 'brightness(1.3) drop-shadow(0 0 12px rgba(255,255,255,0.5))'
+                        : 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
+                      transform: 'translateY(-2px)',
+                    }
+                  }}
+                />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontSize: { xs: '1.3rem', md: '1.4rem' },
+                      fontWeight: 700,
+                      letterSpacing: '-0.01em',
+                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      color: 'transparent',
+                      lineHeight: 1,
+                    }}
+                  >
+                    GloCap
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                      fontWeight: 500,
+                      fontStyle: 'italic',
+                      letterSpacing: '0.02em',
+                      background: 'linear-gradient(45deg, #405DE6 30%, #833AB4 90%)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      color: 'transparent',
+                      lineHeight: 1,
+                    }}
+                  >
+                    Best Caption Generator
+                  </Typography>
+                </Box>
+              </Box>
               <Typography
                 sx={{
                   color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',

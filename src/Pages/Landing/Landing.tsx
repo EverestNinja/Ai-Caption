@@ -1,11 +1,12 @@
 import { Box, Button, Container, Typography, Paper, IconButton, Switch, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { FaInstagram, FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
+import { FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { useTheme } from '../../context/ThemeContext';
+import GlocapLogo from '../../assets/Glocap.png';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -65,28 +66,7 @@ const Landing = () => {
     { icon: <FaMagic />, title: 'AI-Powered', description: 'Advanced AI technology for creative captions' },
     { icon: <FaHashtag />, title: 'Smart Hashtags', description: 'Relevant hashtag suggestions' },
     { icon: <FaRegLightbulb />, title: 'Multiple Styles', description: 'Various tones and styles to choose from' },
-    { icon: <FaRocket />, title: 'Instant Results', description: 'Get captions in seconds' },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Content Creator',
-      image: 'https://randomuser.me/api/portraits/women/1.jpg',
-      text: 'This tool has completely transformed how I create content. The captions are always on point!'
-    },
-    {
-      name: 'Mike Williams',
-      role: 'Social Media Manager',
-      image: 'https://randomuser.me/api/portraits/men/2.jpg',
-      text: 'A game-changer for managing multiple accounts. Saves hours of creative work.'
-    },
-    {
-      name: 'Emma Davis',
-      role: 'Influencer',
-      image: 'https://randomuser.me/api/portraits/women/3.jpg',
-      text: 'The variety of styles and tones available is amazing. My engagement has increased significantly!'
-    }
+    { icon: <FaRocket />, title: 'Instant Results', description: 'Get captions in seconds' }
   ];
 
   if (!mounted) return null;
@@ -219,24 +199,42 @@ const Landing = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 100 }}
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: '2rem'
+              }}
             >
-              <IconButton
+              <Box
+                component="img"
+                src={GlocapLogo}
+                alt="GloCap Logo"
                 sx={{
-                  p: { xs: 2, sm: 3 },
-                  background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                  mb: { xs: 3, sm: 4 },
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  },
-                  '@media (hover: none)': {
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                  width: { xs: 120, sm: 150, md: 180 },
+                  height: 'auto',
+                  objectFit: 'contain',
+                  filter: isDarkMode 
+                    ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
+                    : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
+                  transition: 'all 0.4s ease',
+                  animation: isDarkMode ? 'glow 2s ease-in-out infinite alternate' : 'none',
+                  '@keyframes glow': {
+                    '0%': {
+                      filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
+                    },
+                    '100%': {
+                      filter: 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)) drop-shadow(0 0 25px rgba(255,255,255,0.4)) drop-shadow(0 0 35px rgba(255,255,255,0.3))'
                     }
+                  },
+                  '&:hover': {
+                    transform: 'scale(1.03)',
+                    filter: isDarkMode 
+                      ? 'brightness(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(255,255,255,0.4))'
+                      : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
                   }
                 }}
-              >
-                <FaInstagram size={isMobile ? 32 : 40} color="white" />
-              </IconButton>
+              />
             </motion.div>
 
             <Typography
