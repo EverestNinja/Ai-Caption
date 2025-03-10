@@ -296,29 +296,24 @@ const Generation = () => {
               <FaMagic size={isMobile ? 24 : 32} color="white" />
             </Box>
             <Typography
-              variant="h3"
+              variant="h1"
               sx={{
-                textAlign: 'center',
+                fontSize: { xs: '2rem', sm: '2.5rem' },
                 fontWeight: 700,
-                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-                fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
-                lineHeight: 1.2,
-                mb: { xs: 1, sm: 1.5 },
+                mb: 2,
+                textAlign: 'center',
+                color: isDarkMode ? '#fff' : '#000'
               }}
             >
-              Generate Your Instagram Caption
+              Generate Your Caption
             </Typography>
             <Typography
-              variant="subtitle1"
+              variant="h2"
               sx={{
-                textAlign: 'center',
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                maxWidth: '600px',
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                px: { xs: 2, sm: 0 },
+                fontSize: { xs: '1rem', sm: '1.2rem' },
+                color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                mb: 4,
+                textAlign: 'center'
               }}
             >
               Create engaging captions that capture attention and drive engagement
@@ -345,7 +340,7 @@ const Generation = () => {
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                 <MdOutlineDescription size={24} color={isDarkMode ? '#fff' : '#000'} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
                   Post Details
                 </Typography>
               </Box>
@@ -355,7 +350,7 @@ const Generation = () => {
                 <InputLabel 
                   id="post-type-label"
                   sx={{ 
-                    color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                    color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
                     '&.Mui-focused': {
                       color: '#405DE6',
                     },
@@ -369,18 +364,18 @@ const Generation = () => {
                   onChange={(e) => setPostType(e.target.value as PostType)}
                   label="Post Type"
                   sx={{
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
                     '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#405DE6',
                     },
                     '& .MuiSelect-icon': {
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                     },
                   }}
                 >
@@ -395,7 +390,7 @@ const Generation = () => {
                 <InputLabel 
                   id="caption-tone-label"
                   sx={{ 
-                    color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                    color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
                     '&.Mui-focused': {
                       color: '#405DE6',
                     },
@@ -409,18 +404,18 @@ const Generation = () => {
                   onChange={(e) => setCaptionTone(e.target.value as CaptionTone)}
                   label="Caption Tone"
                   sx={{
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
                     '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#405DE6',
                     },
                     '& .MuiSelect-icon': {
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                     },
                   }}
                 >
@@ -440,7 +435,7 @@ const Generation = () => {
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                 <FaRegLightbulb size={24} color={isDarkMode ? '#fff' : '#000'} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
                   Generation Options
                 </Typography>
               </Box>
@@ -450,7 +445,7 @@ const Generation = () => {
                 <InputLabel 
                   id="generation-count-label"
                   sx={{ 
-                    color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                    color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
                     '&.Mui-focused': {
                       color: '#405DE6',
                     },
@@ -464,18 +459,18 @@ const Generation = () => {
                   onChange={(e) => setGenerationCount(Number(e.target.value))}
                   label="Number of Generations"
                   sx={{
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
                     '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#405DE6',
                     },
                     '& .MuiSelect-icon': {
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                     },
                   }}
                 >
@@ -490,7 +485,7 @@ const Generation = () => {
                 display: 'flex', 
                 gap: { xs: 2, sm: 3 }, 
                 flexWrap: 'wrap',
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)',
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.01)',
                 p: { xs: 1.5, sm: 2 },
                 borderRadius: 2,
               }}>
@@ -517,7 +512,7 @@ const Generation = () => {
                         }}
                       />
                     }
-                    label={<Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Use Hashtags</Typography>}
+                    label={<Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }}>Use Hashtags</Typography>}
                     sx={{
                       color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
                       ...commonTransition,
@@ -548,7 +543,7 @@ const Generation = () => {
                         }}
                       />
                     }
-                    label={<Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Use Emojis</Typography>}
+                    label={<Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }}>Use Emojis</Typography>}
                     sx={{
                       color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
                       ...commonTransition,
@@ -568,7 +563,7 @@ const Generation = () => {
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                 <MdOutlineDescription size={24} color={isDarkMode ? '#fff' : '#000'} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
                   Post Description
                 </Typography>
                 <Tooltip 
@@ -592,19 +587,23 @@ const Generation = () => {
                 onChange={(e) => setPostDescription(e.target.value)}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
                     '& fieldset': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                     },
                     '&:hover fieldset': {
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
                     },
                     '&.Mui-focused fieldset': {
                       borderColor: '#405DE6',
                     },
                   },
                   '& .MuiInputBase-input': {
-                    color: isDarkMode ? '#fff' : '#000',
+                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
+                    '&::placeholder': {
+                      color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                      opacity: 1,
+                    },
                   },
                 }}
               />
@@ -613,7 +612,7 @@ const Generation = () => {
             {/* Generate Button */}
             <Button
               variant="contained"
-              disabled={false} // Remove the disabled condition temporarily for testing
+              disabled={false}
               onClick={handleGenerate}
               startIcon={isGenerating ? <CircularProgress size={isMobile ? 16 : 20} color="inherit" /> : <FaMagic />}
               sx={{
@@ -621,14 +620,15 @@ const Generation = () => {
                 px: { xs: 3, sm: 4 },
                 borderRadius: 3,
                 background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                transition: 'transform 0.2s ease',
+                boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 fontSize: { xs: '0.875rem', sm: '1rem' },
                 width: { xs: '100%', sm: 'auto' },
                 alignSelf: { xs: 'stretch', sm: 'flex-start' },
                 '&:hover': {
                   background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
                   transform: 'translateY(-2px)',
+                  boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
                 },
                 '&:active': {
                   transform: 'translateY(0)',
@@ -656,6 +656,7 @@ const Generation = () => {
               backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
               backgroundImage: 'none',
               borderRadius: { xs: 2, sm: 3 },
+              boxShadow: isDarkMode ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.1)',
             },
           }}
         >
@@ -663,7 +664,6 @@ const Generation = () => {
             p: { xs: 2, sm: 3 },
             position: 'relative',
           }}>
-            {/* Dialog Header */}
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -683,9 +683,10 @@ const Generation = () => {
               <IconButton
                 onClick={() => setIsDialogOpen(false)}
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                   '&:hover': {
                     color: '#405DE6',
+                    backgroundColor: isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)',
                   },
                 }}
               >
@@ -693,7 +694,6 @@ const Generation = () => {
               </IconButton>
             </Box>
 
-            {/* Captions Grid */}
             <Grid container spacing={2}>
               {generatedCaptions.map((caption) => (
                 <Grid item xs={12} key={caption.id}>
@@ -702,13 +702,14 @@ const Generation = () => {
                     sx={{
                       p: { xs: 2, sm: 3 },
                       borderRadius: 2,
-                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                      border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
+                      border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
                       position: 'relative',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      transition: 'all 0.2s ease',
                       '&:hover': {
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                        boxShadow: isDarkMode ? '0 4px 20px rgba(64,93,230,0.2)' : '0 4px 15px rgba(0,0,0,0.1)',
+                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.03)',
                       },
                     }}
                   >
@@ -717,6 +718,7 @@ const Generation = () => {
                         whiteSpace: 'pre-wrap',
                         color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
                         fontSize: { xs: '0.875rem', sm: '1rem' },
+                        lineHeight: 1.6,
                         pr: 4,
                         mb: 1,
                       }}
@@ -740,9 +742,10 @@ const Generation = () => {
                           onClick={() => handleCopyCaption(caption)}
                           size="small"
                           sx={{
-                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                            color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                             '&:hover': {
                               color: '#405DE6',
+                              backgroundColor: isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)',
                             },
                           }}
                         >

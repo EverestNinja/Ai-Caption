@@ -1,53 +1,61 @@
-Project Context: Instagram Caption Generator
+# GloCap - Best Caption Generator
 
-Project Overview
+## Project Overview
 
-This project is an Instagram Caption Generator built using Vite + React. The application will allow users to generate AI-powered Instagram captions based on user input.
+GloCap is an AI-powered Caption Generator built using Vite + React. The application allows users to generate AI-powered captions based on user input, making it perfect for social media content creation.
 
-API Integration
+## Current Implementation Status
 
-The project will use the Grok API to generate captions dynamically based on the user's selected parameters.
+### ✅ Completed
+1. Project Setup
+   - Vite + React + TypeScript configuration
+   - ESLint setup
+   - Package management and dependencies
+   - Project structure and routing
 
-Application Structure
+2. Core Structure
+   - Components directory
+   - Pages directory
+   - Services directory
+   - Context setup
+   - Utils and Types organization
+   - Assets management
 
-The project will consist of two main pages:
+3. Main Pages
+   - Landing page (implemented)
+   - Generation page (implemented)
+   - Privacy page (additional feature)
 
-Landing Page
+### 🛠️ Technical Stack
+- Frontend: Vite + React
+- UI Framework: Material-UI
+- Animation: Framer Motion
+- Routing: React Router DOM
+- TypeScript for type safety
+- Additional libraries:
+  - Axios for API calls
+  - React Icons
+  - TSParticles for visual effects
 
-Introduces the application
+### 🎯 Features Implementation
 
-Provides a call-to-action button to navigate to the generation page
+1. User Input Fields (Generation Page)
+   - Post Type selection
+   - Tone selection
+   - Hashtag toggle
+   - Caption toggle
+   - Character length control
 
-Generation Page
+2. Customization Options
+   - Multiple post types (Actionable, Inspiring, Promotional, Reels, Stories)
+   - Various tones (Fun, Poetic, Casual, Informative, Formal, Witty)
+   - Hashtag generation
+   - Emoji integration
 
-Contains a form where users input their preferences
+### 🔄 Work in Progress
+- API integration refinement
+- Testing and optimization
+- Documentation updates
+- Deployment configuration
 
-Fetches and displays generated captions
-
-User Input Fields (Form on Generation Page)
-
-Post Type: Dropdown selection (e.g., Actionable, Inspiring, Promotional, Reels, Stories)
-
-Post Tone: Dropdown selection (e.g., Fun, Poetic, Casual, Informative, Formal, Witty)
-
-Use Hashtags: Toggle switch (Yes/No)
-
-Use Captions: Toggle switch (Yes/No)
-
-Technology Stack
-
-Frontend: Vite + React
-
-API: Grok API for caption generation
-
-Features (Initial Scope)
-
-Simple and intuitive UI
-
-AI-powered caption generation
-
-Toggle options for hashtags and captions
-
-Two-page structure (Landing + Generation page)
-
-This document serves as a foundational guide for the project development.
+This document serves as a living record of the project's current state and will be updated as development progresses.

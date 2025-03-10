@@ -183,7 +183,7 @@ const Privacy = () => {
                 color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
               }}
             >
-              Welcome to the Instagram Caption Generator by Deltabyte Technologies. Your privacy is our priority. This Privacy Policy outlines how we collect, use, disclose, and protect your information when you use our website and services. By accessing or using our website, you agree to the terms outlined in this policy.
+              Welcome to GloCap by Deltabyte Technologies. Your privacy is our priority. This Privacy Policy outlines how we collect, use, disclose, and protect your information when you use our website and services. By accessing or using our website, you agree to the terms outlined in this policy.
             </Typography>
 
             <Typography
@@ -315,24 +315,9 @@ const Privacy = () => {
               We use the information collected to:
             </Typography>
             <Box component="ul" sx={{ pl: 4, mb: 3 }}>
-              <Box component="li" sx={{ mb: 1 }}>
-                <Typography variant="body1">
-                  Provide and optimize the Instagram Caption Generator service.
-                </Typography>
-              </Box>
-              <Box component="li" sx={{ mb: 1 }}>
-                <Typography variant="body1">
-                  Improve user experience by analyzing website performance and visitor behavior.
-                </Typography>
-              </Box>
-              <Box component="li" sx={{ mb: 1 }}>
-                <Typography variant="body1">
-                  Secure our website and prevent unauthorized access or misuse.
-                </Typography>
-              </Box>
               <Box component="li">
                 <Typography variant="body1">
-                  Respond to user inquiries, feedback, and support requests.
+                  Provide and optimize the GloCap caption generation service.
                 </Typography>
               </Box>
             </Box>

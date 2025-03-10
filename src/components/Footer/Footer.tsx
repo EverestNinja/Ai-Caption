@@ -108,7 +108,7 @@ const Footer = () => {
                   color: 'transparent',
                 }}
               >
-                Instagram Caption Generator
+                GloCap - Best Caption Generator
               </Typography>
               <Typography
                 sx={{
@@ -116,7 +116,7 @@ const Footer = () => {
                   textAlign: { xs: 'center', md: 'left' },
                 }}
               >
-                Create engaging captions for your Instagram posts with the power of AI.
+                Transform your social media presence with AI-powered captions.
               </Typography>
             </Box>
           </Grid>

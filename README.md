@@ -1,9 +1,9 @@
-# Instagram Caption Generator
+# GloCap - Best Caption Generator
 
 ![Tech Stack](https://img.shields.io/badge/Tech%20Stack-React%20%7C%20Vite%20%7C%20TypeScript-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-An AI-powered Instagram Caption Generator that creates engaging, customized captions for your posts. Built with React and Vite for optimal performance.
+An AI-powered Caption Generator that creates engaging, customized captions for your posts. Built with React and Vite for optimal performance.
 
 ## 🚀 Features
 

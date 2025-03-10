@@ -189,7 +189,7 @@ const Landing = () => {
           sx={{
             position: 'relative',
             zIndex: 1,
-            pt: { xs: 16, sm: 12 },
+            pt: { xs: 8, sm: 6 },
             px: { xs: 2, sm: 3, md: 4 },
             pb: { xs: 4, sm: 6 },
             flex: 1,
@@ -208,7 +208,7 @@ const Landing = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             sx={{
-              pt: { xs: 16, sm: 20, md: 24 },
+              pt: { xs: 4, sm: 6, md: 8 },
               pb: { xs: 8, sm: 10 },
               textAlign: 'center',
               position: 'relative',
@@ -250,25 +250,22 @@ const Landing = () => {
                 WebkitBackgroundClip: 'text',
                 color: 'transparent',
                 mb: { xs: 2, sm: 3 },
-                px: { xs: 2, sm: 0 },
+                ...commonTransition,
               }}
             >
-              AI Instagram Caption Generator
+              GloCap - Best Caption Generator
             </Typography>
-
             <Typography
-              variant="h5"
+              variant="h2"
               sx={{
-                color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
-                maxWidth: '800px',
-                mx: 'auto',
-                mb: { xs: 4, sm: 6 },
-                px: { xs: 2, sm: 3 },
-                fontSize: { xs: '1rem', sm: '1.2rem', md: '1.5rem' },
-                lineHeight: 1.5,
+                fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' },
+                fontWeight: 500,
+                mb: { xs: 3, sm: 4 },
+                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                ...commonTransition,
               }}
             >
-              Transform your Instagram presence with AI-powered captions that engage, inspire, and convert
+              Transform your social media presence with AI-powered captions that engage, inspire, and convert
             </Typography>
 
             <Button
@@ -385,7 +382,7 @@ const Landing = () => {
             </Box>
           </Box>
 
-          {/* Testimonials Section - Enhanced for mobile */}
+          {/* About Us Section */}
           <Box sx={{ 
             py: { xs: 6, sm: 8, md: 10 },
             px: { xs: 2, sm: 0 }
@@ -394,79 +391,243 @@ const Landing = () => {
               variant="h3"
               sx={{
                 textAlign: 'center',
-                mb: { xs: 4, sm: 6, md: 8 },
-                color: isDarkMode ? '#fff' : '#000',
+                mb: { xs: 6, sm: 8 },
                 fontWeight: 700,
                 fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
                 ...commonTransition,
               }}
             >
-              What Our Users Say
+              About Us
             </Typography>
+
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  md: 'repeat(3, 1fr)'
-                },
-                gap: { xs: 3, sm: 4 },
+                display: 'flex',
+                flexDirection: 'column',
+                gap: { xs: 6, sm: 8 },
+                maxWidth: '900px',
+                margin: '0 auto',
               }}
             >
-              {testimonials.map((testimonial) => (
+              {/* Introduction Section */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                    lineHeight: 1.8,
+                    mb: 3,
+                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
+                  }}
+                >
+                  Welcome to GloCap - Best Caption Generator, your ultimate AI-powered tool for crafting the perfect social media captions.
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    lineHeight: 1.8,
+                    color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                  }}
+                >
+                  Whether you're an influencer looking to engage your audience, a brand trying to increase reach, or an everyday user wanting to add personality to your posts, GloCap is designed to help you express yourself effortlessly.
+                </Typography>
+              </Box>
+
+              {/* Features Grid */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                  gap: 4,
+                }}
+              >
                 <Paper
-                  key={testimonial.name}
                   elevation={0}
                   sx={{
                     p: { xs: 3, sm: 4 },
                     borderRadius: { xs: 3, sm: 4 },
                     ...commonBoxStyles,
-                    '&:active': {
-                      transform: 'scale(0.98)',
+                    background: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
                     },
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Box
-                      component="img"
-                      src={testimonial.image}
-                      sx={{
-                        width: { xs: 50, sm: 60 },
-                        height: { xs: 50, sm: 60 },
-                        borderRadius: '50%',
-                        mr: 2,
-                      }}
-                    />
-                    <Box>
-                      <Typography 
-                        sx={{ 
-                          fontWeight: 600, 
-                          color: isDarkMode ? '#fff' : '#000',
-                          ...commonTransition,
-                        }}
-                      >
-                        {testimonial.name}
-                      </Typography>
-                      <Typography 
-                        sx={{ 
-                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                          ...commonTransition,
-                        }}
-                      >
-                        {testimonial.role}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Typography 
-                    sx={{ 
-                      color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-                      ...commonTransition,
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      color: 'transparent',
+                      fontWeight: 600,
                     }}
                   >
-                    "{testimonial.text}"
+                    Who We Are
+                  </Typography>
+                  <Typography sx={{ lineHeight: 1.8 }}>
+                    GloCap is a product of Deltabyte Technologies, committed to leveraging AI and technology to simplify digital content creation. Our team consists of passionate developers, designers, and content strategists who understand the importance of storytelling in the digital space.
                   </Typography>
                 </Paper>
-              ))}
+
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 3, sm: 4 },
+                    borderRadius: { xs: 3, sm: 4 },
+                    ...commonBoxStyles,
+                    background: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      color: 'transparent',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Our Approach
+                  </Typography>
+                  <Typography sx={{ lineHeight: 1.8 }}>
+                    We combine AI intelligence with user preferences to provide captions that feel personalized and engaging. Our focus is on helping users create meaningful content that resonates with their audience while ensuring the best possible experience.
+                  </Typography>
+                </Paper>
+              </Box>
+
+              {/* Mission Section */}
+              <Box sx={{ textAlign: 'center', mt: 4 }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    mb: 4,
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                    fontWeight: 600,
+                  }}
+                >
+                  Our Mission
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                    gap: 3,
+                  }}
+                >
+                  {[
+                    {
+                      title: 'Effortless Creation',
+                      description: 'No more struggling to find the perfect words; our AI generates them instantly.',
+                    },
+                    {
+                      title: 'Enhanced Creativity',
+                      description: 'Smart suggestions that spark inspiration and align with different tones and styles.',
+                    },
+                    {
+                      title: 'Time Efficiency',
+                      description: 'Streamline your content creation process, whether you post daily or occasionally.',
+                    },
+                    {
+                      title: 'Better Engagement',
+                      description: 'Boost likes, shares, and comments with captions that truly connect.',
+                    },
+                  ].map((item) => (
+                    <Paper
+                      key={item.title}
+                      elevation={0}
+                      sx={{
+                        p: { xs: 2.5, sm: 3 },
+                        borderRadius: { xs: 2, sm: 3 },
+                        ...commonBoxStyles,
+                        background: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                        transition: 'transform 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-5px)',
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                          mb: 1,
+                          fontWeight: 600,
+                          color: isDarkMode ? '#fff' : '#000',
+                        }}
+                      >
+                        {item.title}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: { xs: '0.9rem', sm: '1rem' },
+                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                        }}
+                      >
+                        {item.description}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Box>
+              </Box>
+
+              {/* Call to Action */}
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  mt: 6,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                    mb: 4,
+                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
+                    lineHeight: 1.8,
+                  }}
+                >
+                  Join us on this journey and experience the power of AI-driven captions that transform your social media game. Whether you're posting for fun, business, or influence, GloCap is here to make every caption count!
+                </Typography>
+                <Button
+                  variant="contained"
+                  size={isMobile ? "medium" : "large"}
+                  onClick={() => navigate('/generate')}
+                  sx={{
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 4, sm: 6 },
+                    borderRadius: 3,
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                    },
+                  }}
+                >
+                  Start Creating Captions
+                </Button>
+              </Box>
             </Box>
           </Box>
         </Container>
