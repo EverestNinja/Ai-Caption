@@ -41,36 +41,73 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const generatePrompt = (params: GenerationRequest): string => {
   const { postType, captionTone, postDescription, useHashtags, useEmojis } = params;
   
-  let prompt = '';
+  // Base context for different post types
+  const postTypeContext: { [key: string]: string } = {
+    'actionable': 'motivational and action-oriented content that inspires people to take specific steps',
+    'inspiring': 'uplifting and thought-provoking content that touches hearts and minds',
+    'promotional': 'engaging promotional content that highlights value without being too salesy',
+    'reels': 'fun and trendy short-form video content that captures attention quickly',
+    'stories': 'casual and authentic moments that connect with followers in real-time'
+  };
+
+  // Tone-specific instructions
+  const toneInstructions: { [key: string]: string } = {
+    fun: "Make it super entertaining and relatable! Use clever wordplay, current trends, or funny observations. Think of it as chatting with a friend who always makes you laugh.",
+    poetic: "Create a lyrical and artistic caption that paints a picture with words. Use metaphors and beautiful language that resonates emotionally.",
+    casual: "Keep it conversational and down-to-earth, like you're sharing thoughts with close friends. Be authentic and relatable.",
+    informative: "Share insights in an engaging way, mixing expertise with accessibility. Make complex ideas easy to understand while maintaining interest.",
+    formal: "Maintain professionalism while being engaging. Think sophisticated yet approachable, like a respected mentor.",
+    witty: "Craft a clever and sharp caption that shows intellectual humor. Think subtle wordplay and smart observations that make people think and smile."
+  };
+
+  const selectedContext = postTypeContext[postType.toLowerCase()] || postType;
+  const selectedTone = toneInstructions[captionTone.toLowerCase()] || 'Keep the tone natural and engaging';
+
+  let prompt = `Create an authentic Instagram caption for ${selectedContext}. ${selectedTone}\n\nThe post is about: ${postDescription}\n\n`;
   
-  // Special handling for Fun tone
-  if (captionTone.toLowerCase() === 'fun') {
-    prompt = `Generate a super entertaining and humorous Instagram caption that will make people laugh! The caption should be witty, playful, and include clever wordplay or puns if possible. This is for a ${postType.toLowerCase()} post about: ${postDescription}.`;
-  } else {
-    prompt = `Generate an engaging Instagram caption for a ${postType.toLowerCase()} post with a ${captionTone.toLowerCase()} tone. The post is about: ${postDescription}.`;
+  // More natural hashtag instructions
+  if (useHashtags) {
+    prompt += 'Include 3-5 highly relevant hashtags that real Instagram users would use. Mix both popular and niche hashtags for better reach. Place them naturally - either integrated into the caption or at the end.\n\n';
   }
   
-  // More explicit instructions about hashtags
-  prompt += useHashtags 
-    ? ' You MUST include exactly 3-5 relevant hashtags at the end of the caption.'
-    : ' Do NOT include any hashtags in the caption.';
-  
-  // More explicit instructions about emojis
-  prompt += useEmojis 
-    ? ' You MUST include 2-3 relevant emojis naturally placed throughout the caption.'
-    : ' Do NOT include any emojis in the caption.';
+  // More natural emoji instructions
+  if (useEmojis) {
+    prompt += 'Sprinkle 2-3 relevant emojis throughout the caption where they feel natural and enhance the message. Use them to emphasize emotions or key points, not just as decorations.\n\n';
+  }
 
-  prompt += ' The caption should be concise (150-220 characters) and engaging, following Instagram best practices.';
+  prompt += `Additional guidelines:
+- Keep it authentic and conversational (150-220 characters)
+- Create a hook that grabs attention in the first line
+- Include a call-to-action or question to boost engagement
+- Match the writing style of successful ${postType.toLowerCase()} posts
+- Make it sound like a real person, not AI-generated
+- Consider current social media trends and language`;
   
   return prompt;
 };
 
 const makeAPIRequest = async (params: GenerationRequest, temperature: number = 0.7, retryCount: number = 0): Promise<XAIResponse> => {
   try {
-    // Increase temperature for fun tone to get more creative results
-    if (params.captionTone.toLowerCase() === 'fun') {
-      temperature = Math.min(temperature + 0.2, 1.0); // Increase temperature but cap at 1.0
+    // Dynamic temperature adjustment based on tone and generation count
+    let adjustedTemperature = temperature;
+    const toneTemperatures: { [key: string]: number } = {
+      fun: 0.85,
+      poetic: 0.8,
+      casual: 0.75,
+      informative: 0.65,
+      formal: 0.6,
+      witty: 0.8
+    };
+    
+    adjustedTemperature = toneTemperatures[params.captionTone.toLowerCase()] || temperature;
+    
+    // Add some randomness for multiple generations
+    if (params.generationCount > 1) {
+      adjustedTemperature += Math.random() * 0.15; // Add up to 0.15 randomness
     }
+    
+    // Ensure temperature stays within valid range
+    adjustedTemperature = Math.max(0.5, Math.min(1.0, adjustedTemperature));
 
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -83,32 +120,36 @@ const makeAPIRequest = async (params: GenerationRequest, temperature: number = 0
         messages: [
           {
             role: "system",
-            content: `You are an expert Instagram caption writer with an amazing sense of humor. Create engaging, authentic captions that drive engagement.
-            
-${params.captionTone.toLowerCase() === 'fun' ? `When writing fun captions:
-1. Use clever wordplay and puns
-2. Include humorous observations
-3. Be playful and light-hearted
-4. Use conversational language
-5. Create relatable humor
-6. Add unexpected twists
-7. Keep it positive and entertaining` : ''}
+            content: `You are an expert Instagram content creator who understands modern social media trends and user behavior. Your specialty is writing captions that feel authentic, engaging, and perfectly suited to each post type.
 
-Important Rules:
-1. ONLY include hashtags if explicitly requested
-2. ONLY include emojis if explicitly requested
-3. Focus on brevity and emotional connection
-4. Keep the tone consistent throughout
-5. Follow the user's instructions exactly regarding hashtags and emojis
-6. Never add extra elements that weren't requested`
+Key Principles:
+1. Write like a real person - use natural language, current slang (when appropriate), and conversational tone
+2. Understand post context - adapt your style to match the post type and audience expectations
+3. Create emotional connections - use storytelling and relatable experiences
+4. Drive engagement - include hooks, questions, or calls-to-action
+5. Stay current - reference relevant trends and cultural moments
+6. Be platform-native - write in a way that feels natural for Instagram
+
+Style Guidelines:
+- Vary sentence structure and length for natural flow
+- Use line breaks strategically for readability
+- Include personal touches and authentic voice
+- Balance professionalism with relatability
+- Adapt hashtag and emoji usage to feel organic
+- Create memorable, shareable content
+
+Remember: Each caption should feel like it was written by a savvy social media user who understands their audience and the platform.`
           },
           {
             role: "user",
             content: generatePrompt(params)
           }
         ],
-        temperature,
-        stream: false
+        temperature: adjustedTemperature,
+        stream: false,
+        max_tokens: 350, // Increased for more natural responses
+        presence_penalty: 0.6, // Encourage more diverse responses
+        frequency_penalty: 0.7 // Reduce repetition
       }),
     });
 
