@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 // MUI Components
 import { 
-  Container, Grid, Typography, TextField, MenuItem, Button, 
-  FormControl, FormLabel, RadioGroup, FormControlLabel, Radio,
-  Paper, Box, useTheme, IconButton, Tooltip, alpha, 
-  Switch, TextFieldProps
+  Container, Typography, Box, useTheme, IconButton, 
+  Paper, Switch, useMediaQuery, CircularProgress,
+  Snackbar, Alert, Button, TextField, MenuItem, FormControl,
+  InputLabel, Select, Stack, Fade, Stepper, Step, StepLabel,
+  Tooltip, LinearProgress, Divider, Chip, Grid
 } from "@mui/material";
 // Icons
 import { MdArrowBack } from 'react-icons/md';
-import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { FaMagic, FaInfoCircle, FaCopy } from 'react-icons/fa';
 // Other imports
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -18,524 +18,237 @@ import { useTheme as useCustomTheme } from '../../context/ThemeContext';
 import Footer from '../../components/Footer/Footer';
 
 // ===== TYPES =====
-type FormFieldId = keyof FormState;
-
-interface FormState {
-  businessNiche: string;
-  primaryGoal: string;
-  targetAudience: string;
-  painPoint: string;
-  customerMotivation: string;
-  emotionalTrigger: string;
-  brandVoice: string;
-  contentStyle: string;
-  engagementHook: string;
-  callToAction: string;
-  timingContext: string;
-  trendTieIn: string;
-  brandTagline: string;
-  socialProof: string;
-  productHighlight: string;
-  uniqueSellingPoint: string;
-  keyBenefit: string;
-  keywordFocus: string;
-}
-
-interface SectionTitleProps {
-  title: string;
-  tooltip: string;
-  number?: string;
-}
-
-interface FieldOption {
-  value: string;
-  label: string;
-}
+type PostType = 'promotional' | 'engagement' | 'educational' | 'testimonial' | 'event' | 'product-launch';
+type BusinessType = 'restaurant' | 'computer-shop' | 'clothing' | 'coffee-shop';
 
 interface FormField {
-  id: FormFieldId;
-  label: string;
-  type: 'select' | 'text' | 'radio';
-  options?: FieldOption[];
-  multiline?: boolean;
-  rows?: number;
-}
-
-interface FormSection {
   id: string;
-  title: string;
-  tooltip: string;
-  number: string;
-  fields: FormField[];
+  label: string;
+  placeholder?: string;
+  type?: 'select' | 'multiline';
+  options?: { value: string; label: string; }[];
+  required?: boolean;
+  tooltip?: string;
+  multiline?: boolean;
 }
 
-interface ThemeStyles {
-  card: React.CSSProperties & {
-    [key: string]: any;
-  };
-  input: React.CSSProperties & {
-    [key: string]: any;
-  };
-  text: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  };
-  button: React.CSSProperties & {
-    [key: string]: any;
-  };
-  background: {
-    main: string;
-    paper: string;
-  };
+interface FormState {
+  postType: PostType | '';
+  businessType: BusinessType | '';
+  [key: string]: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
 }
 
 // ===== CONSTANTS =====
 const TRANSITION_TIMING = '0.3s ease';
 const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
 
-// Initial form state
-const initialFormState: FormState = {
-  businessNiche: 'None',
-  primaryGoal: 'None',
-  targetAudience: 'None',
-  painPoint: 'None',
-  customerMotivation: 'None',
-  emotionalTrigger: 'None',
-  brandVoice: 'None',
-  contentStyle: 'None',
-  engagementHook: 'no',
-  callToAction: 'None',
-  timingContext: 'None',
-  trendTieIn: 'None',
-  brandTagline: '',
-  socialProof: 'None',
-  productHighlight: '',
-  uniqueSellingPoint: 'None',
-  keyBenefit: 'None',
-  keywordFocus: ''
+const POST_TYPES = [
+  { 
+    value: 'promotional', 
+    label: 'Promotional Post'
+  },
+  { 
+    value: 'engagement', 
+    label: 'Engagement Post'
+  },
+  { 
+    value: 'educational', 
+    label: 'Educational Post'
+  },
+  { 
+    value: 'testimonial', 
+    label: 'Testimonial Post'
+  },
+  { 
+    value: 'event', 
+    label: 'Event Post'
+  },
+  { 
+    value: 'product-launch', 
+    label: 'Product Launch Post'
+  }
+];
+
+const BUSINESS_TYPES = [
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'computer-shop', label: 'Computer Shop' },
+  { value: 'clothing', label: 'Clothing' },
+  { value: 'coffee-shop', label: 'Coffee Shop' }
+];
+
+const FORM_FIELDS = {
+  promotional: [
+    { 
+      id: 'product', 
+      label: "What Are You Selling?", 
+      placeholder: "e.g., Handmade Candles",
+      tooltip: "Enter the product or service you want to promote"
+    },
+    { 
+      id: 'offer', 
+      label: "What's the Deal?", 
+      placeholder: "e.g., Buy 2, Get 1 Free",
+      tooltip: "Describe your special offer or promotion"
+    },
+    { 
+      id: 'audience', 
+      label: "Who's It For?", 
+      placeholder: "e.g., Candle Lovers",
+      tooltip: "Specify your target audience"
+    },
+    { 
+      id: 'cta', 
+      label: "What Should They Do?",
+      type: 'select',
+      options: [
+        { value: 'Shop Now', label: 'Shop Now' },
+        { value: 'Grab It', label: 'Grab It' },
+        { value: 'Claim Deal', label: 'Claim Deal' },
+        { value: 'Check It Out', label: 'Check It Out' }
+      ],
+      tooltip: "Choose a call-to-action for your post"
+    },
+    {
+      id: 'tone',
+      label: "How Should It Sound?",
+      type: 'select',
+      options: [
+        { value: 'exciting', label: 'Exciting' },
+        { value: 'urgent', label: 'Urgent' },
+        { value: 'friendly', label: 'Friendly' }
+      ],
+      tooltip: "Select the tone for your promotional message"
+    }
+  ],
+  engagement: [
+    { id: 'topic', label: "What's Your Question or Hook?", placeholder: "e.g., What's your go-to snack?" },
+    { id: 'tiein', label: "How's It Tied to Your Business?", placeholder: "e.g., Our Bakery" },
+    {
+      id: 'goal',
+      label: "What's Your Goal?",
+      type: 'select',
+      options: [
+        { value: 'comments', label: 'Get Comments' },
+        { value: 'chat', label: 'Start a Chat' },
+        { value: 'shares', label: 'Get Shares' }
+      ]
+    },
+    {
+      id: 'tone',
+      label: "How Should It Feel?",
+      type: 'select',
+      options: [
+        { value: 'casual', label: 'Casual' },
+        { value: 'fun', label: 'Fun' },
+        { value: 'curious', label: 'Curious' }
+      ]
+    }
+  ],
+  educational: [
+    { id: 'topic', label: "What Are You Teaching?", placeholder: "e.g., Easy Meal Prep" },
+    { id: 'tip', label: "What's the Key Tip?", placeholder: "e.g., Plan your meals on Sunday", multiline: true },
+    { id: 'industry', label: "Your Business Niche", placeholder: "e.g., Healthy Eating" },
+    {
+      id: 'tone',
+      label: "How Should It Sound?",
+      type: 'select',
+      options: [
+        { value: 'helpful', label: 'Helpful' },
+        { value: 'smart', label: 'Smart' },
+        { value: 'pro', label: 'Pro' }
+      ]
+    }
+  ],
+  testimonial: [
+    { id: 'name', label: "Customer's Name", placeholder: "e.g., Mike R." },
+    { id: 'quote', label: "What Did They Say?", placeholder: "e.g., Best service ever!", multiline: true },
+    { id: 'product', label: "What's It About?", placeholder: "e.g., Our Cleaning Service" },
+    {
+      id: 'tone',
+      label: "How Should It Feel?",
+      type: 'select',
+      options: [
+        { value: 'happy', label: 'Happy' },
+        { value: 'thankful', label: 'Thankful' },
+        { value: 'real', label: 'Real' }
+      ]
+    }
+  ],
+  event: [
+    { id: 'name', label: "What's the Event?", placeholder: "e.g., Holiday Sale" },
+    { id: 'datetime', label: "When Is It?", placeholder: "e.g., Dec 15, 10 AM-4 PM" },
+    { id: 'location', label: "Where's It Happening?", placeholder: "e.g., Our Store or Online" },
+    {
+      id: 'cta',
+      label: "What Should They Do?",
+      type: 'select',
+      options: [
+        { value: 'Join Us', label: 'Join Us' },
+        { value: 'RSVP Now', label: 'RSVP Now' },
+        { value: 'Don\'t Miss Out', label: 'Don\'t Miss Out' }
+      ]
+    },
+    {
+      id: 'tone',
+      label: "How Should It Sound?",
+      type: 'select',
+      options: [
+        { value: 'exciting', label: 'Exciting' },
+        { value: 'welcoming', label: 'Welcoming' },
+        { value: 'urgent', label: 'Urgent' }
+      ]
+    }
+  ],
+  'product-launch': [
+    { id: 'product', label: "What's the New Product?", placeholder: "e.g., Eco-Friendly Mug" },
+    { id: 'feature', label: "What Makes It Special?", placeholder: "e.g., Keeps Drinks Hot for 12 Hours" },
+    { id: 'avail', label: "When Can They Get It?", placeholder: "e.g., Available Now" },
+    {
+      id: 'cta',
+      label: "What Should They Do?",
+      type: 'select',
+      options: [
+        { value: 'Shop Now', label: 'Shop Now' },
+        { value: 'Get Yours', label: 'Get Yours' },
+        { value: 'Learn More', label: 'Learn More' }
+      ]
+    },
+    {
+      id: 'tone',
+      label: "How Should It Sound?",
+      type: 'select',
+      options: [
+        { value: 'exciting', label: 'Exciting' },
+        { value: 'bold', label: 'Bold' },
+        { value: 'friendly', label: 'Friendly' }
+      ]
+    }
+  ]
 };
 
-// ===== FORM OPTIONS =====
-const BUSINESS_NICHES = [
-  { value: 'None', label: 'None' },
-  { value: 'Fitness', label: 'Fitness' },
-  { value: 'Fashion', label: 'Fashion' },
-  { value: 'Technology', label: 'Technology' },
-  { value: 'Food & Beverage', label: 'Food & Beverage' },
-  { value: 'Beauty', label: 'Beauty' },
-  { value: 'Travel', label: 'Travel' },
-  { value: 'Health & Wellness', label: 'Health & Wellness' },
-  { value: 'Education', label: 'Education' },
-  { value: 'Finance', label: 'Finance' },
-  { value: 'Real Estate', label: 'Real Estate' }
-];
-
-const PRIMARY_GOALS = [
-  { value: 'None', label: 'None' },
-  { value: 'Share News', label: 'Share News' },
-  { value: 'Boost Engagement', label: 'Boost Engagement' },
-  { value: 'Increase Conversions', label: 'Increase Conversions' },
-  { value: 'Brand Awareness', label: 'Brand Awareness' },
-  { value: 'Drive Traffic', label: 'Drive Traffic' },
-  { value: 'Educate Audience', label: 'Educate Audience' },
-  { value: 'Generate Leads', label: 'Generate Leads' },
-  { value: 'Promote Offers', label: 'Promote Offers' },
-  { value: 'Build Community', label: 'Build Community' },
-  { value: 'Increase Followers', label: 'Increase Followers' }
-];
-
-const TARGET_AUDIENCES = [
-  { value: 'None', label: 'None' },
-  { value: 'Loyal Fans', label: 'Loyal Fans' },
-  { value: 'New Customers', label: 'New Customers' },
-  { value: 'Young Professionals', label: 'Young Professionals' },
-  { value: 'Parents', label: 'Parents' },
-  { value: 'Students', label: 'Students' },
-  { value: 'Entrepreneurs', label: 'Entrepreneurs' },
-  { value: 'Fitness Enthusiasts', label: 'Fitness Enthusiasts' },
-  { value: 'Tech Lovers', label: 'Tech Lovers' },
-  { value: 'Travelers', label: 'Travelers' },
-  { value: 'Luxury Shoppers', label: 'Luxury Shoppers' }
-];
-
-const PAIN_POINTS = [
-  { value: 'None', label: 'None' },
-  { value: 'Lack of Skills', label: 'Lack of Skills' },
-  { value: 'Time Constraints', label: 'Time Constraints' },
-  { value: 'Expensive Solutions', label: 'Expensive Solutions' },
-  { value: 'Lack of Motivation', label: 'Lack of Motivation' },
-  { value: 'Low Confidence', label: 'Low Confidence' },
-  { value: 'Difficulty Finding Quality', label: 'Difficulty Finding Quality' },
-  { value: 'Overwhelming Choices', label: 'Overwhelming Choices' },
-  { value: 'Trust Issues', label: 'Trust Issues' },
-  { value: 'Poor Customer Service', label: 'Poor Customer Service' },
-  { value: 'Need for Convenience', label: 'Need for Convenience' }
-];
-
-const CUSTOMER_MOTIVATIONS = [
-  { value: 'None', label: 'None' },
-  { value: 'Feel Good', label: 'Feel Good' },
-  { value: 'Save Money', label: 'Save Money' },
-  { value: 'Save Time', label: 'Save Time' },
-  { value: 'Improve Health', label: 'Improve Health' },
-  { value: 'Gain Knowledge', label: 'Gain Knowledge' },
-  { value: 'Be More Productive', label: 'Be More Productive' },
-  { value: 'Look Better', label: 'Look Better' },
-  { value: 'Achieve Goals', label: 'Achieve Goals' },
-  { value: 'Have Fun', label: 'Have Fun' },
-  { value: 'Stay Updated', label: 'Stay Updated' }
-];
-
-const EMOTIONAL_TRIGGERS = [
-  { value: 'None', label: 'None' },
-  { value: 'Curiosity', label: 'Curiosity' },
-  { value: 'Fear of Missing Out (FOMO)', label: 'Fear of Missing Out (FOMO)' },
-  { value: 'Inspiration', label: 'Inspiration' },
-  { value: 'Happiness', label: 'Happiness' },
-  { value: 'Urgency', label: 'Urgency' },
-  { value: 'Nostalgia', label: 'Nostalgia' },
-  { value: 'Empowerment', label: 'Empowerment' },
-  { value: 'Trust', label: 'Trust' },
-  { value: 'Exclusivity', label: 'Exclusivity' },
-  { value: 'Surprise', label: 'Surprise' }
-];
-
-const BRAND_VOICES = [
-  { value: 'None', label: 'None' },
-  { value: 'Witty', label: 'Witty' },
-  { value: 'Casual', label: 'Casual' },
-  { value: 'Professional', label: 'Professional' },
-  { value: 'Inspirational', label: 'Inspirational' },
-  { value: 'Funny', label: 'Funny' },
-  { value: 'Educational', label: 'Educational' },
-  { value: 'Bold', label: 'Bold' },
-  { value: 'Storytelling', label: 'Storytelling' },
-  { value: 'Luxury', label: 'Luxury' },
-  { value: 'Conversational', label: 'Conversational' }
-];
-
-const CONTENT_STYLES = [
-  { value: 'None', label: 'None' },
-  { value: 'List', label: 'List' },
-  { value: 'Storytelling', label: 'Storytelling' },
-  { value: 'Educational', label: 'Educational' },
-  { value: 'Behind-the-Scenes', label: 'Behind-the-Scenes' },
-  { value: 'Q&A', label: 'Q&A' },
-  { value: 'Polls & Questions', label: 'Polls & Questions' },
-  { value: 'User-Generated Content', label: 'User-Generated Content' },
-  { value: 'Case Studies', label: 'Case Studies' },
-  { value: 'Short & Snappy', label: 'Short & Snappy' },
-  { value: 'Memes & Humor', label: 'Memes & Humor' }
-];
-
-const CALLS_TO_ACTION = [
-  { value: 'None', label: 'None' },
-  { value: 'Visit Site', label: 'Visit Site' },
-  { value: 'Shop Now', label: 'Shop Now' },
-  { value: 'Sign Up', label: 'Sign Up' },
-  { value: 'Learn More', label: 'Learn More' },
-  { value: 'Download Now', label: 'Download Now' },
-  { value: 'Get Started', label: 'Get Started' },
-  { value: 'Book Now', label: 'Book Now' },
-  { value: 'Subscribe', label: 'Subscribe' },
-  { value: 'Contact Us', label: 'Contact Us' },
-  { value: 'Try for Free', label: 'Try for Free' }
-];
-
-const TIMING_CONTEXTS = [
-  { value: 'None', label: 'None' },
-  { value: 'Today Only', label: 'Today Only' },
-  { value: 'Limited Time', label: 'Limited Time' },
-  { value: 'Seasonal', label: 'Seasonal' },
-  { value: 'Weekend Special', label: 'Weekend Special' },
-  { value: 'Holiday Sale', label: 'Holiday Sale' },
-  { value: 'New Launch', label: 'New Launch' },
-  { value: 'Pre-Order', label: 'Pre-Order' },
-  { value: 'Monthly Offer', label: 'Monthly Offer' },
-  { value: 'Clearance Sale', label: 'Clearance Sale' },
-  { value: 'Event Exclusive', label: 'Event Exclusive' }
-];
-
-const TREND_TIE_INS = [
-  { value: 'None', label: 'None' },
-  { value: 'Viral Trend', label: 'Viral Trend' },
-  { value: 'Hashtag Challenge', label: 'Hashtag Challenge' },
-  { value: 'Seasonal Trend', label: 'Seasonal Trend' },
-  { value: 'Pop Culture Reference', label: 'Pop Culture Reference' },
-  { value: 'Influencer Collaboration', label: 'Influencer Collaboration' }
-];
-
-const SOCIAL_PROOFS = [
-  { value: 'None', label: 'None' },
-  { value: 'Best Seller', label: 'Best Seller' },
-  { value: 'Top Rated', label: 'Top Rated' },
-  { value: 'Customer Favorite', label: 'Customer Favorite' }
-];
-
-const UNIQUE_SELLING_POINTS = [
-  { value: 'None', label: 'None' },
-  { value: 'Eco Friendly', label: 'Eco Friendly' },
-  { value: 'Affordable', label: 'Affordable' },
-  { value: 'Luxury', label: 'Luxury' },
-  { value: 'Fast & Efficient', label: 'Fast & Efficient' },
-  { value: 'Customizable', label: 'Customizable' },
-  { value: 'Premium Quality', label: 'Premium Quality' },
-  { value: 'Innovative', label: 'Innovative' },
-  { value: 'Handmade', label: 'Handmade' },
-  { value: 'Limited Edition', label: 'Limited Edition' },
-  { value: 'Ethically Sourced', label: 'Ethically Sourced' }
-];
-
-const KEY_BENEFITS = [
-  { value: 'None', label: 'None' },
-  { value: 'Boost Confidence', label: 'Boost Confidence' },
-  { value: 'Save Time', label: 'Save Time' },
-  { value: 'Improve Health', label: 'Improve Health' },
-  { value: 'Increase Productivity', label: 'Increase Productivity' },
-  { value: 'Easy to Use', label: 'Easy to Use' },
-  { value: 'Cost-Effective', label: 'Cost-Effective' },
-  { value: 'Enhance Lifestyle', label: 'Enhance Lifestyle' },
-  { value: 'Provide Security', label: 'Provide Security' },
-  { value: 'Reduce Stress', label: 'Reduce Stress' },
-  { value: 'Support Growth', label: 'Support Growth' }
-];
-
-// ===== FORM STRUCTURE =====
-const FORM_SECTIONS: FormSection[] = [
-  {
-    id: 'business',
-    title: 'Business Details',
-    tooltip: 'Define your business characteristics and goals',
-    number: '1',
-    fields: [
-      {
-        id: 'businessNiche',
-        label: 'Business Niche',
-        type: 'select',
-        options: BUSINESS_NICHES
-      },
-      {
-        id: 'primaryGoal',
-        label: 'Primary Goal',
-        type: 'select',
-        options: PRIMARY_GOALS
-      }
-    ]
-  },
-  {
-    id: 'audience',
-    title: 'Audience Details',
-    tooltip: 'Understand and target your audience effectively',
-    number: '2',
-    fields: [
-      {
-        id: 'targetAudience',
-        label: 'Target Audience',
-        type: 'select',
-        options: TARGET_AUDIENCES
-      },
-      {
-        id: 'painPoint',
-        label: 'Pain Point',
-        type: 'select',
-        options: PAIN_POINTS
-      },
-      {
-        id: 'customerMotivation',
-        label: 'Customer Motivation',
-        type: 'select',
-        options: CUSTOMER_MOTIVATIONS
-      }
-    ]
-  },
-  {
-    id: 'content',
-    title: 'Content Style',
-    tooltip: "Define your content's tone and style",
-    number: '3',
-    fields: [
-      {
-        id: 'emotionalTrigger',
-        label: 'Emotional Trigger',
-        type: 'select',
-        options: EMOTIONAL_TRIGGERS
-      },
-      {
-        id: 'brandVoice',
-        label: 'Brand Voice',
-        type: 'select',
-        options: BRAND_VOICES
-      },
-      {
-        id: 'contentStyle',
-        label: 'Content Style',
-        type: 'select',
-        options: CONTENT_STYLES
-      },
-      {
-        id: 'engagementHook',
-        label: 'Engagement Hook',
-        type: 'radio',
-        options: [
-          { value: 'yes', label: 'Yes' },
-          { value: 'no', label: 'No' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'promotion',
-    title: 'Promotion & Context',
-    tooltip: 'Set your promotional strategy and context',
-    number: '4',
-    fields: [
-      {
-        id: 'callToAction',
-        label: 'Call to Action',
-        type: 'select',
-        options: CALLS_TO_ACTION
-      },
-      {
-        id: 'timingContext',
-        label: 'Timing Context',
-        type: 'select',
-        options: TIMING_CONTEXTS
-      },
-      {
-        id: 'trendTieIn',
-        label: 'Trend Tie-In',
-        type: 'select',
-        options: TREND_TIE_INS
-      },
-      {
-        id: 'brandTagline',
-        label: 'Brand Tagline',
-        type: 'text'
-      },
-      {
-        id: 'socialProof',
-        label: 'Social Proof',
-        type: 'select',
-        options: SOCIAL_PROOFS
-      }
-    ]
-  },
-  {
-    id: 'product',
-    title: 'Product/Service Details',
-    tooltip: 'Highlight your product or service features',
-    number: '5',
-    fields: [
-      {
-        id: 'productHighlight',
-        label: 'Product/Service Highlight',
-        type: 'text',
-        multiline: true,
-        rows: 2
-      },
-      {
-        id: 'uniqueSellingPoint',
-        label: 'Unique Selling Point',
-        type: 'select',
-        options: UNIQUE_SELLING_POINTS
-      },
-      {
-        id: 'keyBenefit',
-        label: 'Key Benefit',
-        type: 'select',
-        options: KEY_BENEFITS
-      },
-      {
-        id: 'keywordFocus',
-        label: 'Keyword Focus',
-        type: 'text'
-      }
-    ]
-  }
-];
-
-// ===== THEME STYLES =====
-const getThemeStyles = (isDarkMode: boolean, isThemeChanging: boolean): ThemeStyles => ({
-  card: {
-    backgroundColor: isDarkMode ? 'rgba(30, 30, 40, 0.4)' : 'rgba(255, 255, 255, 0.7)',
-    backdropFilter: 'blur(10px)',
-    border: 'none',
-    boxShadow: isDarkMode 
-      ? '0 8px 32px rgba(0, 0, 0, 0.2)' 
-      : '0 8px 32px rgba(0, 0, 0, 0.05)',
-  },
-  input: {
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: isDarkMode ? 'rgba(15, 15, 20, 0.5)' : 'rgba(255, 255, 255, 0.8)',
-      transition: 'all 0.2s ease-in-out',
-      '&:hover': {
-        backgroundColor: isDarkMode 
-          ? 'rgba(30, 30, 40, 0.8)' 
-          : 'rgba(122, 90, 248, 0.03)',
-      },
-      '&.Mui-focused': {
-        backgroundColor: isDarkMode 
-          ? 'rgba(30, 30, 40, 0.95)' 
-          : 'rgba(122, 90, 248, 0.05)',
-      }
-    },
-    '& .MuiInputLabel-root': {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
-    },
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: isDarkMode 
-        ? 'rgba(255, 255, 255, 0.15)' 
-        : 'rgba(0, 0, 0, 0.15)'
-    },
-    '& .MuiMenuItem-root': {
-      color: isDarkMode ? '#fff' : '#000'
-    }
-  },
-  text: {
-    primary: isDarkMode ? '#ffffff' : '#121212',
-    secondary: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
-    accent: 'linear-gradient(45deg, #7A5AF8, #6366f1)'
-  },
-  button: {
-    background: isDarkMode 
-      ? 'linear-gradient(45deg, #7A5AF8, #6366f1)' 
-      : '#7A5AF8',
-    color: '#ffffff',
-    boxShadow: isDarkMode 
-      ? '0 8px 16px rgba(122, 90, 248, 0.4)' 
-      : '0 8px 16px rgba(122, 90, 248, 0.3)',
-    '&:hover': {
-      background: isDarkMode 
-        ? 'linear-gradient(45deg, #6344d4, #5354d2)' 
-        : '#6344d4',
-      transform: 'translateY(-2px)',
-      boxShadow: isDarkMode 
-        ? '0 12px 20px rgba(122, 90, 248, 0.5)' 
-        : '0 12px 20px rgba(122, 90, 248, 0.4)'
-    }
-  },
-  background: {
-    main: isDarkMode 
-      ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
-      : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
-    paper: isDarkMode ? '#1e1e2d' : '#ffffff'
-  }
-});
+const STEPS = ['Choose Type', 'Business Info', 'Post Details', 'Generate'];
 
 /**
  * Main Generation component for creating social media captions
  */
 const Generation = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useCustomTheme();
   const [mounted, setMounted] = useState<boolean>(false);
-  const [isThemeChanging, setIsThemeChanging] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormState>(initialFormState);
-
-  // Get theme-specific styles
-  const themeStyles = getThemeStyles(isDarkMode, isThemeChanging);
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
+  const [formState, setFormState] = useState<FormState>({
+    postType: '',
+    businessType: '',
+  });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [generatedCaption, setGeneratedCaption] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -548,183 +261,48 @@ const Generation = () => {
     document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
   }, [isDarkMode]);
 
-  // Event Handlers
-  const handleThemeToggle = (): void => {
-    setIsThemeChanging(true);
-    toggleTheme();
-    setTimeout(() => setIsThemeChanging(false), 400);
+  const validateField = (field: string, value: string): string => {
+    if (!value) return 'This field is required';
+    return '';
   };
 
-  const handleChange = (field: FormFieldId) => 
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData(prev => ({
-        ...prev,
-        [field]: event.target.value
-      }));
-    };
+  const handlePostTypeChange = (type: PostType) => {
+    setFormState(prev => ({ ...prev, postType: type }));
+  };
 
-  // UI Components
-  const SectionTitle = ({ title, tooltip, number }: SectionTitleProps) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-      {number && (
-        <Box sx={{ 
-          width: 30, 
-          height: 30, 
-          borderRadius: '50%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          background: themeStyles.text.accent,
-          color: 'white',
-          fontWeight: 'bold',
-          mr: 1.5
-        }}>
-          {number}
-        </Box>
-      )}
-      <Typography variant="h6" sx={{ 
-        fontWeight: 600,
-        background: themeStyles.text.accent,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent'
-      }}>
-        {title}
-      </Typography>
-      <Tooltip title={tooltip} arrow>
-        <IconButton size="small" sx={{ ml: 1 }}>
-          <IoMdInformationCircleOutline style={{ 
-            fontSize: 18, 
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'
-          }} />
-        </IconButton>
-      </Tooltip>
-    </Box>
-  );
+  const handleChange = (field: string, value: string) => {
+    setFormState(prev => ({ ...prev, [field]: value }));
+    setFormErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
+  };
 
-  const StyledTextField = (props: TextFieldProps) => (
-    <TextField
-      {...props}
-      size="small"
-      sx={{
-        ...themeStyles.input,
-        mb: 2.5,
-        ...(props.sx || {})
-      }}
-    />
-  );
-
-  const renderField = (field: FormField) => {
-    switch (field.type) {
-      case 'select':
-        return (
-          <StyledTextField
-            key={field.id}
-            select
-            fullWidth
-            label={field.label}
-            value={formData[field.id]}
-            onChange={handleChange(field.id)}
-            margin="normal"
-            helperText=""
-          >
-            {field.options?.map(option => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </StyledTextField>
-        );
-      
-      case 'text':
-        return (
-          <StyledTextField
-            key={field.id}
-            fullWidth
-            label={field.label}
-            value={formData[field.id]}
-            onChange={handleChange(field.id)}
-            margin="normal"
-            multiline={field.multiline}
-            rows={field.rows}
-            helperText=""
-          />
-        );
-      
-      case 'radio':
-        return (
-          <FormControl key={field.id} margin="normal">
-            <FormLabel sx={{ 
-              fontSize: '0.875rem', 
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
-              '&.Mui-focused': {
-                color: isDarkMode ? '#7A5AF8' : '#7A5AF8'
-              }
-            }}>
-              {field.label}
-            </FormLabel>
-            <RadioGroup
-              row
-              value={formData[field.id]}
-              onChange={handleChange(field.id)}
-            >
-              {field.options?.map(option => (
-                <FormControlLabel
-                  key={option.value}
-                  value={option.value} 
-                  control={
-                    <Radio 
-                      size="small" 
-                      sx={{
-                        color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : undefined,
-                        '&.Mui-checked': {
-                          color: '#7A5AF8',
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Typography sx={{ 
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.87)' : undefined,
-                      fontSize: '0.875rem'
-                    }}>
-                      {option.label}
-                    </Typography>
-                  } 
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        );
-      
-      default:
-        return null;
+  const handleGenerate = async () => {
+    try {
+      setIsGenerating(true);
+      setError('');
+      // TODO: Implement actual caption generation logic here
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setGeneratedCaption("This is a sample generated caption based on your inputs.");
+      setShowPreview(true);
+    } catch (err) {
+      setError('Failed to generate captions. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const renderFormSection = (section: FormSection) => (
-    <Grid item xs={12} md={6} lg={4} key={section.id}>
-      <Paper elevation={0} sx={{ 
-        p: 3, 
-        height: '100%', 
-        borderRadius: 3,
-        ...themeStyles.card
-      }}>
-        <SectionTitle 
-          title={section.title} 
-          tooltip={section.tooltip} 
-          number={section.number} 
-        />
-        {section.fields.map(field => renderField(field))}
-      </Paper>
-    </Grid>
-  );
+  const handleCopyCaption = () => {
+    navigator.clipboard.writeText(generatedCaption);
+    // Show success message
+  };
 
   if (!mounted) return null;
 
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      backgroundColor: themeStyles.background.main,
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
+        : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
       transition: `background-color ${TRANSITION_TIMING}`,
       position: 'relative',
       pt: 10,
@@ -736,11 +314,11 @@ const Generation = () => {
           position: 'fixed',
           top: 20,
           left: 20,
-          color: isDarkMode ? themeStyles.text.primary : themeStyles.text.primary,
+          color: isDarkMode ? '#ffffff' : '#121212',
           bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
           zIndex: 1100,
           '&:hover': {
-            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : alpha(theme.palette.primary.main, 0.1),
+            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
           },
           transition: TRANSITION_TIMING,
         }}
@@ -762,7 +340,7 @@ const Generation = () => {
           gap: { xs: 0.5, sm: 1 },
           background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
           color: isDarkMode ? '#fff' : '#000',
-          filter: isThemeChanging ? 'blur(0.3px)' : 'none',
+          filter: 'blur(0.3px)',
           transform: 'scale(1) !important',
           transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
           border: 0,
@@ -786,7 +364,7 @@ const Generation = () => {
         </IconButton>
         <Switch
           checked={isDarkMode}
-          onChange={handleThemeToggle}
+          onChange={toggleTheme}
           sx={{
             '& .MuiSwitch-switchBase': {
               color: isDarkMode ? '#405DE6' : '#757575',
@@ -817,69 +395,397 @@ const Generation = () => {
         </IconButton>
       </Paper>
 
-      <Container maxWidth="lg" sx={{ mb: 5 }}>
+      <Container maxWidth="lg" sx={{ mb: 5, pt: 2 }}>
         {/* Header */}
-        <Box component={motion.div}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          sx={{ textAlign: 'center', mb: 6 }}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: { xs: 2, sm: 4 },
+          }}
         >
-          <Typography variant="h3" gutterBottom sx={{ 
-            fontWeight: 700,
-            background: themeStyles.text.accent,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 2,
-            textShadow: isDarkMode ? '0 0 30px rgba(122, 90, 248, 0.3)' : 'none'
-          }}>
-            ✨ Generate Your Caption
+          <Box
+            component={motion.div}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 100 }}
+            sx={{
+              mb: { xs: 1, sm: 1.5 },
+              p: { xs: 1, sm: 1.5 },
+              borderRadius: '50%',
+              background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <FaMagic size={isMobile ? 20 : 28} color="white" />
+          </Box>
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: { xs: '1.75rem', sm: '2.25rem' },
+              fontWeight: 700,
+              mb: 1,
+              textAlign: 'center',
+              color: isDarkMode ? '#fff' : '#000'
+            }}
+          >
+            Generate Your Caption
           </Typography>
-          <Typography variant="h6" sx={{ 
-            color: themeStyles.text.secondary, 
-            fontWeight: 400,
-            maxWidth: '700px',
-            margin: '0 auto'
-          }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: '0.9rem', sm: '1.1rem' },
+              color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+              mb: 2,
+              textAlign: 'center'
+            }}
+          >
             Create engaging captions that capture attention and drive engagement
           </Typography>
         </Box>
 
-        {/* Form Sections */}
-        <Grid container spacing={3}>
-          {FORM_SECTIONS.map(section => renderFormSection(section))}
-        </Grid>
-        
-        {/* Generate Button */}
-        <Box 
-          component={motion.div}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            mt: 6,
-            mb: 8
+        {/* Form Content */}
+        <Paper
+          elevation={3}
+          sx={{
+            p: 3,
+            background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 2,
+            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}
         >
-          <Button 
-            variant="contained" 
-            startIcon={<AutoAwesomeIcon />}
-            sx={{
-              ...themeStyles.button,
-              fontSize: "1.2rem", 
-              px: 6, 
-              py: 2,
-              borderRadius: 3,
-              textTransform: 'none',
-              transition: 'all 0.3s ease-in-out',
-            }}
-          >
-            Generate Caption
-          </Button>
-        </Box>
+          {/* Post Type Selection */}
+          <Box sx={{ mb: 4 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                color: isDarkMode ? '#fff' : '#000',
+                textAlign: 'center'
+              }}
+            >
+              Choose Your Post Type
+            </Typography>
+            <Grid container spacing={2}>
+              {POST_TYPES.map((type) => (
+                <Grid 
+                  item 
+                  xs={12} 
+                  sm={6} 
+                  md={4} 
+                  key={type.value}
+                  sx={{
+                    display: formState.postType && formState.postType !== type.value ? 'none' : 'block',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {formState.postType === type.value ? (
+                    <FormControl fullWidth>
+                      <Select
+                        value={formState.postType}
+                        onChange={(e) => handlePostTypeChange(e.target.value as PostType)}
+                        sx={{
+                          py: 2,
+                          px: 3,
+                          height: 'auto',
+                          borderRadius: 2,
+                          background: isDarkMode 
+                            ? 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))'
+                            : 'linear-gradient(45deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1), rgba(131,58,180,0.1))',
+                          border: `1px solid ${
+                            isDarkMode
+                              ? 'rgba(64,93,230,0.5)'
+                              : 'rgba(64,93,230,0.3)'
+                          }`,
+                          color: isDarkMode ? '#fff' : '#000',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            border: 'none',
+                          },
+                          '&:hover': {
+                            background: isDarkMode 
+                              ? 'linear-gradient(45deg, rgba(64,93,230,0.3), rgba(88,81,219,0.3), rgba(131,58,180,0.3))'
+                              : 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))',
+                          },
+                          '& .MuiSelect-select': {
+                            py: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          },
+                        }}
+                      >
+                        {POST_TYPES.map((option) => (
+                          <MenuItem 
+                            key={option.value} 
+                            value={option.value}
+                            sx={{
+                              py: 2,
+                              px: 3,
+                              '&:hover': {
+                                background: isDarkMode 
+                                  ? 'rgba(64,93,230,0.1)'
+                                  : 'rgba(64,93,230,0.05)',
+                              },
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle1"
+                              sx={{ 
+                                fontWeight: 600,
+                              }}
+                            >
+                              {option.label}
+                            </Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={() => handlePostTypeChange(type.value as PostType)}
+                      sx={{
+                        py: 2,
+                        px: 3,
+                        height: 'auto',
+                        borderRadius: 2,
+                        border: `1px solid ${
+                          isDarkMode
+                            ? 'rgba(255,255,255,0.1)'
+                            : 'rgba(0,0,0,0.1)'
+                        }`,
+                        color: isDarkMode ? '#fff' : '#000',
+                        '&:hover': {
+                          background: isDarkMode
+                            ? 'rgba(255,255,255,0.05)'
+                            : 'rgba(0,0,0,0.05)',
+                          borderColor: isDarkMode
+                            ? 'rgba(64,93,230,0.8)'
+                            : 'rgba(64,93,230,0.5)',
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ 
+                          fontWeight: 600,
+                        }}
+                      >
+                        {type.label}
+                      </Typography>
+                    </Button>
+                  )}
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Business Type Selection */}
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Business Type</InputLabel>
+            <Select
+              value={formState.businessType}
+              onChange={(e) => handleChange('businessType', e.target.value)}
+              label="Business Type"
+              error={!!formErrors.businessType}
+              sx={{
+                color: isDarkMode ? '#fff' : '#000',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                },
+              }}
+            >
+              {BUSINESS_TYPES.map((type) => (
+                <MenuItem key={type.value} value={type.value}>
+                  {type.label}
+                </MenuItem>
+              ))}
+            </Select>
+            {formErrors.businessType && (
+              <Typography color="error" sx={{ mt: 1, fontSize: '0.75rem' }}>
+                {formErrors.businessType}
+              </Typography>
+            )}
+          </FormControl>
+
+          {/* Post Type Specific Fields */}
+          {formState.postType && (
+            <Box>
+              {FORM_FIELDS[formState.postType].map((field) => (
+                <Box key={field.id} sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="subtitle1" sx={{ mr: 1 }}>
+                      {field.label}
+                    </Typography>
+                    {field.tooltip && (
+                      <Tooltip title={field.tooltip}>
+                        <IconButton size="small" sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
+                          <FaInfoCircle />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                  {field.type === 'select' ? (
+                    <FormControl fullWidth error={!!formErrors[field.id]}>
+                      <Select
+                        value={formState[field.id] || ''}
+                        onChange={(e) => handleChange(field.id, e.target.value)}
+                        label={field.label}
+                        sx={{
+                          color: isDarkMode ? '#fff' : '#000',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                          },
+                        }}
+                      >
+                        {field.options?.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formErrors[field.id] && (
+                        <Typography color="error" sx={{ mt: 1, fontSize: '0.75rem' }}>
+                          {formErrors[field.id]}
+                        </Typography>
+                      )}
+                    </FormControl>
+                  ) : (
+                    <TextField
+                      fullWidth
+                      placeholder={field.placeholder}
+                      value={formState[field.id] || ''}
+                      onChange={(e) => handleChange(field.id, e.target.value)}
+                      error={!!formErrors[field.id]}
+                      multiline={field.type === 'multiline'}
+                      rows={field.type === 'multiline' ? 4 : 1}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          color: isDarkMode ? '#fff' : '#000',
+                          '& fieldset': {
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                        },
+                      }}
+                    />
+                  )}
+                </Box>
+              ))}
+            </Box>
+          )}
+
+          {/* Generate Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Button
+              variant="contained"
+              disabled={isGenerating}
+              onClick={handleGenerate}
+              startIcon={isGenerating ? <CircularProgress size={isMobile ? 16 : 20} color="inherit" /> : <FaMagic />}
+              sx={{
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 3, sm: 4 },
+                borderRadius: 3,
+                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                },
+                '&.Mui-disabled': {
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                },
+              }}
+            >
+              {isGenerating ? 'Generating...' : 'Generate Caption'}
+            </Button>
+          </Box>
+
+          {/* Generated Caption Preview */}
+          {showPreview && (
+            <Paper
+              elevation={3}
+              sx={{
+                p: 3,
+                mt: 4,
+                background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#000' }}>
+                Generated Caption
+              </Typography>
+              <Typography
+                sx={{
+                  mb: 2,
+                  color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                  fontStyle: 'italic',
+                }}
+              >
+                {generatedCaption}
+              </Typography>
+              <Button
+                startIcon={<FaCopy />}
+                onClick={handleCopyCaption}
+                sx={{
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  color: isDarkMode ? '#fff' : '#000',
+                  '&:hover': {
+                    background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                  },
+                }}
+              >
+                Copy Caption
+              </Button>
+            </Paper>
+          )}
+        </Paper>
       </Container>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setError('')}
+          severity="error"
+          sx={{
+            width: '100%',
+            backgroundColor: isDarkMode ? '#ff5252' : '#ffebee',
+            color: isDarkMode ? '#fff' : '#c62828',
+          }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
 
       {/* Footer */}
       <Box sx={{ 
