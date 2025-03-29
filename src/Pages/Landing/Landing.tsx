@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
+import FeedbackButton from '../../components/FeedbackButton'
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -607,7 +608,7 @@ const Landing = () => {
                 >
                   Join us on this journey and experience the power of AI-driven captions that transform your social media game. Whether you're posting for fun, business, or influence, GloCap is here to make every caption count!
                 </Typography>
-                <Button
+                {/* <Button
                   variant="contained"
                   size={isMobile ? "medium" : "large"}
                   onClick={() => navigate('/generate')}
@@ -624,7 +625,26 @@ const Landing = () => {
                   }}
                 >
                   Start Creating Captions
-                </Button>
+                </Button> */}
+                <FeedbackButton
+                  variant="contained"
+                  size={isMobile ? "medium" : "large"}
+                  isKeyAction={true}
+                  onClick={() => navigate('/generate')}
+                  sx={{
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 4, sm: 6 },
+                    borderRadius: 3,
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                    },
+                  }}
+                >
+                  Start Creating Captions
+                </FeedbackButton>
               </Box>
             </Box>
           </Box>
