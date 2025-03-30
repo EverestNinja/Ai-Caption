@@ -127,7 +127,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👨‍💻 Developer
 
-Built with ❤️ by [Tech.Everest](https://github.com/EverestNinja)
+Built with ❤️
 
 ## 🔗 Links
 
