@@ -47,8 +47,7 @@ GloCap is an AI-powered Caption Generator built using Vite + React. The applicat
    - Character length control
 
 2. Customization Options
-   - Multiple post types (Actionable, Inspiring, Promotional, Reels, Stories)
-   - Various tones (Fun, Poetic, Casual, Informative, Formal, Witty)
+
    - Hashtag generation
    - Emoji integration
 
