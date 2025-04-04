@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme as useCustomTheme } from '../../context/ThemeContext';
 import Footer from '../../components/Footer/Footer';
 import FeedbackButton from '../../components/FeedbackButton';
+import { usePositiveMessage } from '../../context/PositiveMessageContext';
 
 // ===== TYPES =====
 type PostType = 'promotional' | 'engagement' | 'educational' | 'testimonial' | 'event' | 'product-launch';
@@ -239,6 +240,7 @@ const STEPS = ['Choose Type', 'Business Info', 'Post Details', 'Generate'];
 const Generation = () => {
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useCustomTheme();
+  const { trackAction } = usePositiveMessage();
   const [mounted, setMounted] = useState<boolean>(false);
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -284,6 +286,7 @@ const Generation = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       setGeneratedCaption("This is a sample generated caption based on your inputs.");
       setShowPreview(true);
+      trackAction(true);
     } catch (err) {
       setError('Failed to generate captions. Please try again.');
     } finally {
@@ -294,6 +297,7 @@ const Generation = () => {
   const handleCopyCaption = () => {
     navigator.clipboard.writeText(generatedCaption);
     // Show success message
+    trackAction(true);
   };
 
   if (!mounted) return null;

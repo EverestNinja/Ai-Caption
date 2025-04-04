@@ -5,16 +5,19 @@ import Routes from './Routes';
 import { FeedbackProvider } from './context/FeedbackContext';
 // import { GlobalStyles } from '@mui/material';
 import GlobalStyles from './components/GlobalStyles';
+import { PositiveMessageProvider } from './context/PositiveMessageContext';
 
 const App = () => {
   return (
     <ThemeProvider>
       <FeedbackProvider>
-        <GlobalStyles />
-        <Router>
-          <Routes />
-          <Analytics />
-        </Router>
+        <PositiveMessageProvider>
+          <GlobalStyles />
+          <Router>
+            <Routes />
+            <Analytics />
+          </Router>
+        </PositiveMessageProvider>
       </FeedbackProvider>
     </ThemeProvider>
   );

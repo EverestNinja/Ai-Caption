@@ -8,6 +8,7 @@ import Layout from '../../components/Layout';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
 import FeedbackButton from '../../components/FeedbackButton'
+import { usePositiveMessage } from '../../context/PositiveMessageContext';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -28,6 +29,7 @@ const containerVariants = {
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { trackAction } = usePositiveMessage();
   const isMobile = useMediaQuery('(max-width:600px)');
   const { isDarkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -267,10 +269,13 @@ const Landing = () => {
               Transform your social media presence with AI-powered captions that engage, inspire, and convert
             </Typography>
 
-            <Button
+            <FeedbackButton
               variant="contained"
               size={isMobile ? "medium" : "large"}
-              onClick={() => navigate('/generate')}
+              onClick={() => {
+                trackAction(); // Track general action
+                navigate('/generate');
+              }}
               sx={{
                 py: { xs: 1.5, sm: 2 },
                 px: { xs: 4, sm: 8 },
@@ -290,7 +295,7 @@ const Landing = () => {
               }}
             >
               Get Started Free
-            </Button>
+            </FeedbackButton>
           </Box>
 
           {/* Features Section - Enhanced for mobile */}
@@ -630,7 +635,10 @@ const Landing = () => {
                   variant="contained"
                   size={isMobile ? "medium" : "large"}
                   isKeyAction={true}
-                  onClick={() => navigate('/generate')}
+                  onClick={() => {
+                    trackAction();
+                    navigate('/generate');
+                  }}
                   sx={{
                     py: { xs: 1.5, sm: 2 },
                     px: { xs: 4, sm: 6 },
