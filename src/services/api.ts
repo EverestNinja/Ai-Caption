@@ -61,21 +61,6 @@ export class ApiError extends Error {
 // Utility functions
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getBusinessDescription = (businessType: string, customBusinessType?: string): string => {
-  if (businessType === 'custom' && customBusinessType) {
-    return customBusinessType;
-  }
-
-  const businessDescriptions: Record<string, string> = {
-    'restaurant': 'a restaurant business',
-    'computer-shop': 'a computer and technology store',
-    'clothing': 'a clothing and fashion business',
-    'coffee-shop': 'a coffee shop and café'
-  };
-
-  return businessDescriptions[businessType] || 'a business';
-};
-
 const getEmojiSet = (businessType: string): string[] => {
   const emojiSets: Record<string, string[]> = {
     'restaurant': ['🍽️', '🍕', '🍔', '🥗', '🍷', '😋', '👨‍🍳', '🌟'],
