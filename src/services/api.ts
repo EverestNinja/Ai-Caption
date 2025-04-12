@@ -131,6 +131,8 @@ const generatePrompt = (formState: FormState): string => {
   // Add emojis instruction if enabled
   if (includeEmojis) {
     prompt += 'Use emojis to make the caption more engaging. ';
+  } else {
+    prompt += 'Do not use any emojis in the caption. ';
   }
 
   return prompt;
@@ -265,7 +267,7 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
       if (response.choices && response.choices.length > 0) {
         let caption = response.choices[0].message.content.trim();
         
-        // Add emojis if enabled
+        // Only add emojis if explicitly enabled
         if (formState.includeEmojis) {
           const emojiSet = getEmojiSet(formState.businessType);
           const randomEmojis = [...emojiSet]
@@ -276,7 +278,7 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
           caption = `${randomEmojis.join(' ')} ${caption} ${randomEmojis.sort(() => 0.5 - Math.random()).join(' ')}`;
         }
         
-        // Add hashtags if enabled
+        // Only add hashtags if explicitly enabled
         if (formState.includeHashtags) {
           const hashtags = generateHashtags(formState.businessType, formState.postType);
           caption = `${caption}\n\n${hashtags}`;
