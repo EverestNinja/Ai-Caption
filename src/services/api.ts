@@ -89,60 +89,64 @@ const getEmojiSet = (businessType: string): string[] => {
 };
 
 const generatePrompt = (formState: FormState): string => {
-  const {
-    postType,
-    businessType,
-    customBusinessType,
-    includeHashtags,
-    includeEmojis,
-    ...customFields
-  } = formState;
-
-  const businessDescription = getBusinessDescription(businessType, customBusinessType);
-  let prompt = `Create an engaging social media caption for ${businessDescription}. `;
-
-  // Add post type specific details
+  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, ...fields } = formState;
+  const businessTypeText = businessType === 'custom' ? customBusinessType : businessType;
+  
+  let prompt = `Create a ${postType} social media caption for a ${businessTypeText} business. `;
+  
+  // Add specific instructions based on post type
   switch (postType) {
     case 'promotional':
-      prompt += `This is a promotional post highlighting ${customFields.product || 'our products/services'}. `;
-      prompt += `Special offer: ${customFields.offer || 'exclusive deal'}. `;
-      prompt += `Target audience: ${customFields.audience || 'our valued customers'}. `;
+      prompt += `The caption should promote ${fields.product} with the offer "${fields.offer}". `;
+      prompt += `Target audience: ${fields.audience}. `;
+      prompt += `Call to action: ${fields.cta}. `;
+      prompt += `Tone: ${fields.tone}. `;
       break;
-
     case 'engagement':
-      prompt += `This is an engagement post asking: "${customFields.topic || 'thought-provoking question'}" `;
-      prompt += `related to ${customFields.tiein || businessDescription}. `;
+      prompt += `Topic: ${fields.topic}. `;
+      prompt += `Tie-in: ${fields.tiein}. `;
+      prompt += `Goal: ${fields.goal}. `;
+      prompt += `Tone: ${fields.tone}. `;
       break;
-
     case 'testimonial':
-      prompt += `This is a testimonial post from ${customFields.name || 'a satisfied customer'}. `;
-      prompt += `Their feedback: "${customFields.quote || 'positive experience'}" `;
+      prompt += `Customer name: ${fields.name}. `;
+      prompt += `Quote: "${fields.quote}". `;
+      prompt += `Product/service: ${fields.product}. `;
+      prompt += `Tone: ${fields.tone}. `;
       break;
-
     case 'event':
-      prompt += `This is an event announcement for ${customFields.name || 'our upcoming event'}. `;
-      prompt += `Date/Time: ${customFields.datetime || 'specific date and time'}. `;
-      prompt += `Location: ${customFields.location || 'event location'}. `;
+      prompt += `Event name: ${fields.name}. `;
+      prompt += `Date/time: ${fields.datetime}. `;
+      prompt += `Location: ${fields.location}. `;
+      prompt += `Call to action: ${fields.cta}. `;
+      prompt += `Tone: ${fields.tone}. `;
       break;
-
     case 'product-launch':
-      prompt += `This is a product launch announcement for ${customFields.product || 'our new product'}. `;
-      prompt += `Key features: ${customFields.feature || 'standout features'}. `;
+      prompt += `Product: ${fields.product}. `;
+      prompt += `Key feature: ${fields.feature}. `;
+      prompt += `Availability: ${fields.avail}. `;
+      prompt += `Call to action: ${fields.cta}. `;
+      prompt += `Tone: ${fields.tone}. `;
+      break;
+    case 'custom':
+      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Topic: ${fields.topic}. `;
+      prompt += `Target audience: ${fields.audience}. `;
+      prompt += `Writing style: ${fields.style}. `;
+      prompt += `Call to action: ${fields.cta}. `;
+      prompt += `Photo description: ${fields.photoDescription}. `;
       break;
   }
 
-  // Add styling instructions
+  // Add hashtags instruction if enabled
   if (includeHashtags) {
-    prompt += `Include 3-5 relevant hashtags at the end. `;
+    prompt += 'Include relevant hashtags at the end. ';
   }
 
+  // Add emojis instruction if enabled
   if (includeEmojis) {
-    prompt += `Use 2-3 relevant emojis to enhance the message. `;
+    prompt += 'Use emojis to make the caption more engaging. ';
   }
-
-  // Add tone and style
-  prompt += `Tone: ${customFields.tone || 'professional and engaging'}. `;
-  prompt += `Style: ${customFields.style || 'conversational and authentic'}. `;
 
   return prompt;
 };
