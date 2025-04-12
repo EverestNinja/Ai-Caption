@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 // MUI Components
 import { 
   Container, Typography, Box, IconButton, 
@@ -8,7 +8,7 @@ import {
   DialogTitle, DialogContent, DialogActions, FormControlLabel, Slider
 } from "@mui/material";
 // Icons
-import { MdArrowBack, MdRefresh, MdCloudUpload } from 'react-icons/md';
+import { MdArrowBack, MdRefresh } from 'react-icons/md';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck } from 'react-icons/fa';
 import { BsEmojiSmile } from 'react-icons/bs';
@@ -19,6 +19,7 @@ import { useTheme as useCustomTheme } from '../../context/ThemeContext';
 import Footer from '../../components/Footer/Footer';
 import Tooltip from '@mui/material/Tooltip'; // Explicit import for Tooltip
 import Chip from '@mui/material/Chip'; // Explicit import for Chip
+import { generateCaptions } from '../../services/api'; // Import the generateCaptions function
 
 // ===== TYPES =====
 type PostType = 'promotional' | 'engagement' | 'testimonial' | 'event' | 'product-launch' | 'custom';
@@ -48,6 +49,11 @@ interface FormState {
 
 interface FormErrors {
   [key: string]: string;
+}
+
+interface GeneratedCaption {
+  text: string;
+  // Add any other necessary properties here
 }
 
 // ===== CONSTANTS =====
@@ -207,7 +213,7 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
   custom: [
     {
       id: 'tone',
-      label: 'Select Tone(s)',
+      label: 'Select Tone',
       type: 'select',
       options: [
         { value: 'funny', label: 'Funny' },
@@ -216,8 +222,8 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'inspirational', label: 'Inspirational' },
         { value: 'romantic', label: 'Romantic' }
       ],
-      tooltip: 'Choose one or more tones for your caption',
-      multiline: true
+      tooltip: 'Choose a tone for your caption',
+      multiline: false
     },
     {
       id: 'topic',
@@ -246,7 +252,7 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
     },
     {
       id: 'style',
-      label: 'Select Writing Style(s)',
+      label: 'Select Writing Style',
       type: 'select',
       options: [
         { value: 'casual', label: 'Casual' },
@@ -255,12 +261,12 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'storytelling', label: 'Storytelling' },
         { value: 'corporate', label: 'Corporate' }
       ],
-      tooltip: 'Choose one or more writing styles',
-      multiline: true
+      tooltip: 'Choose a writing style',
+      multiline: false
     },
     {
       id: 'cta',
-      label: 'Select Call to Action(s)',
+      label: 'Select Call to Action',
       type: 'select',
       options: [
         { value: 'shop-now', label: 'Shop Now' },
@@ -268,8 +274,8 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'comment-below', label: 'Comment Below' },
         { value: 'swipe-up', label: 'Swipe Up' }
       ],
-      tooltip: 'Choose one or more calls to action',
-      multiline: true
+      tooltip: 'Choose a call to action',
+      multiline: false
     },
     {
       id: 'photoDescription',
@@ -298,14 +304,15 @@ const Generation = () => {
     numberOfGenerations: 1,
     includeHashtags: false,
     includeEmojis: false,
-    image: null,
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [generatedCaptions, setGeneratedCaptions] = useState<GeneratedCaption[]>([]);
   const [generatedCaption, setGeneratedCaption] = useState('');
   const [showPreview] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // Reusable menu props for consistent dropdown styling
   const darkModeMenuProps = {
@@ -440,46 +447,36 @@ const Generation = () => {
   };
 
   const handlePostTypeChange = (type: PostType) => {
-    setFormState(prev => ({ ...prev, postType: type }));
+    setFormState(prev => ({ 
+      ...prev, 
+      postType: type,
+      // Clear other post type related fields when changing post type
+      ...Object.fromEntries(
+        Object.keys(prev)
+          .filter(key => key !== 'postType' && key !== 'businessType' && key !== 'customBusinessType' && key !== 'numberOfGenerations' && key !== 'includeHashtags' && key !== 'includeEmojis' && key !== 'image')
+          .map(key => [key, ''])
+      )
+    }));
   };
 
   const handleChange = (field: string, value: string | number | boolean) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+    setFormState(prev => ({ 
+      ...prev, 
+      [field]: value,
+      // Clear other fields when changing business type
+      ...(field === 'businessType' ? {
+        customBusinessType: '',
+        ...Object.fromEntries(
+          Object.keys(prev)
+            .filter(key => key !== 'postType' && key !== 'businessType' && key !== 'customBusinessType' && key !== 'numberOfGenerations' && key !== 'includeHashtags' && key !== 'includeEmojis' && key !== 'image')
+            .map(key => [key, ''])
+        )
+      } : {})
+    }));
     setFormErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
   };
 
   const handleGenerate = async () => {
-    // For mockup/demo purposes
-    if (!formState.businessType && !formState.postType) {
-      setIsGenerating(true);
-      setError('');
-      setGeneratedCaption('');
-
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-        const mockCaptions = [
-          "✨ Elevate your social media presence with stunning visuals and engaging content! Our premium templates make it easy to stand out from the crowd. Limited time offer: Get 30% off when you subscribe today! #ContentCreation #SocialMediaStrategy",
-          
-          "☕ Start your morning right with our signature blend! Ethically sourced beans, carefully roasted to perfection. Try our seasonal pumpkin spice latte - available for a limited time only! #CoffeeLover #MorningRitual",
-          
-          "📱 Just dropped: The next generation of tech is here! Faster processor, stunning display, and all-day battery life. Visit our store today for an exclusive hands-on demo! #TechLaunch #Innovation",
-          
-          "🍕 Weekend special! Buy any large pizza and get a second one FREE! Perfect for game day or family night. Order online or call us at 555-1234 for delivery. #PizzaLover #WeekendDeals",
-          
-          "👗 Fall collection now available! Cozy sweaters, stylish jackets, and everything you need for the season. Shop in-store or online with free shipping on orders over $50! #FallFashion #NewArrivals"
-        ];
-
-        setGeneratedCaption(mockCaptions[Math.floor(Math.random() * mockCaptions.length)]);
-        setShowResultDialog(true);
-        setCanRegenerate(true);
-        return;
-      } catch (err) {
-        setError('Failed to generate mock caption. Please try again.');
-      } finally {
-        setIsGenerating(false);
-      }
-    }
-    
     if (!validateForm()) {
       setError('Please fill in all required fields');
       return;
@@ -487,103 +484,44 @@ const Generation = () => {
 
     setIsGenerating(true);
     setError('');
-    setGeneratedCaption('');
+    setGeneratedCaptions([]);
 
     try {
-      // Note: This is a mock implementation
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      // Generate caption based on business type and post type
-      let caption = '';
-      const businessName = formState.businessType === 'custom' 
-        ? formState.customBusinessType 
-        : {
-            'restaurant': 'our restaurant',
-            'computer-shop': 'our tech store',
-            'clothing': 'our boutique',
-            'coffee-shop': 'our coffee shop'
-          }[formState.businessType as string] || 'our business';
-      
-      // Emoji selection based on business type
-      const emoji = {
-        'restaurant': '🍽️',
-        'computer-shop': '💻',
-        'clothing': '👗',
-        'coffee-shop': '☕',
-        'custom': '✨'
-      }[formState.businessType as string] || '✨';
-      
-      switch (formState.postType) {
-        case 'promotional':
-          caption = `${emoji} Don't miss out on our amazing ${formState.product || 'products'}! ${formState.offer || 'Special offer'} - perfect for ${formState.audience || 'everyone'}. ${formState.cta || 'Check it out'}!`;
-          break;
-        case 'engagement':
-          caption = `${emoji} ${formState.topic || 'What do you think?'}\n\nAt ${businessName}, we'd love to hear your thoughts! Drop a comment below 👇`;
-          break;
-        case 'testimonial':
-          caption = `${emoji} "${formState.quote || 'This is amazing!'}" - ${formState.name || 'Happy Customer'}\n\nThank you for choosing ${businessName}! We're grateful for amazing customers like you.`;
-          break;
-        case 'event':
-          caption = `${emoji} Join us for ${formState.name || 'our special event'}!\n\n🕒 ${formState.datetime || 'Coming soon'}\n📍 ${formState.location || 'At our location'}\n\n${formState.cta || 'Don\'t miss out'}!`;
-          break;
-        case 'product-launch':
-          caption = `${emoji} Introducing our newest addition: ${formState.product || 'new product'}!\n\n✨ ${formState.feature || 'Amazing features'}\n\n${formState.avail || 'Available now'} - ${formState.cta || 'Get yours'}!`;
-          break;
-        default:
-          caption = `${emoji} Experience something extraordinary with us at ${businessName}! #Quality #Excellence`;
+      const captions = await generateCaptions(formState);
+      if (captions.length > 0) {
+        setGeneratedCaptions(captions);
+        setGeneratedCaption(captions[0].text);
+        setShowResultDialog(true);
+        setCanRegenerate(true);
+      } else {
+        setError('No captions were generated. Please try again.');
       }
-
-      // Add hashtags if enabled
-      if (formState.includeHashtags) {
-        const hashtags = {
-          'restaurant': '#FoodLovers #Cuisine #Delicious #Foodie',
-          'computer-shop': '#Tech #Gadgets #Innovation #TechLovers',
-          'clothing': '#Fashion #Style #NewCollection #Trendy',
-          'coffee-shop': '#CoffeeLover #Barista #CafeVibes #MorningBoost',
-          'custom': '#Business #Quality #Service #Excellence'
-        }[formState.businessType as string] || '#Business #Quality #Service';
-        
-        caption += `\n\n${hashtags}`;
-      }
-
-      // Add more emojis if enabled
-      if (formState.includeEmojis) {
-        const addEmojis = (text: string) => {
-          const businessEmojis = {
-            'restaurant': ['🍽️', '🍕', '🍔', '🥗', '🍷', '😋'],
-            'computer-shop': ['💻', '📱', '🖥️', '⌨️', '🔌', '🤖'],
-            'clothing': ['👗', '👔', '👟', '🧥', '👒', '✨'],
-            'coffee-shop': ['☕', '🍰', '🥐', '🍮', '☀️', '😊'],
-            'custom': ['✨', '🎯', '🚀', '💫', '📈', '🙌']
-          }[formState.businessType as string] || ['✨', '🎯', '🚀', '💫', '📈', '🙌'];
-          
-          // Add emojis to the text, but not in hashtags
-          if (!text.startsWith('#')) {
-            // Add 1-2 random emojis at suitable points
-            const sentences = text.split('.');
-            return sentences.map((sentence, i) => {
-              if (i < sentences.length - 1 && sentence.length > 10 && Math.random() > 0.3) {
-                const randomEmoji = businessEmojis[Math.floor(Math.random() * businessEmojis.length)];
-                return `${sentence}. ${randomEmoji} `;
-              }
-              return `${sentence}${i < sentences.length - 1 ? '.' : ''}`;
-            }).join('');
-          }
-          return text;
-        };
-        
-        // Apply emojis to non-hashtag parts
-        caption = caption.split('\n\n').map(part => addEmojis(part)).join('\n\n');
-      }
-
-      setGeneratedCaption(caption);
-      setShowResultDialog(true);
-      setCanRegenerate(true);
     } catch (err) {
-      setError('Failed to generate caption. Please try again.');
+      if (err instanceof Error) {
+        if (err.message.includes('API key is missing')) {
+          setError('API key is missing. Please check your environment configuration.');
+        } else if (err.message.includes('API authentication failed')) {
+          setError('Invalid API key. Please check your API key configuration.');
+        } else if (err.message.includes('Network error')) {
+          setError('Network error. Please check your internet connection.');
+        } else if (err.message.includes('rate limit')) {
+          setError('API rate limit exceeded. Please try again in a few minutes.');
+        } else {
+          setError(`Failed to generate caption: ${err.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleRegenerate = async () => {
+    if (!canRegenerate) return;
+    setIsRegenerating(true);
+    await handleGenerate();
+    setIsRegenerating(false);
   };
 
   const handleCopyCaption = () => {
@@ -595,12 +533,6 @@ const Generation = () => {
       setTimeout(() => {
         setCopiedToClipboard(false);
       }, 2000);
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setFormState(prev => ({ ...prev, image: event.target.files![0] }));
     }
   };
 
@@ -1060,25 +992,13 @@ const Generation = () => {
                         {field.type === 'select' ? (
                           <FormControl fullWidth error={!!formErrors[field.id]} size="small">
                             <Select
-                              multiple={field.multiline}
-                              value={field.multiline ? (formState[field.id] || '').split(',') : formState[field.id] || ''}
-                              onChange={(e) => handleChange(field.id, field.multiline ? (e.target.value as string[]).join(',') : e.target.value as string)}
+                              value={formState[field.id] || ''}
+                              onChange={(e) => handleChange(field.id, e.target.value)}
                               MenuProps={darkModeMenuProps}
-                              renderValue={(selected) => field.multiline ? (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                  {(selected as string[]).map((value) => (
-                                    <Chip 
-                                      key={value} 
-                                      label={field.options?.find(opt => opt.value === value)?.label} 
-                                      size="small"
-                                      sx={{
-                                        background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                        color: isDarkMode ? '#fff' : '#000'
-                                      }}
-                                    />
-                                  ))}
-                                </Box>
-                              ) : selected}
+                              renderValue={(selected) => {
+                                const option = field.options?.find(opt => opt.value === selected);
+                                return option ? option.label : '';
+                              }}
                               sx={{
                                 color: isDarkMode ? '#fff' : '#000',
                                 '& .MuiOutlinedInput-notchedOutline': {
@@ -1241,61 +1161,6 @@ const Generation = () => {
                           />
                         </Box>
                       </Box>
-
-                      {/* Image Upload Option */}
-                      <Box sx={{ width: '100%', mt: 3 }}>
-                        <Typography variant="subtitle1" sx={{ mb: 1.5, color: isDarkMode ? '#fff' : '#000', fontWeight: 500 }}>
-                          Upload Reference Image (Optional)
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <Button
-                            component="label"
-                            variant="outlined"
-                            startIcon={<MdCloudUpload size={20} />}
-                            sx={{
-                              py: 1.5,
-                              px: 2,
-                              borderRadius: 2,
-                              borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                              color: isDarkMode ? '#fff' : '#000',
-                              textTransform: 'none',
-                              '&:hover': {
-                                borderColor: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.5)',
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                              },
-                            }}
-                          >
-                            {formState.image ? 'Change Image' : 'Upload Image'}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              hidden
-                              onChange={handleImageUpload}
-                            />
-                          </Button>
-                          {formState.image && (
-                            <Box sx={{ mt: 2, textAlign: 'center' }}>
-                              <Typography variant="body2" sx={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
-                                {formState.image.name}
-                              </Typography>
-                              <Button
-                                size="small"
-                                onClick={() => setFormState(prev => ({ ...prev, image: null }))}
-                                sx={{ 
-                                  mt: 0.5,
-                                  color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                                  '&:hover': {
-                                    backgroundColor: 'transparent',
-                                    textDecoration: 'underline',
-                                  }
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
                     </Grid>
                     
                     <Grid item xs={12} md={6}>
@@ -1341,18 +1206,6 @@ const Generation = () => {
                           }
                           sx={{ color: isDarkMode ? '#fff' : '#000' }}
                         />
-
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            mt: 2, 
-                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-                            fontStyle: 'italic',
-                            maxWidth: '350px',
-                          }}
-                        >
-                          Uploading a reference image can help generate more relevant captions for your content. The AI will analyze the image to provide context-appropriate suggestions.
-                        </Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -1522,74 +1375,133 @@ const Generation = () => {
                 border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
               }}
             >
-              {/* Main Caption */}
-              <Typography
-                variant="body1"
+              <Box
                 sx={{
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.8,
-                  color: isDarkMode ? '#fff' : '#000',
-                  fontFamily: '"Inter", sans-serif',
-                  fontSize: '1.1rem',
-                  mb: 2,
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                    },
+                  },
                 }}
               >
-                {generatedCaption.split('\n\n').map((part, index) => {
-                  // Check if this part contains hashtags
-                  const isHashtags = part.startsWith('#');
-                  return isHashtags ? null : (
-                    <span key={index}>
-                      {part}
-                      {index < generatedCaption.split('\n\n').length - 1 && <><br /><br /></>}
-                    </span>
-                  );
-                })}
-              </Typography>
-
-              {/* Hashtags Section */}
-              {generatedCaption.includes('#') && (
-                <Box sx={{ 
-                  mt: 2,
-                  pt: 2,
-                  borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
-                      fontFamily: '"Inter", sans-serif',
-                      fontSize: '0.95rem',
-                      lineHeight: 1.8,
-                    }}
+                {generatedCaptions.map((caption, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
                   >
-                    {generatedCaption.split('\n\n').map((part, partIndex) => {
-                      if (part.startsWith('#')) {
-                        return part.split(' ').map((tag, i) => (
-                          <Chip
-                            key={`${partIndex}-${i}`}
-                            label={tag}
-                            size="small"
-                            sx={{
-                              m: 0.5,
-                              background: isDarkMode 
-                                ? 'rgba(64,93,230,0.2)' 
-                                : 'rgba(64,93,230,0.1)',
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        mb: 3,
+                        background: isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.03)'
+                          : 'rgba(0, 0, 0, 0.02)',
+                        borderRadius: '12px',
+                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="subtitle1" sx={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+                          Caption {index + 1}
+                        </Typography>
+                        <IconButton
+                          onClick={() => {
+                            navigator.clipboard.writeText(caption.text);
+                            setCopiedToClipboard(true);
+                            setTimeout(() => setCopiedToClipboard(false), 2000);
+                          }}
+                          size="small"
+                          sx={{
+                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                            '&:hover': {
                               color: isDarkMode ? '#fff' : '#000',
-                              '&:hover': {
-                                background: isDarkMode 
-                                  ? 'rgba(64,93,230,0.3)' 
-                                  : 'rgba(64,93,230,0.2)',
-                                cursor: 'pointer'
-                              },
+                            },
+                          }}
+                        >
+                          <FaCopy />
+                        </IconButton>
+                      </Box>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          whiteSpace: 'pre-wrap',
+                          lineHeight: 1.8,
+                          color: isDarkMode ? '#fff' : '#000',
+                          fontFamily: '"Inter", sans-serif',
+                          fontSize: '1.1rem',
+                        }}
+                      >
+                        {caption.text.split('\n\n').map((part, partIndex) => {
+                          const isHashtags = part.startsWith('#');
+                          return isHashtags ? null : (
+                            <span key={partIndex}>
+                              {part}
+                              {partIndex < caption.text.split('\n\n').length - 1 && <><br /><br /></>}
+                            </span>
+                          );
+                        })}
+                      </Typography>
+                      {caption.text.includes('#') && (
+                        <Box sx={{ 
+                          mt: 2,
+                          pt: 2,
+                          borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                        }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+                              fontFamily: '"Inter", sans-serif',
+                              fontSize: '0.95rem',
+                              lineHeight: 1.8,
                             }}
-                          />
-                        ));
-                      }
-                      return null;
-                    })}
-                  </Typography>
-                </Box>
-              )}
+                          >
+                            {caption.text.split('\n\n').map((part, partIndex) => {
+                              if (part.startsWith('#')) {
+                                return part.split(' ').map((tag, i) => (
+                                  <Chip
+                                    key={`${partIndex}-${i}`}
+                                    label={tag}
+                                    size="small"
+                                    sx={{
+                                      m: 0.5,
+                                      background: isDarkMode 
+                                        ? 'rgba(64,93,230,0.2)' 
+                                        : 'rgba(64,93,230,0.1)',
+                                      color: isDarkMode ? '#fff' : '#000',
+                                      '&:hover': {
+                                        background: isDarkMode 
+                                          ? 'rgba(64,93,230,0.3)' 
+                                          : 'rgba(64,93,230,0.2)',
+                                        cursor: 'pointer'
+                                      },
+                                    }}
+                                  />
+                                ));
+                              }
+                              return null;
+                            })}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  </motion.div>
+                ))}
+              </Box>
             </Paper>
           </DialogContent>
 
@@ -1608,9 +1520,10 @@ const Generation = () => {
             <Box>
               {canRegenerate && (
                 <Button
-                  onClick={handleGenerate}
+                  onClick={handleRegenerate}
                   variant="outlined"
-                  startIcon={<MdRefresh />}
+                  startIcon={isRegenerating ? <CircularProgress size={20} /> : <MdRefresh />}
+                  disabled={isRegenerating}
                   sx={{
                     mr: 1,
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
@@ -1619,9 +1532,13 @@ const Generation = () => {
                       borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
                       background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                     },
+                    '&.Mui-disabled': {
+                      color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                    },
                   }}
                 >
-                  Regenerate
+                  {isRegenerating ? 'Regenerating...' : 'Regenerate'}
                 </Button>
               )}
             </Box>
