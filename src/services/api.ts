@@ -132,7 +132,7 @@ const generatePrompt = (formState: FormState): string => {
   if (includeEmojis) {
     prompt += 'Use emojis to make the caption more engaging. ';
   } else {
-    prompt += 'Do not use any emojis in the caption. ';
+    prompt += 'DO NOT use any emojis in the caption. Make sure the caption is completely free of emojis. ';
   }
 
   return prompt;
