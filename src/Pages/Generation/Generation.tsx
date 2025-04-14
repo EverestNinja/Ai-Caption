@@ -46,6 +46,7 @@ interface FormState {
   includeEmojis: boolean;
   image?: File | null;
   imagePreview?: string | null;
+  captionLength: number; // Added new field
   [key: string]: any;
 }
 
@@ -480,6 +481,7 @@ const Generation = () => {
     includeEmojis: false,
     image: null,
     imagePreview: null,
+    captionLength: 2, // Default to medium length
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [generatedCaptions, setGeneratedCaptions] = useState<GeneratedCaption[]>([]);
@@ -1407,6 +1409,90 @@ const Generation = () => {
                               },
                             }}
                             valueLabelDisplay="auto"
+                          />
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ width: '100%', mb: 2 }}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            mb: { xs: 1, sm: 1.5 }, 
+                            color: isDarkMode ? '#fff' : '#000', 
+                            fontWeight: 500,
+                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                          }}
+                        >
+                          Caption Length
+                        </Typography>
+                        <Box sx={{ 
+                          px: { xs: 1, sm: 2 },
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center' 
+                        }}>
+                          <Slider
+                            value={formState.captionLength}
+                            onChange={(_, value) => handleChange('captionLength', value as number)}
+                            step={1}
+                            marks={[
+                              { value: 1, label: 'Short (≤30 words)' },
+                              { value: 2, label: 'Medium (30-60)' },
+                              { value: 3, label: 'Long (60-100)' },
+                            ]}
+                            min={1}
+                            max={3}
+                            sx={{
+                              width: '100%',
+                              maxWidth: { xs: '100%', sm: '280px' },
+                              '& .MuiSlider-rail': {
+                                height: isMobile ? 3 : 4,
+                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                opacity: 0.8,
+                              },
+                              '& .MuiSlider-track': {
+                                height: isMobile ? 3 : 4,
+                                backgroundColor: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)',
+                                border: 'none',
+                              },
+                              '& .MuiSlider-thumb': {
+                                width: isMobile ? 22 : 28,
+                                height: isMobile ? 22 : 28,
+                                backgroundColor: isDarkMode ? '#fff' : '#fff',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                '&::before': {
+                                  boxShadow: '0 0 1px 8px rgba(64,93,230,0.1)',
+                                },
+                                '&:hover, &.Mui-focusVisible': {
+                                  boxShadow: '0 0 0 8px rgba(64,93,230,0.16)',
+                                },
+                                '&::after': {
+                                  content: '""',
+                                  position: 'absolute',
+                                  width: isMobile ? 16 : 20,
+                                  height: isMobile ? 16 : 20,
+                                  borderRadius: '50%',
+                                  backgroundColor: '#405DE6',
+                                },
+                              },
+                              '& .MuiSlider-mark': {
+                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                                height: isMobile ? 3 : 4,
+                                width: isMobile ? 3 : 4,
+                                borderRadius: '50%',
+                              },
+                              '& .MuiSlider-markActive': {
+                                backgroundColor: isDarkMode ? '#fff' : '#405DE6',
+                              },
+                              '& .MuiSlider-markLabel': {
+                                fontSize: isMobile ? '0.8rem' : '0.9rem',
+                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                                marginTop: 1,
+                              },
+                              '& .MuiSlider-valueLabel': {
+                                display: 'none',
+                              },
+                            }}
                           />
                         </Box>
                       </Box>

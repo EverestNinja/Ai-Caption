@@ -6,6 +6,7 @@ export interface FormState {
   numberOfGenerations: number;
   includeHashtags: boolean;
   includeEmojis: boolean;
+  captionLength: number;
   image?: File | null;
   imagePreview?: string | null;
   [key: string]: any;
@@ -110,10 +111,20 @@ const imageToBase64 = async (file: File): Promise<string> => {
 };
 
 const generatePrompt = (formState: FormState): string => {
-  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, image, ...fields } = formState;
+  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, image, captionLength, ...fields } = formState;
   const businessTypeText = businessType === 'custom' ? customBusinessType : businessType;
   
-  let prompt = `Create a ${postType} social media caption for a ${businessTypeText} business. `;
+  // Define caption length instructions with more specific word count guidance
+  const lengthMap = {
+    1: 'very short and concise (around 1-2 sentences, maximum 30 words total)',
+    2: 'moderate length (around 2-3 sentences, between 30-60 words total)',
+    3: 'detailed and comprehensive (around 4-5 sentences, between 60-100 words total)'
+  };
+  
+  const lengthDescription = lengthMap[captionLength as keyof typeof lengthMap] || 'moderate length (around 2-3 sentences, between 30-60 words total)';
+  
+  // Start with length instruction as the primary directive
+  let prompt = `Create a ${lengthDescription} ${postType} social media caption for a ${businessTypeText} business. IMPORTANT: The length constraint is the highest priority requirement. `;
   
   // Add specific instructions based on post type
   switch (postType) {
@@ -179,6 +190,9 @@ const generatePrompt = (formState: FormState): string => {
   } else {
     prompt += 'DO NOT use any emojis in the caption. Make sure the caption is completely free of emojis. ';
   }
+  
+  // Reiterate length constraint at the end
+  prompt += `Remember to keep the caption ${lengthDescription}.`;
   
   return prompt;
 };
@@ -291,11 +305,11 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
 
   // Different prompt styles for each generation
   const promptStyles = {
-    1: "Write a professional and polished caption that maintains a strong brand voice.",
-    2: "Create a creative and engaging caption that stands out from typical social media posts.",
-    3: "Generate a conversational and relatable caption that connects with the audience.",
-    4: "Craft a unique and memorable caption that uses creative wordplay and storytelling.",
-    5: "Write an attention-grabbing caption that encourages high engagement and interaction."
+    1: "Write a professional and polished caption that maintains a strong brand voice while strictly adhering to the specified caption length.",
+    2: "Create a creative and engaging caption that stands out from typical social media posts without exceeding the requested word count.",
+    3: "Generate a conversational and relatable caption that connects with the audience while keeping within the specified length constraints.",
+    4: "Craft a unique and memorable caption that uses creative wordplay and storytelling, but be careful not to exceed the specified word limit.",
+    5: "Write an attention-grabbing caption that encourages high engagement and interaction while maintaining the exact requested length."
   };
 
   // Different tone modifiers for each generation
@@ -320,7 +334,7 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
     const messages: ChatMessage[] = [
       {
         role: "system",
-        content: "You are a creative social media caption generator. Generate engaging, unique captions that stand out."
+        content: "You are a creative social media caption generator that strictly follows length requirements. Generate engaging, unique captions that match the exact length specifications provided by the user. Be concise and precise with your word count."
       },
       {
         role: "user",
