@@ -1,18 +1,22 @@
-interface GenerationRequest {
+// Types
+export interface FormState {
   postType: string;
-  captionTone: string;
-  generationCount: number;
-  useHashtags: boolean;
-  useEmojis: boolean;
-  postDescription: string;
+  businessType: string;
+  customBusinessType?: string;
+  numberOfGenerations: number;
+  includeHashtags: boolean;
+  includeEmojis: boolean;
+  image?: File | null;
+  imagePreview?: string | null;
+  [key: string]: any;
 }
 
-interface GeneratedCaption {
+export interface GeneratedCaption {
   id: number;
   text: string;
 }
 
-interface XAIResponse {
+interface ApiResponse {
   id: string;
   object: string;
   created: number;
@@ -27,282 +31,373 @@ interface XAIResponse {
   }>;
 }
 
-class APIError extends Error {
-  constructor(public status: number, message: string, public details?: any) {
+// First, let's add a type definition for the message content
+interface ChatMessage {
+  role: string;
+  content: string | ContentItem[];
+}
+
+interface ContentItem {
+  type: string;
+  text?: string;
+  image_url?: {
+    url: string;
+  };
+}
+
+// Let's update the ApiRequest type to match our ChatMessage interface
+interface ApiRequest {
+  model: string;
+  messages: ChatMessage[];
+  temperature: number;
+  max_tokens: number;
+  top_p: number;
+  frequency_penalty: number;
+  presence_penalty: number;
+}
+
+// Constants
+const API_ENDPOINT = import.meta.env.VITE_API_BASE_URL || 'https://api.x.ai/v1/chat/completions';
+const API_KEY = import.meta.env.VITE_XAPI_KEY || import.meta.env.VITE_API_KEY;
+const DEFAULT_MODEL = 'grok-2-latest';
+const VISION_MODEL = 'grok-2-vision-1212';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
+// Error handling
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public code: string = 'API_ERROR',
+    public status?: number
+  ) {
     super(message);
-    this.name = 'APIError';
+    this.name = 'ApiError';
   }
 }
 
-const MAX_RETRIES = 2;
-
+// Utility functions
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const generatePrompt = (params: GenerationRequest): string => {
-  const { postType, captionTone, postDescription, useHashtags, useEmojis } = params;
-  
-  // Base context for different post types
-  const postTypeContext: { [key: string]: string } = {
-    'actionable': 'motivational and action-oriented content that inspires people to take specific steps',
-    'inspiring': 'uplifting and thought-provoking content that touches hearts and minds',
-    'promotional': 'engaging promotional content that highlights value without being too salesy',
-    'reels': 'fun and trendy short-form video content that captures attention quickly',
-    'stories': 'casual and authentic moments that connect with followers in real-time'
+const getEmojiSet = (businessType: string): string[] => {
+  const emojiSets: Record<string, string[]> = {
+    'restaurant': ['🍽️', '🍕', '🍔', '🥗', '🍷', '😋', '👨‍🍳', '🌟'],
+    'computer-shop': ['💻', '🖥️', '📱', '🔌', '⌨️', '🖱️', '⚡', '🔧'],
+    'clothing': ['👗', '👔', '👟', '🧥', '👒', '✨', '🛍️', '👕'],
+    'coffee-shop': ['☕', '🍰', '🥐', '🍮', '☀️', '😊', '👨‍🍳', '🌟'],
+    'custom': ['✨', '🎯', '🚀', '💫', '📈', '🙌', '💡', '🌟']
   };
 
-  // Tone-specific instructions
-  const toneInstructions: { [key: string]: string } = {
-    fun: "Make it super entertaining and relatable! Use clever wordplay, current trends, or funny observations. Think of it as chatting with a friend who always makes you laugh.",
-    poetic: "Create a lyrical and artistic caption that paints a picture with words. Use metaphors and beautiful language that resonates emotionally.",
-    casual: "Keep it conversational and down-to-earth, like you're sharing thoughts with close friends. Be authentic and relatable.",
-    informative: "Share insights in an engaging way, mixing expertise with accessibility. Make complex ideas easy to understand while maintaining interest.",
-    formal: "Maintain professionalism while being engaging. Think sophisticated yet approachable, like a respected mentor.",
-    witty: "Craft a clever and sharp caption that shows intellectual humor. Think subtle wordplay and smart observations that make people think and smile."
-  };
+  return emojiSets[businessType] || emojiSets['custom'];
+};
 
-  const selectedContext = postTypeContext[postType.toLowerCase()] || postType;
-  const selectedTone = toneInstructions[captionTone.toLowerCase()] || 'Keep the tone natural and engaging';
+// Function to convert image to base64
+const imageToBase64 = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        // Get the base64 string without the prefix
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      } else {
+        reject(new Error('Failed to convert image to base64'));
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
 
-  let prompt = `Create an authentic Instagram caption for ${selectedContext}. ${selectedTone}\n\nThe post is about: ${postDescription}\n\n`;
+const generatePrompt = (formState: FormState): string => {
+  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, image, ...fields } = formState;
+  const businessTypeText = businessType === 'custom' ? customBusinessType : businessType;
   
-  // More natural hashtag instructions
-  if (useHashtags) {
-    prompt += 'Include 3-5 highly relevant hashtags that real Instagram users would use. Mix both popular and niche hashtags for better reach. Place them naturally - either integrated into the caption or at the end.\n\n';
-  }
+  let prompt = `Create a ${postType} social media caption for a ${businessTypeText} business. `;
   
-  // More natural emoji instructions
-  if (useEmojis) {
-    prompt += 'Sprinkle 2-3 relevant emojis throughout the caption where they feel natural and enhance the message. Use them to emphasize emotions or key points, not just as decorations.\n\n';
+  // Add specific instructions based on post type
+  switch (postType) {
+    case 'promotional':
+      prompt += `The caption should promote ${fields.product} with the offer "${fields.offer}". `;
+      prompt += `Target audience: ${fields.audience}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      break;
+    case 'engagement':
+      prompt += `Topic: ${fields.topic}. `;
+      prompt += `Tie-in: ${fields.tiein}. `;
+      prompt += `Goal: ${fields.goal === 'custom' ? fields.customGoal : fields.goal}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      break;
+    case 'testimonial':
+      prompt += `Customer name: ${fields.name}. `;
+      prompt += `Quote: "${fields.quote}". `;
+      prompt += `Product/service: ${fields.product}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      break;
+    case 'event':
+      prompt += `Event name: ${fields.name}. `;
+      prompt += `Date/time: ${fields.datetime}. `;
+      prompt += `Location: ${fields.location}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      break;
+    case 'product-launch':
+      prompt += `Product: ${fields.product}. `;
+      prompt += `Key feature: ${fields.feature}. `;
+      prompt += `Availability: ${fields.avail}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      break;
+    case 'custom':
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      prompt += `Topic: ${fields.topic === 'custom' ? fields.customTopic : fields.topic}. `;
+      prompt += `Target audience: ${fields.audience === 'custom' ? fields.customAudience : fields.audience}. `;
+      prompt += `Writing style: ${fields.style === 'custom' ? fields.customStyle : fields.style}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      break;
   }
 
-  prompt += `Additional guidelines:
-- Keep it authentic and conversational (150-220 characters)
-- Create a hook that grabs attention in the first line
-- Include a call-to-action or question to boost engagement
-- Match the writing style of successful ${postType.toLowerCase()} posts
-- Make it sound like a real person, not AI-generated
-- Consider current social media trends and language`;
+  // Add image description if provided
+  if (fields.description) {
+    prompt += `Post description: ${fields.description}. `;
+  }
+
+  // If there's an image, mention it in the prompt
+  if (image) {
+    prompt += `The post includes an uploaded image. Make the caption relevant to this image. `;
+  }
+
+  // Add hashtags instruction if enabled
+  if (includeHashtags) {
+    prompt += 'Include relevant hashtags at the end. ';
+  }
+
+  // Add emojis instruction if enabled
+  if (includeEmojis) {
+    prompt += 'Use emojis to make the caption more engaging. ';
+  } else {
+    prompt += 'DO NOT use any emojis in the caption. Make sure the caption is completely free of emojis. ';
+  }
   
   return prompt;
 };
 
-const makeAPIRequest = async (params: GenerationRequest, temperature: number = 0.7, retryCount: number = 0): Promise<XAIResponse> => {
-  try {
-    // Dynamic temperature adjustment based on tone and generation count
-    let adjustedTemperature = temperature;
-    const toneTemperatures: { [key: string]: number } = {
-      fun: 0.85,
-      poetic: 0.8,
-      casual: 0.75,
-      informative: 0.65,
-      formal: 0.6,
-      witty: 0.8
-    };
-    
-    adjustedTemperature = toneTemperatures[params.captionTone.toLowerCase()] || temperature;
-    
-    // Add some randomness for multiple generations
-    if (params.generationCount > 1) {
-      adjustedTemperature += Math.random() * 0.15; // Add up to 0.15 randomness
-    }
-    
-    // Ensure temperature stays within valid range
-    adjustedTemperature = Math.max(0.5, Math.min(1.0, adjustedTemperature));
+const makeApiRequest = async (requestBody: ApiRequest): Promise<ApiResponse> => {
+  if (!API_KEY) {
+    throw new ApiError('API key is missing', 'AUTHENTICATION_ERROR');
+  }
 
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_XAPI_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "grok-2-latest",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert Instagram content creator who understands modern social media trends and user behavior. Your specialty is writing captions that feel authentic, engaging, and perfectly suited to each post type.
-
-Key Principles:
-1. Write like a real person - use natural language, current slang (when appropriate), and conversational tone
-2. Understand post context - adapt your style to match the post type and audience expectations
-3. Create emotional connections - use storytelling and relatable experiences
-4. Drive engagement - include hooks, questions, or calls-to-action
-5. Stay current - reference relevant trends and cultural moments
-6. Be platform-native - write in a way that feels natural for Instagram
-
-Style Guidelines:
-- Vary sentence structure and length for natural flow
-- Use line breaks strategically for readability
-- Include personal touches and authentic voice
-- Balance professionalism with relatability
-- Adapt hashtag and emoji usage to feel organic
-- Create memorable, shareable content
-
-Remember: Each caption should feel like it was written by a savvy social media user who understands their audience and the platform.`
-          },
-          {
-            role: "user",
-            content: generatePrompt(params)
-          }
-        ],
-        temperature: adjustedTemperature,
-        stream: false,
-        max_tokens: 350, // Increased for more natural responses
-        presence_penalty: 0.6, // Encourage more diverse responses
-        frequency_penalty: 0.7 // Reduce repetition
-      }),
+          'Authorization': `Bearer ${API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      
-      // Handle rate limiting
-      if (response.status === 429 && retryCount < MAX_RETRIES) {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '1');
-        await wait(retryAfter * 1000);
-        return makeAPIRequest(params, temperature, retryCount + 1);
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(
+          errorData.error?.message || `API request failed with status ${response.status}`,
+          'API_ERROR',
+          response.status
+        );
       }
 
-      // Handle token expiration
-      if (response.status === 401) {
-        throw new APIError(401, 'API key has expired or is invalid. Please check your API key.', errorData);
+      return await response.json();
+    } catch (error) {
+      lastError = error as Error;
+      if (error instanceof ApiError && error.status === 429) {
+        // Rate limit hit, wait and retry
+        await wait(RETRY_DELAY * attempt);
+        continue;
       }
-
-      throw new APIError(
-        response.status,
-        errorData?.error?.message || `API request failed with status ${response.status}`,
-        errorData
-      );
+      break;
     }
+  }
 
-    const data: XAIResponse = await response.json();
+  throw new ApiError(
+    lastError instanceof Error ? lastError.message : 'Network error occurred',
+    'NETWORK_ERROR'
+  );
+};
+
+const validateFormState = (formState: FormState): void => {
+  if (!formState.postType) {
+    throw new Error('Post type is required');
+  }
+
+  if (!formState.businessType) {
+    throw new Error('Business type is required');
+  }
+
+  if (formState.businessType === 'custom' && !formState.customBusinessType) {
+    throw new Error('Custom business type is required');
+  }
+
+  if (formState.numberOfGenerations < 1 || formState.numberOfGenerations > 5) {
+    throw new Error('Number of generations must be between 1 and 5');
+  }
+};
+
+// Helper function to generate relevant hashtags
+const generateHashtags = (businessType: string, postType: string): string[] => {
+  const businessHashtags: Record<string, string[]> = {
+    'restaurant': ['#foodie', '#foodporn', '#instafood', '#yummy', '#delicious'],
+    'computer-shop': ['#tech', '#gadgets', '#electronics', '#innovation', '#digital'],
+    'clothing': ['#fashion', '#style', '#ootd', '#trendy', '#shoplocal'],
+    'coffee-shop': ['#coffee', '#cafe', '#coffeetime', '#barista', '#coffeelover'],
+    'custom': ['#business', '#success', '#entrepreneur', '#growth', '#branding']
+  };
+
+  const postTypeHashtags: Record<string, string[]> = {
+    'promotional': ['#specialoffer', '#limitedtime', '#deals', '#discount', '#sale'],
+    'engagement': ['#community', '#engagement', '#interaction', '#feedback', '#opinion'],
+    'testimonial': ['#testimonial', '#review', '#feedback', '#satisfied', '#happycustomer'],
+    'event': ['#event', '#announcement', '#comingsoon', '#savethedate', '#joinus'],
+    'product-launch': ['#newproduct', '#launch', '#innovation', '#exclusive', '#firstlook']
+  };
+
+  const hashtags = [
+    ...(businessHashtags[businessType] || businessHashtags['custom']),
+    ...(postTypeHashtags[postType] || [])
+  ];
+
+  // Shuffle and select 3-5 hashtags
+  return hashtags
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.floor(Math.random() * 3) + 3);
+};
+
+export const generateCaptions = async (formState: FormState): Promise<GeneratedCaption[]> => {
+  validateFormState(formState);
+  
+  const captions: GeneratedCaption[] = [];
+  
+  // Different temperature settings for each generation
+  const temperatureSettings = {
+    1: 0.7,  // Balanced and professional
+    2: 0.9,  // More creative and varied
+    3: 0.8,  // Balanced with some creativity
+    4: 0.95, // Very creative and unique
+    5: 0.85  // Balanced with high engagement
+  };
+
+  // Different prompt styles for each generation
+  const promptStyles = {
+    1: "Write a professional and polished caption that maintains a strong brand voice.",
+    2: "Create a creative and engaging caption that stands out from typical social media posts.",
+    3: "Generate a conversational and relatable caption that connects with the audience.",
+    4: "Craft a unique and memorable caption that uses creative wordplay and storytelling.",
+    5: "Write an attention-grabbing caption that encourages high engagement and interaction."
+  };
+
+  // Different tone modifiers for each generation
+  const toneModifiers = {
+    1: "professional and authoritative",
+    2: "creative and innovative",
+    3: "friendly and conversational",
+    4: "unique and memorable",
+    5: "engaging and interactive"
+  };
+
+  for (let i = 0; i < formState.numberOfGenerations; i++) {
+    const generationNumber = i + 1;
+    const temperature = temperatureSettings[generationNumber as keyof typeof temperatureSettings];
+    const promptStyle = promptStyles[generationNumber as keyof typeof promptStyles];
+    const toneModifier = toneModifiers[generationNumber as keyof typeof toneModifiers];
     
-    // Validate response structure
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid API response format');
-    }
+    // Modify the prompt with generation-specific style
+    const modifiedPrompt = `${generatePrompt(formState)}\n\n${promptStyle}\nTone should be ${toneModifier}.`;
+    
+    // Create base messages array for the API request
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content: "You are a creative social media caption generator. Generate engaging, unique captions that stand out."
+      },
+      {
+        role: "user",
+        content: modifiedPrompt
+      }
+    ];
 
-    return data;
-  } catch (error) {
-    if (error instanceof APIError) {
+    try {
+      // Select the appropriate model based on whether an image is included
+      const modelToUse = formState.image ? VISION_MODEL : DEFAULT_MODEL;
+      
+      // If an image is provided, process it and include in the API request
+      if (formState.image) {
+        try {
+          const imageBase64 = await imageToBase64(formState.image);
+          
+          // Add image content to the messages
+          messages.push({
+            role: "user",
+            content: [
+              { type: "text", text: "Here is the image to reference for the caption:" },
+              {
+                type: "image_url", 
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`
+                }
+              }
+            ]
+          });
+        } catch (error) {
+          console.error("Error processing image:", error);
+          throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      const requestBody = {
+        model: modelToUse,
+        messages: messages,
+        temperature: temperature,
+        max_tokens: 200, // Increased token limit to accommodate image descriptions
+        top_p: 0.9,
+        frequency_penalty: 0.7,
+        presence_penalty: 0.7,
+      };
+
+      const response = await makeApiRequest(requestBody);
+      
+      if (response.choices && response.choices.length > 0) {
+        let caption = response.choices[0].message.content.trim();
+        
+        // Only add emojis if explicitly enabled
+        if (formState.includeEmojis) {
+          const emojiSet = getEmojiSet(formState.businessType);
+          const randomEmojis = [...emojiSet]
+            .sort(() => 0.5 - Math.random())
+            .slice(0, Math.floor(Math.random() * 2) + 2);
+          
+          // Add emojis at the beginning and end
+          caption = `${randomEmojis.join(' ')} ${caption} ${randomEmojis.sort(() => 0.5 - Math.random()).join(' ')}`;
+        }
+        
+        // Only add hashtags if explicitly enabled
+        if (formState.includeHashtags) {
+          const hashtags = generateHashtags(formState.businessType, formState.postType);
+          caption = `${caption}\n\n${hashtags.join(' ')}`;
+        }
+        
+        captions.push({
+          id: generationNumber,
+          text: caption
+        });
+      }
+    } catch (error) {
+      console.error(`Error generating caption ${generationNumber}:`, error);
       throw error;
     }
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new APIError(0, 'Network error. Please check your internet connection.', error);
-    }
-    throw new APIError(500, 'An unexpected error occurred while generating captions.', error);
   }
-};
 
-const validateGenerationParams = (params: GenerationRequest): void => {
-  if (!params.postType || !params.captionTone || !params.postDescription) {
-    throw new Error('Missing required parameters: postType, captionTone, and postDescription are required');
-  }
-  if (params.generationCount < 1 || params.generationCount > 5) {
-    throw new Error('Generation count must be between 1 and 5');
-  }
-  if (params.postDescription.length < 10) {
-    throw new Error('Post description must be at least 10 characters long');
-  }
-};
-
-export const generateCaptions = async (params: GenerationRequest): Promise<GeneratedCaption[]> => {
-  try {
-    console.log('Generating captions with params:', params);
-    validateGenerationParams(params);
-
-    if (params.generationCount > 1) {
-      const promises = Array.from({ length: params.generationCount }, async (_, index) => {
-        const temperature = 0.7 + (index * 0.1); // Increase temperature for variety
-        const data = await makeAPIRequest(params, temperature);
-        
-        return {
-          id: index + 1,
-          text: data.choices[0].message.content.trim()
-        };
-      });
-
-      const results = await Promise.allSettled(promises);
-      const successfulResults = results
-        .filter((result): result is PromiseFulfilledResult<GeneratedCaption> => result.status === 'fulfilled')
-        .map(result => result.value);
-
-      if (successfulResults.length === 0) {
-        throw new Error('Failed to generate any captions. Please try again.');
-      }
-
-      return successfulResults;
-    }
-
-    // Single generation
-    const data = await makeAPIRequest(params);
-    return [{
-      id: 1,
-      text: data.choices[0].message.content.trim()
-    }];
-  } catch (error) {
-    console.error('Generation Error:', error);
-    
-    if (error instanceof APIError) {
-      // Enhance error message based on status code
-      switch (error.status) {
-        case 401:
-          throw new Error('Authentication failed. Please check your API key.');
-        case 429:
-          throw new Error('Too many requests. Please try again in a few moments.');
-        case 503:
-          throw new Error('Service temporarily unavailable. Please try again later.');
-        default:
-          throw new Error(error.message || 'Failed to generate captions. Please try again.');
-      }
-    }
-    
-    throw error instanceof Error ? error : new Error('An unexpected error occurred.');
-  }
-};
-
-export const mockGenerateCaptions = async (params: GenerationRequest): Promise<GeneratedCaption[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  // Generate mock captions based on the parameters
-  return Array.from({ length: params.generationCount }, (_, index) => ({
-    id: index + 1,
-    text: generateMockCaption(params, index + 1),
-  }));
-};
-
-const generateMockCaption = (params: GenerationRequest, index: number): string => {
-  const { postType, captionTone, postDescription, useHashtags, useEmojis } = params;
-  
-  const emojis = useEmojis ? getEmojisForType(postType) : '';
-  const hashtags = useHashtags ? getHashtagsForType(postType) : '';
-  
-  return `${emojis} Caption ${index} for your ${postType.toLowerCase()} post with a ${captionTone.toLowerCase()} tone:\n\n${postDescription}\n\n${hashtags}`;
-};
-
-const getEmojisForType = (postType: string): string => {
-  const emojiMap: { [key: string]: string } = {
-    'Actionable': '💪 🎯',
-    'Inspiring': '✨ 💫',
-    'Promotional': '🚀 💎',
-    'Reels': '🎬 🎵',
-    'Stories': '📱 ⭐',
-  };
-  return emojiMap[postType] || '🌟 ✨';
-};
-
-const getHashtagsForType = (postType: string): string => {
-  const hashtagMap: { [key: string]: string[] } = {
-    'Actionable': ['#motivation', '#goals', '#success'],
-    'Inspiring': ['#inspiration', '#mindset', '#positivity'],
-    'Promotional': ['#offer', '#limited', '#exclusive'],
-    'Reels': ['#reels', '#trending', '#viral'],
-    'Stories': ['#story', '#lifestyle', '#daily'],
-  };
-  
-  const commonHashtags = ['#instagram', '#social', '#content'];
-  const typeHashtags = hashtagMap[postType] || [];
-  
-  return [...typeHashtags, ...commonHashtags].join(' ');
+  return captions;
 }; 
