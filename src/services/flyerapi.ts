@@ -67,105 +67,6 @@ export const checkXaiApiHealth = async (): Promise<boolean> => {
 };
 
 /**
- * Helper function to extract base64 data from a data URL
- */
-const getBase64FromDataUrl = (dataUrl: string): string => {
-  if (!dataUrl) return '';
-  const parts = dataUrl.split(',');
-  return parts.length > 1 ? parts[1] : '';
-};
-
-/**
- * Analyzes a logo to extract its main colors and features
- * @param logoDataUrl The logo as a data URL
- * @returns A promise with the logo description
- */
-const analyzeLogo = async (logoDataUrl: string): Promise<{ colors: string[], description: string }> => {
-  return new Promise((resolve) => {
-    try {
-      const img = new Image();
-      img.onload = () => {
-        // Create a canvas to analyze the logo
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // Draw the image onto the canvas
-        ctx?.drawImage(img, 0, 0);
-        
-        // Sample colors from different parts of the logo
-        const colorSamples: string[] = [];
-        const samplePoints = [
-          { x: Math.floor(img.width * 0.25), y: Math.floor(img.height * 0.25) },
-          { x: Math.floor(img.width * 0.75), y: Math.floor(img.height * 0.25) },
-          { x: Math.floor(img.width * 0.25), y: Math.floor(img.height * 0.75) },
-          { x: Math.floor(img.width * 0.75), y: Math.floor(img.height * 0.75) },
-          { x: Math.floor(img.width * 0.5), y: Math.floor(img.height * 0.5) },
-        ];
-        
-        samplePoints.forEach(point => {
-          const pixelData = ctx?.getImageData(point.x, point.y, 1, 1).data;
-          if (pixelData) {
-            const hex = `#${pixelData[0].toString(16).padStart(2, '0')}${pixelData[1].toString(16).padStart(2, '0')}${pixelData[2].toString(16).padStart(2, '0')}`;
-            if (!colorSamples.includes(hex)) {
-              colorSamples.push(hex);
-            }
-          }
-        });
-        
-        // Filter out near-duplicates and limit to 3 main colors
-        const mainColors = colorSamples.slice(0, 3);
-        
-        // Determine if logo is mostly text or has imagery
-        const aspectRatio = img.width / img.height;
-        const isWideFormat = aspectRatio > 2.5;
-        
-        // Create a description based on the analysis
-        let description = "a logo with ";
-        if (mainColors.length > 0) {
-          description += `primarily ${mainColors[0]} color`;
-          if (mainColors.length > 1) {
-            description += ` and ${mainColors[1]} accent`;
-          }
-        }
-        
-        if (isWideFormat) {
-          description += ", primarily text-based in a horizontal format";
-        } else if (aspectRatio < 0.8) {
-          description += ", in a vertical/tall format";
-        } else {
-          description += ", with a balanced square-like format";
-        }
-        
-        resolve({
-          colors: mainColors,
-          description: description
-        });
-      };
-      
-      img.onerror = () => {
-        // Fallback if analysis fails
-        resolve({
-          colors: ['unknown'],
-          description: 'a professional company logo'
-        });
-      };
-      
-      // Load the image for analysis
-      img.src = logoDataUrl;
-      
-    } catch (error) {
-      console.error('Error analyzing logo:', error);
-      resolve({
-        colors: ['unknown'],
-        description: 'a professional company logo'
-      });
-    }
-  });
-};
-
-/**
  * Adds a logo to the specified position of the generated image
  * @param baseImage Base64 string of the generated image
  * @param logoImage Base64 string of the logo
@@ -352,4 +253,4 @@ export const generateFlyer = async (formState: FlyerFormState): Promise<Generate
     
     throw new FlyerApiError(error.message || 'An unexpected error occurred', 'GENERAL_ERROR');
   }
-};
+}; 

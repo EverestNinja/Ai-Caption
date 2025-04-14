@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, TextField, Button, IconButton, Switch, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, Modal, Backdrop, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Container, Typography, Paper, TextField, Button, IconButton, Switch, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaMagic, FaArrowLeft, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
@@ -106,14 +106,6 @@ const Flyer = () => {
       ...prev,
       companyLogo: null,
       logoPreview: null
-    }));
-  };
-
-  // Handle logo position change
-  const handleLogoPositionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFormState(prev => ({
-      ...prev,
-      logoPosition: event.target.value as FlyerFormState['logoPosition']
     }));
   };
 
