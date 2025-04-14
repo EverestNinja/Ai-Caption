@@ -6,6 +6,8 @@ export interface FormState {
   numberOfGenerations: number;
   includeHashtags: boolean;
   includeEmojis: boolean;
+  image?: File | null;
+  imagePreview?: string | null;
   [key: string]: any;
 }
 
@@ -29,9 +31,24 @@ interface ApiResponse {
   }>;
 }
 
+// First, let's add a type definition for the message content
+interface ChatMessage {
+  role: string;
+  content: string | ContentItem[];
+}
+
+interface ContentItem {
+  type: string;
+  text?: string;
+  image_url?: {
+    url: string;
+  };
+}
+
+// Let's update the ApiRequest type to match our ChatMessage interface
 interface ApiRequest {
   model: string;
-  messages: { role: string; content: string; }[];
+  messages: ChatMessage[];
   temperature: number;
   max_tokens: number;
   top_p: number;
@@ -43,6 +60,7 @@ interface ApiRequest {
 const API_ENDPOINT = import.meta.env.VITE_API_BASE_URL || 'https://api.x.ai/v1/chat/completions';
 const API_KEY = import.meta.env.VITE_XAPI_KEY || import.meta.env.VITE_API_KEY;
 const DEFAULT_MODEL = 'grok-2-latest';
+const VISION_MODEL = 'grok-2-vision-1212';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
@@ -73,8 +91,26 @@ const getEmojiSet = (businessType: string): string[] => {
   return emojiSets[businessType] || emojiSets['custom'];
 };
 
+// Function to convert image to base64
+const imageToBase64 = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        // Get the base64 string without the prefix
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      } else {
+        reject(new Error('Failed to convert image to base64'));
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
+
 const generatePrompt = (formState: FormState): string => {
-  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, ...fields } = formState;
+  const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, image, ...fields } = formState;
   const businessTypeText = businessType === 'custom' ? customBusinessType : businessType;
   
   let prompt = `Create a ${postType} social media caption for a ${businessTypeText} business. `;
@@ -84,43 +120,52 @@ const generatePrompt = (formState: FormState): string => {
     case 'promotional':
       prompt += `The caption should promote ${fields.product} with the offer "${fields.offer}". `;
       prompt += `Target audience: ${fields.audience}. `;
-      prompt += `Call to action: ${fields.cta}. `;
-      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
       break;
     case 'engagement':
       prompt += `Topic: ${fields.topic}. `;
       prompt += `Tie-in: ${fields.tiein}. `;
-      prompt += `Goal: ${fields.goal}. `;
-      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Goal: ${fields.goal === 'custom' ? fields.customGoal : fields.goal}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
       break;
     case 'testimonial':
       prompt += `Customer name: ${fields.name}. `;
       prompt += `Quote: "${fields.quote}". `;
       prompt += `Product/service: ${fields.product}. `;
-      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
       break;
     case 'event':
       prompt += `Event name: ${fields.name}. `;
       prompt += `Date/time: ${fields.datetime}. `;
       prompt += `Location: ${fields.location}. `;
-      prompt += `Call to action: ${fields.cta}. `;
-      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
       break;
     case 'product-launch':
       prompt += `Product: ${fields.product}. `;
       prompt += `Key feature: ${fields.feature}. `;
       prompt += `Availability: ${fields.avail}. `;
-      prompt += `Call to action: ${fields.cta}. `;
-      prompt += `Tone: ${fields.tone}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
       break;
     case 'custom':
-      prompt += `Tone: ${fields.tone}. `;
-      prompt += `Topic: ${fields.topic}. `;
-      prompt += `Target audience: ${fields.audience}. `;
-      prompt += `Writing style: ${fields.style}. `;
-      prompt += `Call to action: ${fields.cta}. `;
-      prompt += `Photo description: ${fields.photoDescription}. `;
+      prompt += `Tone: ${fields.tone === 'custom' ? fields.customTone : fields.tone}. `;
+      prompt += `Topic: ${fields.topic === 'custom' ? fields.customTopic : fields.topic}. `;
+      prompt += `Target audience: ${fields.audience === 'custom' ? fields.customAudience : fields.audience}. `;
+      prompt += `Writing style: ${fields.style === 'custom' ? fields.customStyle : fields.style}. `;
+      prompt += `Call to action: ${fields.cta === 'custom' ? fields.customCta : fields.cta}. `;
       break;
+  }
+
+  // Add image description if provided
+  if (fields.description) {
+    prompt += `Post description: ${fields.description}. `;
+  }
+
+  // If there's an image, mention it in the prompt
+  if (image) {
+    prompt += `The post includes an uploaded image. Make the caption relevant to this image. `;
   }
 
   // Add hashtags instruction if enabled
@@ -134,7 +179,7 @@ const generatePrompt = (formState: FormState): string => {
   } else {
     prompt += 'DO NOT use any emojis in the caption. Make sure the caption is completely free of emojis. ';
   }
-
+  
   return prompt;
 };
 
@@ -148,15 +193,15 @@ const makeApiRequest = async (requestBody: ApiRequest): Promise<ApiResponse> => 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
           'Authorization': `Bearer ${API_KEY}`,
         },
         body: JSON.stringify(requestBody),
-      });
+    });
 
-      if (!response.ok) {
+    if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new ApiError(
           errorData.error?.message || `API request failed with status ${response.status}`,
@@ -201,6 +246,35 @@ const validateFormState = (formState: FormState): void => {
   }
 };
 
+// Helper function to generate relevant hashtags
+const generateHashtags = (businessType: string, postType: string): string[] => {
+  const businessHashtags: Record<string, string[]> = {
+    'restaurant': ['#foodie', '#foodporn', '#instafood', '#yummy', '#delicious'],
+    'computer-shop': ['#tech', '#gadgets', '#electronics', '#innovation', '#digital'],
+    'clothing': ['#fashion', '#style', '#ootd', '#trendy', '#shoplocal'],
+    'coffee-shop': ['#coffee', '#cafe', '#coffeetime', '#barista', '#coffeelover'],
+    'custom': ['#business', '#success', '#entrepreneur', '#growth', '#branding']
+  };
+
+  const postTypeHashtags: Record<string, string[]> = {
+    'promotional': ['#specialoffer', '#limitedtime', '#deals', '#discount', '#sale'],
+    'engagement': ['#community', '#engagement', '#interaction', '#feedback', '#opinion'],
+    'testimonial': ['#testimonial', '#review', '#feedback', '#satisfied', '#happycustomer'],
+    'event': ['#event', '#announcement', '#comingsoon', '#savethedate', '#joinus'],
+    'product-launch': ['#newproduct', '#launch', '#innovation', '#exclusive', '#firstlook']
+  };
+
+  const hashtags = [
+    ...(businessHashtags[businessType] || businessHashtags['custom']),
+    ...(postTypeHashtags[postType] || [])
+  ];
+
+  // Shuffle and select 3-5 hashtags
+  return hashtags
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.floor(Math.random() * 3) + 3);
+};
+
 export const generateCaptions = async (formState: FormState): Promise<GeneratedCaption[]> => {
   validateFormState(formState);
   
@@ -242,26 +316,56 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
     // Modify the prompt with generation-specific style
     const modifiedPrompt = `${generatePrompt(formState)}\n\n${promptStyle}\nTone should be ${toneModifier}.`;
     
-    const requestBody = {
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "You are a creative social media caption generator. Generate engaging, unique captions that stand out."
-        },
-        {
-          role: "user",
-          content: modifiedPrompt
-        }
-      ],
-      temperature: temperature,
-      max_tokens: 150,
-      top_p: 0.9,
-      frequency_penalty: 0.7,
-      presence_penalty: 0.7,
-    };
+    // Create base messages array for the API request
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content: "You are a creative social media caption generator. Generate engaging, unique captions that stand out."
+      },
+      {
+        role: "user",
+        content: modifiedPrompt
+      }
+    ];
 
     try {
+      // Select the appropriate model based on whether an image is included
+      const modelToUse = formState.image ? VISION_MODEL : DEFAULT_MODEL;
+      
+      // If an image is provided, process it and include in the API request
+      if (formState.image) {
+        try {
+          const imageBase64 = await imageToBase64(formState.image);
+          
+          // Add image content to the messages
+          messages.push({
+            role: "user",
+            content: [
+              { type: "text", text: "Here is the image to reference for the caption:" },
+              {
+                type: "image_url", 
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`
+                }
+              }
+            ]
+          });
+        } catch (error) {
+          console.error("Error processing image:", error);
+          throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      const requestBody = {
+        model: modelToUse,
+        messages: messages,
+        temperature: temperature,
+        max_tokens: 200, // Increased token limit to accommodate image descriptions
+        top_p: 0.9,
+        frequency_penalty: 0.7,
+        presence_penalty: 0.7,
+      };
+
       const response = await makeApiRequest(requestBody);
       
       if (response.choices && response.choices.length > 0) {
@@ -281,7 +385,7 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
         // Only add hashtags if explicitly enabled
         if (formState.includeHashtags) {
           const hashtags = generateHashtags(formState.businessType, formState.postType);
-          caption = `${caption}\n\n${hashtags}`;
+          caption = `${caption}\n\n${hashtags.join(' ')}`;
         }
         
         captions.push({
@@ -296,33 +400,4 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
   }
 
   return captions;
-};
-
-// Helper function to generate relevant hashtags
-const generateHashtags = (businessType: string, postType: string): string[] => {
-  const businessHashtags: Record<string, string[]> = {
-    'restaurant': ['#foodie', '#foodporn', '#instafood', '#yummy', '#delicious'],
-    'computer-shop': ['#tech', '#gadgets', '#electronics', '#innovation', '#digital'],
-    'clothing': ['#fashion', '#style', '#ootd', '#trendy', '#shoplocal'],
-    'coffee-shop': ['#coffee', '#cafe', '#coffeetime', '#barista', '#coffeelover'],
-    'custom': ['#business', '#success', '#entrepreneur', '#growth', '#branding']
-  };
-
-  const postTypeHashtags: Record<string, string[]> = {
-    'promotional': ['#specialoffer', '#limitedtime', '#deals', '#discount', '#sale'],
-    'engagement': ['#community', '#engagement', '#interaction', '#feedback', '#opinion'],
-    'testimonial': ['#testimonial', '#review', '#feedback', '#satisfied', '#happycustomer'],
-    'event': ['#event', '#announcement', '#comingsoon', '#savethedate', '#joinus'],
-    'product-launch': ['#newproduct', '#launch', '#innovation', '#exclusive', '#firstlook']
-  };
-
-  const hashtags = [
-    ...(businessHashtags[businessType] || businessHashtags['custom']),
-    ...(postTypeHashtags[postType] || [])
-  ];
-
-  // Shuffle and select 3-5 hashtags
-  return hashtags
-    .sort(() => Math.random() - 0.5)
-    .slice(0, Math.floor(Math.random() * 3) + 3);
 }; 

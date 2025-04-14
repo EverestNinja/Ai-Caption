@@ -3,14 +3,13 @@ import { useState, useEffect } from 'react';
 import { 
   Container, Typography, Box, IconButton, 
   Paper, Switch, useMediaQuery, CircularProgress,
-  Snackbar, Alert, Button, TextField, MenuItem, FormControl,
-  InputLabel, Select, Grid, Dialog,
+  Snackbar, Alert, Button, TextField, MenuItem, FormControl, Select, Grid, Dialog,
   DialogTitle, DialogContent, DialogActions, FormControlLabel, Slider
 } from "@mui/material";
 // Icons
 import { MdArrowBack, MdRefresh } from 'react-icons/md';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
-import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck } from 'react-icons/fa';
+import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck, FaUpload, FaImage, FaTimesCircle } from 'react-icons/fa';
 import { BsEmojiSmile } from 'react-icons/bs';
 // Other imports
 import { motion } from 'framer-motion';
@@ -34,6 +33,8 @@ interface FormField {
   required?: boolean;
   tooltip?: string;
   multiline?: boolean;
+  rows?: number;
+  dependsOn?: { field: string; value: string; };
 }
 
 interface FormState {
@@ -44,6 +45,7 @@ interface FormState {
   includeHashtags: boolean;
   includeEmojis: boolean;
   image?: File | null;
+  imagePreview?: string | null;
   [key: string]: any;
 }
 
@@ -105,9 +107,18 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'Shop Now', label: 'Shop Now' },
         { value: 'Grab It', label: 'Grab It' },
         { value: 'Claim Deal', label: 'Claim Deal' },
-        { value: 'Check It Out', label: 'Check It Out' }
+        { value: 'Check It Out', label: 'Check It Out' },
+        { value: 'custom', label: 'Custom CTA' }
       ],
       tooltip: "Choose a call-to-action for your post"
+    },
+    {
+      id: 'customCta',
+      label: 'Enter Custom CTA',
+      placeholder: 'e.g., Limited Time Offer, Act Fast',
+      tooltip: 'Enter your custom call to action',
+      required: false,
+      dependsOn: { field: 'cta', value: 'custom' }
     },
     {
       id: 'tone',
@@ -116,9 +127,27 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'exciting', label: 'Exciting' },
         { value: 'urgent', label: 'Urgent' },
-        { value: 'friendly', label: 'Friendly' }
+        { value: 'friendly', label: 'Friendly' },
+        { value: 'custom', label: 'Custom Tone' }
       ],
       tooltip: "Select the tone for your promotional message"
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Mysterious, Energetic, Bold',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Promoting our new summer collection with a special discount",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
+      multiline: true,
+      rows: 3
     }
   ],
   engagement: [
@@ -131,8 +160,17 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'comments', label: 'Get Comments' },
         { value: 'chat', label: 'Start a Chat' },
-        { value: 'shares', label: 'Get Shares' }
+        { value: 'shares', label: 'Get Shares' },
+        { value: 'custom', label: 'Custom Goal' }
       ]
+    },
+    {
+      id: 'customGoal',
+      label: 'Enter Custom Goal',
+      placeholder: 'e.g., Gather Testimonials, Build Community',
+      tooltip: 'Describe your custom engagement goal',
+      required: false,
+      dependsOn: { field: 'goal', value: 'custom' }
     },
     {
       id: 'tone',
@@ -141,8 +179,26 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'casual', label: 'Casual' },
         { value: 'fun', label: 'Fun' },
-        { value: 'curious', label: 'Curious' }
+        { value: 'curious', label: 'Curious' },
+        { value: 'custom', label: 'Custom Tone' }
       ]
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Thoughtful, Provocative, Intriguing',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Asking customers about their favorite menu items",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
+      multiline: true,
+      rows: 3
     }
   ],
   testimonial: [
@@ -156,8 +212,26 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'happy', label: 'Happy' },
         { value: 'thankful', label: 'Thankful' },
-        { value: 'real', label: 'Real' }
+        { value: 'real', label: 'Real' },
+        { value: 'custom', label: 'Custom Tone' }
       ]
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Emotional, Inspirational, Genuine',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Sharing a customer's positive experience with our service",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
+      multiline: true,
+      rows: 3
     }
   ],
   event: [
@@ -171,8 +245,17 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'Join Us', label: 'Join Us' },
         { value: 'RSVP Now', label: 'RSVP Now' },
-        { value: 'Don\'t Miss Out', label: 'Don\'t Miss Out' }
+        { value: 'Don\'t Miss Out', label: 'Don\'t Miss Out' },
+        { value: 'custom', label: 'Custom CTA' }
       ]
+    },
+    {
+      id: 'customCta',
+      label: 'Enter Custom CTA',
+      placeholder: 'e.g., Secure Your Spot, Register Today',
+      tooltip: 'Enter your custom call to action',
+      required: false,
+      dependsOn: { field: 'cta', value: 'custom' }
     },
     {
       id: 'tone',
@@ -181,8 +264,26 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'exciting', label: 'Exciting' },
         { value: 'welcoming', label: 'Welcoming' },
-        { value: 'urgent', label: 'Urgent' }
+        { value: 'urgent', label: 'Urgent' },
+        { value: 'custom', label: 'Custom Tone' }
       ]
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Exclusive, Celebratory, Prestigious',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Announcing our annual summer sale event",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
+      multiline: true,
+      rows: 3
     }
   ],
   'product-launch': [
@@ -196,8 +297,17 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'Shop Now', label: 'Shop Now' },
         { value: 'Get Yours', label: 'Get Yours' },
-        { value: 'Learn More', label: 'Learn More' }
+        { value: 'Learn More', label: 'Learn More' },
+        { value: 'custom', label: 'Custom CTA' }
       ]
+    },
+    {
+      id: 'customCta',
+      label: 'Enter Custom CTA',
+      placeholder: 'e.g., Pre-Order Today, Be The First',
+      tooltip: 'Enter your custom call to action',
+      required: false,
+      dependsOn: { field: 'cta', value: 'custom' }
     },
     {
       id: 'tone',
@@ -206,8 +316,26 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
       options: [
         { value: 'exciting', label: 'Exciting' },
         { value: 'bold', label: 'Bold' },
-        { value: 'friendly', label: 'Friendly' }
+        { value: 'friendly', label: 'Friendly' },
+        { value: 'custom', label: 'Custom Tone' }
       ]
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Innovative, Futuristic, Revolutionary',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Introducing our new eco-friendly product line",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
+      multiline: true,
+      rows: 3
     }
   ],
   custom: [
@@ -220,10 +348,19 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'sarcastic', label: 'Sarcastic' },
         { value: 'professional', label: 'Professional' },
         { value: 'inspirational', label: 'Inspirational' },
-        { value: 'romantic', label: 'Romantic' }
+        { value: 'romantic', label: 'Romantic' },
+        { value: 'custom', label: 'Custom Tone' }
       ],
       tooltip: 'Choose a tone for your caption',
       multiline: false
+    },
+    {
+      id: 'customTone',
+      label: 'Enter Custom Tone',
+      placeholder: 'e.g., Mysterious, Energetic, Bold',
+      tooltip: 'Describe your custom tone',
+      required: false,
+      dependsOn: { field: 'tone', value: 'custom' }
     },
     {
       id: 'topic',
@@ -234,9 +371,18 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'travel', label: 'Travel' },
         { value: 'business', label: 'Business' },
         { value: 'love', label: 'Love' },
-        { value: 'gaming', label: 'Gaming' }
+        { value: 'gaming', label: 'Gaming' },
+        { value: 'custom', label: 'Custom Topic' }
       ],
       tooltip: 'Choose the main topic for your caption'
+    },
+    {
+      id: 'customTopic',
+      label: 'Enter Custom Topic',
+      placeholder: 'e.g., Sustainability, Education, Photography',
+      tooltip: 'Describe your custom topic',
+      required: false,
+      dependsOn: { field: 'topic', value: 'custom' }
     },
     {
       id: 'audience',
@@ -246,9 +392,18 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'general', label: 'General' },
         { value: 'millennials', label: 'Millennials' },
         { value: 'genz', label: 'Gen Z' },
-        { value: 'professionals', label: 'Professionals' }
+        { value: 'professionals', label: 'Professionals' },
+        { value: 'custom', label: 'Custom Audience' }
       ],
       tooltip: 'Select your target audience'
+    },
+    {
+      id: 'customAudience',
+      label: 'Enter Custom Audience',
+      placeholder: 'e.g., Parents, Dog Owners, Tech Enthusiasts',
+      tooltip: 'Describe your custom audience',
+      required: false,
+      dependsOn: { field: 'audience', value: 'custom' }
     },
     {
       id: 'style',
@@ -259,10 +414,19 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'poetic', label: 'Poetic' },
         { value: 'witty', label: 'Witty' },
         { value: 'storytelling', label: 'Storytelling' },
-        { value: 'corporate', label: 'Corporate' }
+        { value: 'corporate', label: 'Corporate' },
+        { value: 'custom', label: 'Custom Style' }
       ],
       tooltip: 'Choose a writing style',
       multiline: false
+    },
+    {
+      id: 'customStyle',
+      label: 'Enter Custom Style',
+      placeholder: 'e.g., Minimalist, Technical, Philosophical',
+      tooltip: 'Describe your custom writing style',
+      required: false,
+      dependsOn: { field: 'style', value: 'custom' }
     },
     {
       id: 'cta',
@@ -272,18 +436,28 @@ const FORM_FIELDS: { [key in PostType]: FormField[] } = {
         { value: 'shop-now', label: 'Shop Now' },
         { value: 'tag-friend', label: 'Tag a Friend' },
         { value: 'comment-below', label: 'Comment Below' },
-        { value: 'swipe-up', label: 'Swipe Up' }
+        { value: 'swipe-up', label: 'Swipe Up' },
+        { value: 'custom', label: 'Custom CTA' }
       ],
       tooltip: 'Choose a call to action',
       multiline: false
     },
     {
-      id: 'photoDescription',
-      label: 'Describe the Photo',
-      placeholder: 'e.g., A sunset over a calm beach',
-      tooltip: 'Describe the photo that will accompany your caption',
+      id: 'customCta',
+      label: 'Enter Custom CTA',
+      placeholder: 'e.g., Join our community, Try for free',
+      tooltip: 'Enter your custom call to action',
+      required: false,
+      dependsOn: { field: 'cta', value: 'custom' }
+    },
+    { 
+      id: 'description', 
+      label: "Describe Your Post", 
+      placeholder: "e.g., Creating a fun and engaging post for our followers",
+      tooltip: "Describe your post in at least 3 words",
+      required: true,
       multiline: true,
-      type: 'multiline'
+      rows: 3
     }
   ]
 };
@@ -304,6 +478,8 @@ const Generation = () => {
     numberOfGenerations: 1,
     includeHashtags: false,
     includeEmojis: false,
+    image: null,
+    imagePreview: null,
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [generatedCaptions, setGeneratedCaptions] = useState<GeneratedCaption[]>([]);
@@ -406,6 +582,7 @@ const Generation = () => {
     };
   }, [isDarkMode]);
 
+  // Update validateField function for better custom field validation
   const validateField = (field: string, value: any): string => {
     if (field === 'numberOfGenerations') {
       if (value < 1 || value > 5) return 'Number of generations must be between 1 and 5';
@@ -416,7 +593,39 @@ const Generation = () => {
       return 'Please enter your custom business type';
     }
 
-    if (!value && field !== 'includeHashtags' && field !== 'includeEmojis') {
+    if (field === 'description' && value) {
+      const wordCount = value.trim().split(/\s+/).length;
+      if (wordCount < 3) return 'Description must be at least 3 words long';
+    }
+
+    // Custom fields validations using a mapping approach
+    if (field === 'tone' && value === 'custom' && !formState.customTone) {
+      return 'Please enter your custom tone';
+    }
+    
+    if (field === 'topic' && value === 'custom' && !formState.customTopic) {
+      return 'Please enter your custom topic';
+    }
+    
+    if (field === 'audience' && value === 'custom' && !formState.customAudience) {
+      return 'Please enter your custom audience';
+    }
+    
+    if (field === 'style' && value === 'custom' && !formState.customStyle) {
+      return 'Please enter your custom writing style';
+    }
+    
+    if (field === 'cta' && value === 'custom' && !formState.customCta) {
+      return 'Please enter your custom call to action';
+    }
+    
+    if (field === 'goal' && value === 'custom' && !formState.customGoal) {
+      return 'Please enter your custom goal';
+    }
+
+    // General required field validation
+    if (!value && field !== 'includeHashtags' && field !== 'includeEmojis' && 
+        !field.startsWith('custom')) { // Don't validate custom fields unless needed
       return 'This field is required';
     }
     
@@ -487,8 +696,10 @@ const Generation = () => {
     setGeneratedCaptions([]);
 
     try {
+      // Pass the complete formState which includes image data
       const captions = await generateCaptions(formState);
-      if (captions.length > 0) {
+      
+      if (captions && captions.length > 0) {
         setGeneratedCaptions(captions);
         setGeneratedCaption(captions[0].text);
         setShowResultDialog(true);
@@ -506,6 +717,8 @@ const Generation = () => {
           setError('Network error. Please check your internet connection.');
         } else if (err.message.includes('rate limit')) {
           setError('API rate limit exceeded. Please try again in a few minutes.');
+        } else if (err.message.includes('image')) {
+          setError(`Image error: ${err.message}`);
         } else {
           setError(`Failed to generate caption: ${err.message}`);
         }
@@ -530,10 +743,46 @@ const Generation = () => {
       setCopiedToClipboard(true);
       
       // Reset the copied state after 2 seconds
-      setTimeout(() => {
+    setTimeout(() => {
         setCopiedToClipboard(false);
-      }, 2000);
+    }, 2000);
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const selectedFile = event.target.files[0];
+      
+      // Check file size (limit to 5MB)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError('Image file size should not exceed 5MB');
+        return;
+      }
+      
+      // Check file type
+      if (!selectedFile.type.match('image.*')) {
+        setError('Please select an image file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormState(prev => ({
+          ...prev,
+          image: selectedFile,
+          imagePreview: e.target?.result as string
+        }));
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  const removeImage = () => {
+    setFormState(prev => ({
+      ...prev,
+      image: null,
+      imagePreview: null
+    }));
   };
 
   if (!mounted) return null;
@@ -634,13 +883,17 @@ const Generation = () => {
           </IconButton>
         </Paper>
 
-      <Container maxWidth="lg" sx={{ mb: 5, pt: 2 }}>
+      <Container maxWidth="lg" sx={{ 
+        mb: 5, 
+        pt: { xs: 1, sm: 2 },
+        px: { xs: 2, sm: 3 } // Less horizontal padding on mobile
+      }}>
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              mb: { xs: 2, sm: 4 },
+              mb: { xs: 1, sm: 4 }, // Less margin on mobile
             }}
           >
             <Box
@@ -688,10 +941,10 @@ const Generation = () => {
           <Paper
             elevation={3}
             sx={{
-              p: { xs: 2, sm: 3 },
+              p: { xs: 1.5, sm: 3 }, // Less padding on mobile
               background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
+              borderRadius: { xs: '12px', sm: '16px' }, // Smaller border radius on mobile
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
               boxShadow: isDarkMode 
                 ? '0 10px 30px rgba(0, 0, 0, 0.2)' 
@@ -699,26 +952,27 @@ const Generation = () => {
               transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: { xs: 2, sm: 4 } }}> {/* Less margin on mobile */}
               <Typography
                 variant="h6"
                 sx={{
-                  mb: 2,
+                  mb: { xs: 1, sm: 2 }, // Less margin on mobile
                   color: isDarkMode ? '#fff' : '#000',
                   textAlign: 'center',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' } // Smaller heading on mobile
                 }}
               >
                 Choose Your Post Type
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
                 {POST_TYPES.map((type) => (
                   <Grid 
                     item 
                     xs={6}
                     sm={formState.postType ? 6 : 4} 
-                    md={formState.postType ? 6 : 4} 
-                    key={type.value}
+                    md={formState.postType ? 6 : 4}
+                    key={type.value} 
                     sx={{ 
                       display: formState.postType && formState.postType !== type.value ? 'none' : 'block',
                       transition: 'all 0.3s ease'
@@ -726,14 +980,14 @@ const Generation = () => {
                   >
                     {formState.postType === type.value ? (
                       <FormControl fullWidth>
-                        <Select
+                <Select
                           value={formState.postType}
                           onChange={(e) => handlePostTypeChange(e.target.value as PostType)}
                           MenuProps={darkModeMenuProps}
-                          sx={{
+                  sx={{
                             py: 1.5,
                             px: 2,
-                            height: 'auto',
+                            height: '56px',
                             borderRadius: 2,
                             background: isDarkMode 
                               ? 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))'
@@ -744,7 +998,7 @@ const Generation = () => {
                                 : 'rgba(64,93,230,0.3)'
                             }`,
                             color: isDarkMode ? '#fff' : '#000',
-                            '& .MuiOutlinedInput-notchedOutline': {
+                    '& .MuiOutlinedInput-notchedOutline': {
                               border: 'none',
                             },
                             '&:hover': {
@@ -771,9 +1025,9 @@ const Generation = () => {
                                   background: isDarkMode 
                                     ? 'rgba(64,93,230,0.1)'
                                     : 'rgba(64,93,230,0.05)',
-                                },
-                              }}
-                            >
+                    },
+                  }}
+                >
                               <Typography
                                 variant="subtitle1"
                                 sx={{ 
@@ -783,19 +1037,18 @@ const Generation = () => {
                                 {option.label}
                               </Typography>
                             </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                  ))}
+                </Select>
+              </FormControl>
                     ) : (
                       <Button
                         fullWidth
                         variant="outlined"
                         onClick={() => handlePostTypeChange(type.value as PostType)}
-                        sx={{ 
+                  sx={{ 
                           py: 1.5,
                           px: 1,
-                          height: '100%',
-                          minHeight: '56px',
+                          height: '56px',
                           borderRadius: 2,
                           border: `1px solid ${
                             isDarkMode
@@ -810,9 +1063,9 @@ const Generation = () => {
                             borderColor: isDarkMode
                               ? 'rgba(64,93,230,0.8)'
                               : 'rgba(64,93,230,0.5)',
-                          },
-                        }}
-                      >
+                    },
+                  }}
+                >
                         <Typography
                           variant="subtitle2"
                           sx={{ 
@@ -826,32 +1079,53 @@ const Generation = () => {
                     )}
                   </Grid>
                 ))}
-                
-                {/* Business Type right next to Post Type when selected */}
+
+                {/* Business Type Selection */}
                 {formState.postType && (
                   <Grid item xs={6} sm={6} md={6}>
                     <FormControl fullWidth>
-                      <InputLabel>Business Type</InputLabel>
                       <Select
                         value={formState.businessType}
                         onChange={(e) => handleChange('businessType', e.target.value)}
-                        label="Business Type"
-                        error={!!formErrors.businessType}
+                        displayEmpty
                         MenuProps={darkModeMenuProps}
                         sx={{
                           height: '56px',
-                          color: isDarkMode ? '#fff' : '#000',
                           borderRadius: 2,
+                          background: isDarkMode 
+                            ? 'rgba(255,255,255,0.05)'
+                            : 'rgba(255,255,255,0.8)',
+                          color: isDarkMode ? '#fff' : '#000',
                           '& .MuiOutlinedInput-notchedOutline': {
                             borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                           },
                           '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
                           },
+                          '& .MuiSelect-select': {
+                            py: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                          },
+                        }}
+                        renderValue={(selected) => {
+                          if (!selected) {
+                            return <Typography sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
+                              Business Type
+                            </Typography>;
+                          }
+                          return BUSINESS_TYPES.find(type => type.value === selected)?.label || selected;
                         }}
                       >
                         {BUSINESS_TYPES.map((type) => (
-                          <MenuItem key={type.value} value={type.value}>
+                          <MenuItem 
+                            key={type.value} 
+                            value={type.value}
+                            sx={{
+                              py: 1.5,
+                              px: 2,
+                            }}
+                          >
                             {type.label}
                           </MenuItem>
                         ))}
@@ -866,9 +1140,13 @@ const Generation = () => {
                 )}
               </Grid>
 
-              {/* Custom Business Type Input Field */}
+              {/* Custom Business Type Input */}
               {formState.businessType === 'custom' && (
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ 
+                  mt: 2, 
+                  width: '100%',
+                  px: 1
+                }}>
                   <TextField
                     fullWidth
                     label="Custom Business Type"
@@ -878,7 +1156,7 @@ const Generation = () => {
                     size="small"
                     error={!!formErrors.customBusinessType}
                     helperText={formErrors.customBusinessType}
-                    sx={{
+                    sx={{ 
                       '& .MuiOutlinedInput-root': {
                         color: isDarkMode ? '#fff' : '#000',
                         '& fieldset': {
@@ -897,101 +1175,56 @@ const Generation = () => {
               )}
             </Box>
 
-            {/* Remove the separate Business Type Section since it's now integrated above */}
-            {!formState.postType && (
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Business Type</InputLabel>
-                    <Select
-                      value={formState.businessType}
-                      onChange={(e) => handleChange('businessType', e.target.value)}
-                      label="Business Type"
-                      error={!!formErrors.businessType}
-                      MenuProps={darkModeMenuProps}
-                      sx={{
-                        color: isDarkMode ? '#fff' : '#000',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                        },
-                      }}
-                    >
-                      {BUSINESS_TYPES.map((type) => (
-                        <MenuItem key={type.value} value={type.value}>
-                          {type.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {formErrors.businessType && (
-                      <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
-                        {formErrors.businessType}
-                      </Typography>
-                    )}
-                  </FormControl>
-                </Grid>
-                
-                {formState.businessType === 'custom' && (
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Custom Business Type"
-                      placeholder="Enter your business type"
-                      value={formState.customBusinessType || ''}
-                      onChange={(e) => handleChange('customBusinessType', e.target.value)}
-                      size="small"
-                      error={!!formErrors.customBusinessType}
-                      helperText={formErrors.customBusinessType}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          color: isDarkMode ? '#fff' : '#000',
-                          '& fieldset': {
-                            borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-              </Grid>
-            )}
-
             {formState.postType && (
-              <Box>
+            <Box>
                 {/* Form Fields Section - Rendered in a 2x2 grid */}
-                <Grid container spacing={3}>
-                  {FORM_FIELDS[formState.postType].map((field) => (
-                    <Grid item xs={12} md={6} key={field.id}>
-                      <Box sx={{ mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Typography variant="subtitle1" sx={{ mr: 1, fontWeight: 500, color: isDarkMode ? '#fff' : '#000' }}>
+                <Grid container spacing={isMobile ? 1.5 : 3}>
+                  {FORM_FIELDS[formState.postType]
+                    .filter(field => {
+                      // Show field if it doesn't depend on another field, or if its dependency is satisfied
+                      if (!field.dependsOn) return true;
+                      return formState[field.dependsOn.field] === field.dependsOn.value;
+                    })
+                    .map((field) => (
+                    <Grid item xs={12} md={field.id === 'description' ? 12 : 6} key={field.id}>
+                      <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mb: { xs: 0.5, sm: 1 }, 
+                          flexWrap: 'wrap' // Allow wrapping on very small screens
+                        }}>
+                          <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                              mr: 1, 
+                              fontWeight: 500, 
+                              color: isDarkMode ? '#fff' : '#000',
+                              fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
+                            }}
+                          >
                             {field.label}
                           </Typography>
                           {field.tooltip && (
                             <Tooltip title={field.tooltip}>
-                              <IconButton size="small" sx={{ 
-                                color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                                padding: 0.2,
-                                '&:hover': {
-                                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                }
-                              }}>
-                                <FaInfoCircle size={14} />
+                              <IconButton 
+                                size="small" 
+                                sx={{ 
+                                  color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                                  padding: { xs: 0.1, sm: 0.2 }, // Smaller padding on mobile
+                                  '&:hover': {
+                                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                  }
+                                }}
+                              >
+                                <FaInfoCircle size={isMobile ? 12 : 14} />
                               </IconButton>
                             </Tooltip>
                           )}
                         </Box>
                         {field.type === 'select' ? (
                           <FormControl fullWidth error={!!formErrors[field.id]} size="small">
-                            <Select
+                <Select
                               value={formState[field.id] || ''}
                               onChange={(e) => handleChange(field.id, e.target.value)}
                               MenuProps={darkModeMenuProps}
@@ -999,12 +1232,12 @@ const Generation = () => {
                                 const option = field.options?.find(opt => opt.value === selected);
                                 return option ? option.label : '';
                               }}
-                              sx={{
+                  sx={{
                                 color: isDarkMode ? '#fff' : '#000',
-                                '& .MuiOutlinedInput-notchedOutline': {
+                    '& .MuiOutlinedInput-notchedOutline': {
                                   borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
                                   borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
                                 },
                                 '& .MuiSelect-select': {
@@ -1016,14 +1249,14 @@ const Generation = () => {
                                 <MenuItem key={option.value} value={option.value}>
                                   {option.label}
                                 </MenuItem>
-                              ))}
-                            </Select>
+                  ))}
+                </Select>
                             {formErrors[field.id] && (
                               <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
                                 {formErrors[field.id]}
                               </Typography>
                             )}
-                          </FormControl>
+              </FormControl>
                         ) : (
                           <TextField
                             fullWidth
@@ -1032,8 +1265,8 @@ const Generation = () => {
                             onChange={(e) => handleChange(field.id, e.target.value)}
                             error={!!formErrors[field.id]}
                             helperText={formErrors[field.id]}
-                            multiline={field.type === 'multiline'}
-                            rows={field.type === 'multiline' ? 3 : 1}
+                            multiline={field.multiline}
+                            rows={field.rows || 1}
                             size="small"
                             sx={{
                               '& .MuiOutlinedInput-root': {
@@ -1060,9 +1293,9 @@ const Generation = () => {
                 <Paper 
                   elevation={0}
                   sx={{ 
-                    mt: 4, 
-                    mb: 3, 
-                    p: 3, 
+                    mt: { xs: 2, sm: 4 }, // Less margin on mobile
+                    mb: { xs: 2, sm: 3 }, // Less margin on mobile
+                    p: { xs: 2, sm: 3 }, // Less padding on mobile
                     borderRadius: 2,
                     background: isDarkMode 
                       ? 'rgba(255,255,255,0.03)' 
@@ -1070,18 +1303,34 @@ const Generation = () => {
                     border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                   }}
                 >
-                  <Typography variant="h6" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#000', fontWeight: 600 }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      mb: { xs: 1.5, sm: 3 }, // Less margin on mobile
+                      color: isDarkMode ? '#fff' : '#000', 
+                      fontWeight: 600,
+                      fontSize: { xs: '1rem', sm: '1.25rem' } // Smaller text on mobile
+                    }}
+                  >
                     Generation Options
                   </Typography>
                   
-                  <Grid container spacing={3}>
+                  <Grid container spacing={isMobile ? 1.5 : 3}>
                     <Grid item xs={12} md={6}>
                       <Box sx={{ width: '100%', mb: 2 }}>
-                        <Typography variant="subtitle1" sx={{ mb: 1.5, color: isDarkMode ? '#fff' : '#000', fontWeight: 500 }}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            mb: { xs: 1, sm: 1.5 }, 
+                            color: isDarkMode ? '#fff' : '#000', 
+                            fontWeight: 500,
+                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                          }}
+                        >
                           Number of Generations
                         </Typography>
                         <Box sx={{ 
-                          px: 2, 
+                          px: { xs: 1, sm: 2 },
                           display: 'flex', 
                           flexDirection: 'column', 
                           alignItems: 'center' 
@@ -1101,20 +1350,20 @@ const Generation = () => {
                             max={5}
                             sx={{
                               width: '100%',
-                              maxWidth: '280px',
+                              maxWidth: { xs: '100%', sm: '280px' },
                               '& .MuiSlider-rail': {
-                                height: 4,
+                                height: isMobile ? 3 : 4,
                                 backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                                 opacity: 0.8,
                               },
                               '& .MuiSlider-track': {
-                                height: 4,
+                                height: isMobile ? 3 : 4,
                                 backgroundColor: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)',
                                 border: 'none',
                               },
                               '& .MuiSlider-thumb': {
-                                width: 28,
-                                height: 28,
+                                width: isMobile ? 22 : 28,
+                                height: isMobile ? 22 : 28,
                                 backgroundColor: isDarkMode ? '#fff' : '#fff',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                                 '&::before': {
@@ -1126,23 +1375,23 @@ const Generation = () => {
                                 '&::after': {
                                   content: '""',
                                   position: 'absolute',
-                                  width: 20,
-                                  height: 20,
+                                  width: isMobile ? 16 : 20,
+                                  height: isMobile ? 16 : 20,
                                   borderRadius: '50%',
                                   backgroundColor: '#405DE6',
                                 },
                               },
                               '& .MuiSlider-mark': {
                                 backgroundColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                height: 4,
-                                width: 4,
+                                height: isMobile ? 3 : 4,
+                                width: isMobile ? 3 : 4,
                                 borderRadius: '50%',
                               },
                               '& .MuiSlider-markActive': {
                                 backgroundColor: isDarkMode ? '#fff' : '#405DE6',
                               },
                               '& .MuiSlider-markLabel': {
-                                fontSize: '0.9rem',
+                                fontSize: isMobile ? '0.8rem' : '0.9rem',
                                 color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                                 marginTop: 1,
                               },
@@ -1150,7 +1399,7 @@ const Generation = () => {
                                 background: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.7)',
                                 borderRadius: '6px',
                                 padding: '2px 6px',
-                                fontSize: '0.85rem',
+                                fontSize: isMobile ? '0.75rem' : '0.85rem',
                                 fontWeight: 'bold',
                                 '&:before': {
                                   display: 'none',
@@ -1179,8 +1428,15 @@ const Generation = () => {
                           }
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <FaHashtag />
-                              <span>Include Hashtags</span>
+                              <FaHashtag size={isMobile ? 14 : 16} />
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontSize: { xs: '0.85rem', sm: '0.95rem' } 
+                                }}
+                              >
+                                Include Hashtags
+                              </Typography>
                             </Box>
                           }
                           sx={{ color: isDarkMode ? '#fff' : '#000' }}
@@ -1200,12 +1456,144 @@ const Generation = () => {
                           }
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <BsEmojiSmile />
-                              <span>Include Emojis</span>
+                              <BsEmojiSmile size={isMobile ? 14 : 16} />
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontSize: { xs: '0.85rem', sm: '0.95rem' } 
+                                }}
+                              >
+                                Include Emojis
+                              </Typography>
                             </Box>
                           }
                           sx={{ color: isDarkMode ? '#fff' : '#000' }}
                         />
+                      </Box>
+                    </Grid>
+
+                    {/* Image Upload Section */}
+                    <Grid item xs={12}>
+                      <Box sx={{ 
+                        mt: 2, 
+                        p: { xs: 2, sm: 3 },
+                        border: `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                        borderRadius: 2,
+                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                        transition: 'all 0.3s ease',
+                      }}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            mb: { xs: 1, sm: 2 },
+                            color: isDarkMode ? '#fff' : '#000', 
+                            fontWeight: 500,
+                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                          }}
+                        >
+                          <FaImage style={{ marginRight: '8px', fontSize: '0.9rem' }} />
+                          Upload Image (Optional)
+                        </Typography>
+                        
+                        {formState.imagePreview ? (
+                          <Box sx={{ position: 'relative', mb: 1 }}>
+                            <Box 
+                              component="img"
+                              src={formState.imagePreview}
+                              alt="Preview"
+                              sx={{ 
+                                width: '100%',
+                                maxHeight: { xs: '150px', sm: '200px' },
+                                objectFit: 'contain',
+                                borderRadius: 1,
+                              }}
+                            />
+                            <IconButton
+                              onClick={removeImage}
+                              size="small"
+                              sx={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                color: '#fff',
+                                padding: { xs: '4px', sm: '8px' },
+                                '&:hover': {
+                                  backgroundColor: 'rgba(0,0,0,0.7)',
+                                }
+                              }}
+                            >
+                              <FaTimesCircle size={isMobile ? 14 : 16} />
+                            </IconButton>
+                          </Box>
+                        ) : (
+                          <Box 
+                            sx={{ 
+                              textAlign: 'center',
+                              p: { xs: 1.5, sm: 3 },
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                              }
+                            }}
+                            onClick={() => document.getElementById('image-upload')?.click()}
+                          >
+                            <FaUpload size={isMobile ? 20 : 28} color={isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                            <Typography 
+                              variant="body2"
+                              sx={{ 
+                                mt: 1, 
+                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                                fontSize: { xs: '0.8rem', sm: '0.95rem' }
+                              }}
+                            >
+                              Click to upload an image
+                            </Typography>
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                display: 'block', 
+                                mt: 0.5, 
+                                color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                              }}
+                            >
+                              PNG, JPG or JPEG (max. 5MB)
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        <input
+                          type="file"
+                          id="image-upload"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleFileChange}
+                        />
+                        
+                        {!formState.imagePreview && (
+                          <Button
+                            startIcon={<FaUpload size={isMobile ? 12 : 14} />}
+                            variant="outlined"
+                            size="small"
+                            onClick={() => document.getElementById('image-upload')?.click()}
+                            sx={{
+                              mt: { xs: 1, sm: 2 },
+                              py: { xs: 0.5, sm: 1 },
+                              borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                              color: isDarkMode ? '#fff' : '#000',
+                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                              '&:hover': {
+                                borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                              }
+                            }}
+                          >
+                            Browse Files
+                          </Button>
+                        )}
                       </Box>
                     </Grid>
                   </Grid>
@@ -1213,20 +1601,23 @@ const Generation = () => {
               </Box>
             )}
 
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, sm: 4 } }}>
               <Button
                 variant="contained"
                 disabled={isGenerating}
                 onClick={handleGenerate}
-                startIcon={isGenerating ? <CircularProgress size={isMobile ? 16 : 20} color="inherit" /> : <FaMagic />}
+                startIcon={isGenerating ? 
+                  <CircularProgress size={isMobile ? 14 : 20} color="inherit" /> : 
+                  <FaMagic size={isMobile ? 16 : 20} />
+                }
                 sx={{
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 4, sm: 5 },
+                  py: { xs: 1, sm: 2 },
+                  px: { xs: 3, sm: 5 },
                   borderRadius: 3,
                   background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                   boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
                   transition: 'all 0.3s ease',
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontSize: { xs: '0.8rem', sm: '1rem' }, // Smaller text on mobile
                   fontWeight: 'bold',
                   letterSpacing: '0.5px',
                   textTransform: 'none',
@@ -1284,7 +1675,7 @@ const Generation = () => {
                   }}
                 >
                   Copy Caption
-                </Button>
+            </Button>
               </Paper>
             )}
           </Paper>
@@ -1319,10 +1710,10 @@ const Generation = () => {
               background: isDarkMode 
                 ? 'linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%)'
                 : 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
-              borderRadius: '16px',
+              borderRadius: { xs: '12px', sm: '16px' }, // Smaller border radius on mobile
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)',
-              maxWidth: '600px',
-              margin: '20px',
+              maxWidth: { xs: '95%', sm: '600px' }, // Wider on mobile
+              margin: { xs: '10px', sm: '20px' }, // Less margin on mobile
               overflow: 'hidden',
             }
           }}
@@ -1333,23 +1724,30 @@ const Generation = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              pb: 2,
+              pb: { xs: 1, sm: 2 }, // Less padding on mobile
+              pt: { xs: 1.5, sm: 2 }, // Less padding on mobile
+              px: { xs: 2, sm: 3 }, // Less padding on mobile
               background: isDarkMode 
                 ? 'linear-gradient(135deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2))' 
                 : 'linear-gradient(135deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1))',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FaMagic size={20} color={isDarkMode ? '#fff' : '#000'} />
-              <Typography variant="h5" sx={{ 
-                fontWeight: 600,
-                color: isDarkMode ? '#fff' : '#000',
-              }}>
+              <FaMagic size={isMobile ? 16 : 20} color={isDarkMode ? '#fff' : '#000'} />
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: isDarkMode ? '#fff' : '#000',
+                  fontSize: { xs: '1.2rem', sm: '1.5rem' }, // Smaller heading on mobile
+                }}
+              >
                 Generated Caption
               </Typography>
             </Box>
             <IconButton
               onClick={() => setShowResultDialog(false)}
+              size={isMobile ? "small" : "medium"} // Smaller button on mobile
               sx={{
                 color: isDarkMode ? '#fff' : '#000',
                 '&:hover': {
@@ -1357,30 +1755,30 @@ const Generation = () => {
                     ? 'rgba(255, 255, 255, 0.1)' 
                     : 'rgba(0, 0, 0, 0.1)',
                 }
-              }}
-            >
-              <FaTimes />
-            </IconButton>
+                }}
+              >
+                <FaTimes size={isMobile ? 16 : 24} />
+              </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ p: 3 }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 } }}> {/* Less padding on mobile */}
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 2, sm: 3 }, // Less padding on mobile
                 background: isDarkMode 
                   ? 'rgba(255, 255, 255, 0.05)'
                   : 'rgba(0, 0, 0, 0.02)',
-                borderRadius: '12px',
+                borderRadius: { xs: '8px', sm: '12px' }, // Smaller border radius on mobile
                 border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
               }}
             >
               <Box
                 sx={{
-                  maxHeight: '60vh',
+                  maxHeight: { xs: '50vh', sm: '60vh' }, // Smaller height on mobile
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
-                    width: '8px',
+                    width: { xs: '6px', sm: '8px' }, // Thinner scrollbar on mobile
                   },
                   '&::-webkit-scrollbar-track': {
                     background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
@@ -1405,17 +1803,29 @@ const Generation = () => {
                     <Paper
                       elevation={0}
                       sx={{
-                        p: 3,
-                        mb: 3,
+                        p: { xs: 2, sm: 3 }, // Less padding on mobile
+                        mb: { xs: 2, sm: 3 }, // Less margin on mobile
                         background: isDarkMode 
                           ? 'rgba(255, 255, 255, 0.03)'
                           : 'rgba(0, 0, 0, 0.02)',
-                        borderRadius: '12px',
+                        borderRadius: { xs: '8px', sm: '12px' }, // Smaller border radius on mobile
                         border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
                       }}
                     >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle1" sx={{ color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+                      {/* Caption header with number and copy button */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        mb: { xs: 1, sm: 2 } // Less margin on mobile
+                      }}>
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                            fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
+                          }}
+                        >
                           Caption {index + 1}
                         </Typography>
                         <IconButton
@@ -1427,14 +1837,16 @@ const Generation = () => {
                           size="small"
                           sx={{
                             color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                            padding: { xs: '4px', sm: '8px' }, // Smaller padding on mobile
                             '&:hover': {
                               color: isDarkMode ? '#fff' : '#000',
                             },
                           }}
                         >
-                          <FaCopy />
+                          <FaCopy size={isMobile ? 14 : 16} />
                         </IconButton>
                       </Box>
+                      {/* Caption text */}
                       <Typography
                         variant="body1"
                         sx={{
@@ -1442,7 +1854,7 @@ const Generation = () => {
                           lineHeight: 1.8,
                           color: isDarkMode ? '#fff' : '#000',
                           fontFamily: '"Inter", sans-serif',
-                          fontSize: '1.1rem',
+                          fontSize: { xs: '0.95rem', sm: '1.1rem' }, // Smaller text on mobile
                         }}
                       >
                         {caption.text.split('\n\n').map((part, partIndex) => {
@@ -1455,10 +1867,12 @@ const Generation = () => {
                           );
                         })}
                       </Typography>
+                      
+                      {/* Hashtags */}
                       {caption.text.includes('#') && (
                         <Box sx={{ 
-                          mt: 2,
-                          pt: 2,
+                          mt: { xs: 1.5, sm: 2 }, // Less margin on mobile
+                          pt: { xs: 1.5, sm: 2 }, // Less padding on mobile
                           borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
                         }}>
                           <Typography
@@ -1466,7 +1880,7 @@ const Generation = () => {
                             sx={{
                               color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
                               fontFamily: '"Inter", sans-serif',
-                              fontSize: '0.95rem',
+                              fontSize: { xs: '0.85rem', sm: '0.95rem' }, // Smaller text on mobile
                               lineHeight: 1.8,
                             }}
                           >
@@ -1478,11 +1892,13 @@ const Generation = () => {
                                     label={tag}
                                     size="small"
                                     sx={{
-                                      m: 0.5,
+                                      m: { xs: 0.3, sm: 0.5 }, // Less margin on mobile
                                       background: isDarkMode 
                                         ? 'rgba(64,93,230,0.2)' 
                                         : 'rgba(64,93,230,0.1)',
                                       color: isDarkMode ? '#fff' : '#000',
+                                      fontSize: { xs: '0.7rem', sm: '0.8rem' }, // Smaller text on mobile
+                                      height: { xs: '24px', sm: '32px' }, // Smaller height on mobile
                                       '&:hover': {
                                         background: isDarkMode 
                                           ? 'rgba(64,93,230,0.3)' 
@@ -1500,34 +1916,40 @@ const Generation = () => {
                       )}
                     </Paper>
                   </motion.div>
-                ))}
-              </Box>
+              ))}
+          </Box>
             </Paper>
           </DialogContent>
 
           <DialogActions 
             sx={{ 
-              p: 3, 
-              pt: 2,
+              p: { xs: 2, sm: 3 }, // Less padding on mobile
+              pt: { xs: 1, sm: 2 }, // Less padding top on mobile
               borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
               display: 'flex',
-              justifyContent: 'space-between',
+              flexDirection: { xs: 'column', sm: 'row' }, // Stack buttons on mobile
+              justifyContent: { xs: 'center', sm: 'space-between' },
+              alignItems: 'center',
+              gap: { xs: 1, sm: 0 }, // Add gap on mobile
               background: isDarkMode 
                 ? 'linear-gradient(135deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1))' 
                 : 'linear-gradient(135deg, rgba(64,93,230,0.05), rgba(88,81,219,0.05))',
             }}
           >
-            <Box>
+            <Box sx={{ width: { xs: '100%', sm: 'auto' }, mb: { xs: 1, sm: 0 } }}>
               {canRegenerate && (
                 <Button
                   onClick={handleRegenerate}
                   variant="outlined"
-                  startIcon={isRegenerating ? <CircularProgress size={20} /> : <MdRefresh />}
+                  fullWidth={isMobile}
+                  startIcon={isRegenerating ? <CircularProgress size={isMobile ? 16 : 20} /> : <MdRefresh size={isMobile ? 14 : 18} />}
                   disabled={isRegenerating}
                   sx={{
-                    mr: 1,
+                    mr: { xs: 0, sm: 1 },
+                    py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
                     color: isDarkMode ? '#fff' : '#000',
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                     '&:hover': {
                       borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
                       background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
@@ -1542,17 +1964,25 @@ const Generation = () => {
                 </Button>
               )}
             </Box>
-            <Box>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, // Stack buttons on mobile
+              width: { xs: '100%', sm: 'auto' },
+              gap: { xs: 1, sm: 0 } // Add gap on mobile
+            }}>
               <Button
                 onClick={handleCopyCaption}
                 variant="contained"
-                startIcon={copiedToClipboard ? <FaCheck /> : <FaCopy />}
+                fullWidth={isMobile}
+                startIcon={copiedToClipboard ? <FaCheck size={isMobile ? 12 : 14} /> : <FaCopy size={isMobile ? 12 : 14} />}
                 sx={{
-                  mr: 1,
+                  mr: { xs: 0, sm: 1 },
+                  py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
                   background: copiedToClipboard
                     ? 'linear-gradient(45deg, #00c853, #00e676)'
                     : 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                   color: 'white',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                   transition: 'background 0.3s ease',
                   '&:hover': {
                     background: copiedToClipboard
@@ -1566,9 +1996,12 @@ const Generation = () => {
               <Button
                 onClick={() => setShowResultDialog(false)}
                 variant="outlined"
+                fullWidth={isMobile}
                 sx={{
+                  py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
                   borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
                   color: isDarkMode ? '#fff' : '#000',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
                   '&:hover': {
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
                     background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',

@@ -1,7 +1,7 @@
 {
   "name": "glocap",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -36,5 +36,17 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
-  }
+  },
+  "description": "![Tech Stack](https://img.shields.io/badge/Tech%20Stack-React%20%7C%20Vite%20%7C%20TypeScript-blue)\r ![License](https://img.shields.io/badge/License-MIT-green)",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EverestNinja/Ai-Caption.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EverestNinja/Ai-Caption/issues"
+  },
+  "homepage": "https://github.com/EverestNinja/Ai-Caption#readme"
 }
