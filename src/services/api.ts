@@ -381,7 +381,7 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
               }
             ]
           });
-        } catch (error) {
+  } catch (error) {
           console.error("Error processing image:", error);
           throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }

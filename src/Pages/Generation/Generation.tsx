@@ -693,8 +693,8 @@ const Generation = () => {
       return;
     }
 
-    setIsGenerating(true);
-    setError('');
+      setIsGenerating(true);
+      setError('');
     setGeneratedCaptions([]);
 
     try {
@@ -702,7 +702,7 @@ const Generation = () => {
       const captions = await generateCaptions(formState);
       
       if (captions && captions.length > 0) {
-        setGeneratedCaptions(captions);
+      setGeneratedCaptions(captions);
         setGeneratedCaption(captions[0].text);
         setShowResultDialog(true);
         setCanRegenerate(true);
@@ -885,6 +885,26 @@ const Generation = () => {
           </IconButton>
         </Paper>
 
+        {/* Background Gradient */}
+        <Box
+          component={motion.div}
+          animate={{
+            background: isDarkMode
+              ? 'radial-gradient(circle at 50% 50%, rgba(131, 58, 180, 0.15) 0%, rgba(193, 53, 132, 0.08) 50%, transparent 100%)'
+              : 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.08) 0%, rgba(131, 58, 180, 0.04) 50%, transparent 100%)',
+          }}
+          transition={{ duration: 0.4 }}
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0,
+            transition: TRANSITION_TIMING,
+          }}
+        />
+
       <Container maxWidth="lg" sx={{ 
         mb: 5, 
         pt: { xs: 1, sm: 2 },
@@ -925,7 +945,7 @@ const Generation = () => {
                 color: isDarkMode ? '#fff' : '#000'
               }}
             >
-              Generate Your Caption
+              Generate Your Content
             </Typography>
             <Typography
               variant="h2"
@@ -936,7 +956,7 @@ const Generation = () => {
                 textAlign: 'center'
               }}
             >
-              Create engaging captions that capture attention and drive engagement
+              Create engaging content that captures attention and drives engagement
             </Typography>
           </Box>
 
@@ -966,7 +986,7 @@ const Generation = () => {
                 }}
               >
                 Choose Your Post Type
-              </Typography>
+                </Typography>
               <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
                 {POST_TYPES.map((type) => (
                   <Grid 
@@ -975,7 +995,7 @@ const Generation = () => {
                     sm={formState.postType ? 6 : 4} 
                     md={formState.postType ? 6 : 4}
                     key={type.value} 
-                    sx={{ 
+                  sx={{ 
                       display: formState.postType && formState.postType !== type.value ? 'none' : 'block',
                       transition: 'all 0.3s ease'
                     }}
@@ -1086,22 +1106,22 @@ const Generation = () => {
                 {formState.postType && (
                   <Grid item xs={6} sm={6} md={6}>
                     <FormControl fullWidth>
-                      <Select
+                <Select
                         value={formState.businessType}
                         onChange={(e) => handleChange('businessType', e.target.value)}
                         displayEmpty
                         MenuProps={darkModeMenuProps}
-                        sx={{
+                  sx={{
                           height: '56px',
                           borderRadius: 2,
                           background: isDarkMode 
                             ? 'rgba(255,255,255,0.05)'
                             : 'rgba(255,255,255,0.8)',
                           color: isDarkMode ? '#fff' : '#000',
-                          '& .MuiOutlinedInput-notchedOutline': {
+                    '& .MuiOutlinedInput-notchedOutline': {
                             borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                          },
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
                           },
                           '& .MuiSelect-select': {
@@ -1130,14 +1150,14 @@ const Generation = () => {
                           >
                             {type.label}
                           </MenuItem>
-                        ))}
-                      </Select>
+                  ))}
+                </Select>
                       {formErrors.businessType && (
                         <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
                           {formErrors.businessType}
                         </Typography>
                       )}
-                    </FormControl>
+              </FormControl>
                   </Grid>
                 )}
               </Grid>
@@ -1161,11 +1181,15 @@ const Generation = () => {
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         color: isDarkMode ? '#fff' : '#000',
+                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
                         '& fieldset': {
                           borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                         },
                         '&:hover fieldset': {
                           borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: isDarkMode ? 'rgba(131, 58, 180, 0.6)' : 'rgba(131, 58, 180, 0.6)',
                         },
                       },
                       '& .MuiInputLabel-root': {
@@ -1206,12 +1230,12 @@ const Generation = () => {
                             }}
                           >
                             {field.label}
-                          </Typography>
+                </Typography>
                           {field.tooltip && (
                             <Tooltip title={field.tooltip}>
                               <IconButton 
                                 size="small" 
-                                sx={{ 
+                  sx={{ 
                                   color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
                                   padding: { xs: 0.1, sm: 0.2 }, // Smaller padding on mobile
                                   '&:hover': {
@@ -1331,9 +1355,9 @@ const Generation = () => {
                         >
                           Number of Generations
                         </Typography>
-                        <Box sx={{ 
+              <Box sx={{ 
                           px: { xs: 1, sm: 2 },
-                          display: 'flex', 
+                display: 'flex', 
                           flexDirection: 'column', 
                           alignItems: 'center' 
                         }}>
@@ -1423,7 +1447,7 @@ const Generation = () => {
                             fontSize: { xs: '0.9rem', sm: '1rem' }
                           }}
                         >
-                          Caption Length
+                          Content Length
                         </Typography>
                         <Box sx={{ 
                           px: { xs: 1, sm: 2 },
@@ -1500,52 +1524,52 @@ const Generation = () => {
                     
                     <Grid item xs={12} md={6}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%', justifyContent: 'center' }}>
-                        <FormControlLabel
-                          control={
-                            <Switch
+                  <FormControlLabel
+                    control={
+                      <Switch
                               checked={formState.includeHashtags}
                               onChange={(e) => handleChange('includeHashtags', e.target.checked)}
-                              sx={{
+                        sx={{
                                 '& .MuiSwitch-switchBase.Mui-checked': {
-                                  color: '#405DE6',
-                                },
-                              }}
-                            />
-                          }
+                              color: '#405DE6',
+                          },
+                        }}
+                      />
+                    }
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <FaHashtag size={isMobile ? 14 : 16} />
                               <Typography 
                                 variant="body2" 
-                                sx={{ 
+                    sx={{
                                   fontSize: { xs: '0.85rem', sm: '0.95rem' } 
-                                }}
+                    }}
                               >
                                 Include Hashtags
                               </Typography>
-                            </Box>
+                </Box>
                           }
                           sx={{ color: isDarkMode ? '#fff' : '#000' }}
                         />
 
-                        <FormControlLabel
-                          control={
-                            <Switch
+                  <FormControlLabel
+                    control={
+                      <Switch
                               checked={formState.includeEmojis}
                               onChange={(e) => handleChange('includeEmojis', e.target.checked)}
-                              sx={{
+                        sx={{
                                 '& .MuiSwitch-switchBase.Mui-checked': {
-                                  color: '#405DE6',
-                                },
-                              }}
-                            />
-                          }
+                              color: '#405DE6',
+                          },
+                        }}
+                      />
+                    }
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <BsEmojiSmile size={isMobile ? 14 : 16} />
                               <Typography 
                                 variant="body2" 
-                                sx={{ 
+                    sx={{
                                   fontSize: { xs: '0.85rem', sm: '0.95rem' } 
                                 }}
                               >
@@ -1554,8 +1578,8 @@ const Generation = () => {
                             </Box>
                           }
                           sx={{ color: isDarkMode ? '#fff' : '#000' }}
-                        />
-                      </Box>
+                  />
+                </Box>
                     </Grid>
 
                     {/* Image Upload Section */}
@@ -1594,7 +1618,7 @@ const Generation = () => {
                                 fontStyle: 'italic'
                               }}>
                                 (Caption will focus on image content)
-                              </Typography>
+                </Typography>
                             </Box>
                           ) : (
                             'Upload Image (Optional)'
@@ -1630,11 +1654,11 @@ const Generation = () => {
                               }}
                             >
                               <FaTimesCircle size={isMobile ? 14 : 16} />
-                            </IconButton>
-                          </Box>
+                  </IconButton>
+              </Box>
                         ) : (
                           <Box 
-                            sx={{ 
+                sx={{
                               textAlign: 'center',
                               p: { xs: 1.5, sm: 3 },
                               cursor: 'pointer',
@@ -1660,7 +1684,7 @@ const Generation = () => {
                               sx={{ 
                                 display: 'block', 
                                 mt: 0.5, 
-                                color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
                                 fontSize: { xs: '0.7rem', sm: '0.75rem' }
                               }}
                             >
@@ -1698,7 +1722,7 @@ const Generation = () => {
                             Browse Files
                           </Button>
                         )}
-                      </Box>
+            </Box>
                     </Grid>
                   </Grid>
                 </Paper>
@@ -1706,40 +1730,40 @@ const Generation = () => {
             )}
 
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, sm: 4 } }}>
-              <Button
-                variant="contained"
+            <Button
+              variant="contained"
                 disabled={isGenerating}
-                onClick={handleGenerate}
+              onClick={handleGenerate}
                 startIcon={isGenerating ? 
                   <CircularProgress size={isMobile ? 14 : 20} color="inherit" /> : 
                   <FaMagic size={isMobile ? 16 : 20} />
                 }
-                sx={{
+              sx={{
                   py: { xs: 1, sm: 2 },
                   px: { xs: 3, sm: 5 },
-                  borderRadius: 3,
-                  background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                  boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
+                borderRadius: 3,
+                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
                   transition: 'all 0.3s ease',
                   fontSize: { xs: '0.8rem', sm: '1rem' }, // Smaller text on mobile
                   fontWeight: 'bold',
                   letterSpacing: '0.5px',
                   textTransform: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
-                  },
-                  '&:active': {
-                    transform: 'translateY(0)',
-                  },
-                  '&.Mui-disabled': {
-                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                    color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
-                {isGenerating ? 'Generating...' : 'Generate Caption'}
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                },
+                '&.Mui-disabled': {
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                },
+              }}
+            >
+                {isGenerating ? 'Generating...' : 'Generate Content'}
               </Button>
             </Box>
 
@@ -1756,7 +1780,7 @@ const Generation = () => {
                 }}
               >
                 <Typography variant="h6" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#000' }}>
-                  Generated Caption
+                  Generated Content
                 </Typography>
                 <Typography
                   sx={{
@@ -1778,7 +1802,7 @@ const Generation = () => {
                     },
                   }}
                 >
-                  Copy Caption
+                  Copy Content
             </Button>
               </Paper>
             )}
@@ -1838,23 +1862,23 @@ const Generation = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <FaMagic size={isMobile ? 16 : 20} color={isDarkMode ? '#fff' : '#000'} />
-              <Typography 
+              <Typography
                 variant="h5" 
-                sx={{ 
+                sx={{
                   fontWeight: 600,
                   color: isDarkMode ? '#fff' : '#000',
                   fontSize: { xs: '1.2rem', sm: '1.5rem' }, // Smaller heading on mobile
                 }}
               >
-                Generated Caption
+                Generated Content
               </Typography>
             </Box>
-            <IconButton
+              <IconButton
               onClick={() => setShowResultDialog(false)}
               size={isMobile ? "small" : "medium"} // Smaller button on mobile
-              sx={{
+                sx={{
                 color: isDarkMode ? '#fff' : '#000',
-                '&:hover': {
+                  '&:hover': {
                   background: isDarkMode 
                     ? 'rgba(255, 255, 255, 0.1)' 
                     : 'rgba(0, 0, 0, 0.1)',
@@ -1866,9 +1890,9 @@ const Generation = () => {
           </DialogTitle>
 
           <DialogContent sx={{ p: { xs: 2, sm: 3 } }}> {/* Less padding on mobile */}
-            <Paper
-              elevation={0}
-              sx={{
+                  <Paper
+                    elevation={0}
+                    sx={{
                 p: { xs: 2, sm: 3 }, // Less padding on mobile
                 background: isDarkMode 
                   ? 'rgba(255, 255, 255, 0.05)'
@@ -1891,12 +1915,12 @@ const Generation = () => {
                   '&::-webkit-scrollbar-thumb': {
                     background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                     borderRadius: '4px',
-                    '&:hover': {
+                      '&:hover': {
                       background: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
                     },
-                  },
-                }}
-              >
+                      },
+                    }}
+                  >
                 {generatedCaptions.map((caption, index) => (
                   <motion.div
                     key={index}
@@ -1917,8 +1941,8 @@ const Generation = () => {
                       }}
                     >
                       {/* Caption header with number and copy button */}
-                      <Box sx={{ 
-                        display: 'flex', 
+                    <Box sx={{ 
+                      display: 'flex',
                         justifyContent: 'space-between', 
                         alignItems: 'center', 
                         mb: { xs: 1, sm: 2 } // Less margin on mobile
@@ -1949,7 +1973,7 @@ const Generation = () => {
                         >
                           <FaCopy size={isMobile ? 14 : 16} />
                         </IconButton>
-                      </Box>
+                    </Box>
                       {/* Caption text */}
                       <Typography
                         variant="body1"
@@ -2018,7 +2042,7 @@ const Generation = () => {
                           </Typography>
                         </Box>
                       )}
-                    </Paper>
+                  </Paper>
                   </motion.div>
               ))}
           </Box>
@@ -2048,7 +2072,7 @@ const Generation = () => {
                   fullWidth={isMobile}
                   startIcon={isRegenerating ? <CircularProgress size={isMobile ? 16 : 20} /> : <MdRefresh size={isMobile ? 14 : 18} />}
                   disabled={isRegenerating}
-                  sx={{
+            sx={{
                     mr: { xs: 0, sm: 1 },
                     py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
                     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
@@ -2095,7 +2119,7 @@ const Generation = () => {
                   },
                 }}
               >
-                {copiedToClipboard ? 'Copied!' : 'Copy Caption'}
+                {copiedToClipboard ? 'Copied!' : 'Copy Content'}
               </Button>
               <Button
                 onClick={() => setShowResultDialog(false)}

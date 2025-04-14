@@ -251,7 +251,7 @@ const Landing = () => {
                 ...commonTransition,
               }}
             >
-              GloCap - Best Caption Generator
+              GloCap - Best Content Generator
             </Typography>
             <Typography
               variant="h2"
@@ -263,13 +263,13 @@ const Landing = () => {
                 ...commonTransition,
               }}
             >
-              Transform your social media presence with AI-powered captions that engage, inspire, and convert
+              Transform your social media presence with AI-powered content that engages, inspires, and converts
             </Typography>
 
             <Button
               variant="contained"
               size={isMobile ? "medium" : "large"}
-              onClick={() => navigate('/generate')}
+              onClick={() => navigate('/choose')}
               sx={{
                 py: { xs: 1.5, sm: 2 },
                 px: { xs: 4, sm: 8 },
@@ -373,7 +373,7 @@ const Landing = () => {
                       ...commonTransition,
                     }}
                   >
-                    {feature.description}
+                    {feature.description.replace('captions', 'content')}
                   </Typography>
                 </Paper>
               ))}
@@ -428,7 +428,7 @@ const Landing = () => {
                     color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
                   }}
                 >
-                  Welcome to GloCap - Best Caption Generator, your ultimate AI-powered tool for crafting the perfect social media captions.
+                  Welcome to GloCap - Best Content Generator, your ultimate AI-powered tool for crafting the perfect social media content.
                 </Typography>
                 <Typography
                   sx={{
@@ -610,7 +610,7 @@ const Landing = () => {
                 <Button
                   variant="contained"
                   size={isMobile ? "medium" : "large"}
-                  onClick={() => navigate('/generate')}
+                  onClick={() => navigate('/choose')}
                   sx={{
                     py: { xs: 1.5, sm: 2 },
                     px: { xs: 4, sm: 6 },
@@ -623,7 +623,7 @@ const Landing = () => {
                     },
                   }}
                 >
-                  Start Creating Captions
+                  Get Your Captions Now
                 </Button>
               </Box>
             </Box>
