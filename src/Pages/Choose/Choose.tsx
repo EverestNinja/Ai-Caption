@@ -1,4 +1,4 @@
-import { Box, Container, Typography, Paper, IconButton, Switch, Grid, Card, CardContent, CardMedia, Button, useMediaQuery } from '@mui/material';
+import { Box, Container, Typography, Paper, IconButton, Switch, Grid, Card, CardContent , Button, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaFileAlt, FaMagic, FaArrowLeft } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
