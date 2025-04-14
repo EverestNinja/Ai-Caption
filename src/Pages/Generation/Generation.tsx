@@ -1563,9 +1563,13 @@ const Generation = () => {
                       <Box sx={{ 
                         mt: 2, 
                         p: { xs: 2, sm: 3 },
-                        border: `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                        border: formState.imagePreview 
+                          ? `2px solid ${isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)'}` 
+                          : `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
                         borderRadius: 2,
-                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                        backgroundColor: formState.imagePreview
+                          ? isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)'
+                          : isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
                         transition: 'all 0.3s ease',
                       }}>
                         <Typography 
@@ -1580,7 +1584,21 @@ const Generation = () => {
                           }}
                         >
                           <FaImage style={{ marginRight: '8px', fontSize: '0.9rem' }} />
-                          Upload Image (Optional)
+                          {formState.imagePreview ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <span style={{ color: isDarkMode ? 'rgba(64,93,230,1)' : 'rgba(64,93,230,1)' }}>
+                                Image Uploaded
+                              </span>
+                              <Typography variant="caption" sx={{ 
+                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                                fontStyle: 'italic'
+                              }}>
+                                (Caption will focus on image content)
+                              </Typography>
+                            </Box>
+                          ) : (
+                            'Upload Image (Optional)'
+                          )}
                         </Typography>
                         
                         {formState.imagePreview ? (

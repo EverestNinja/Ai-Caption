@@ -123,8 +123,20 @@ const generatePrompt = (formState: FormState): string => {
   
   const lengthDescription = lengthMap[captionLength as keyof typeof lengthMap] || 'moderate length (around 2-3 sentences, between 30-60 words total)';
   
-  // Start with length instruction as the primary directive
-  let prompt = `Create a ${lengthDescription} ${postType} social media caption for a ${businessTypeText} business. IMPORTANT: The length constraint is the highest priority requirement. `;
+  // Start with image instruction if image is provided
+  let prompt = '';
+  if (image) {
+    prompt = `PRIORITY INSTRUCTION: The uploaded image is the most important element to focus on. Generate a caption that directly describes and relates to the visual elements in this specific image. `;
+  }
+  
+  // Add length and post type instructions
+  prompt += `Create a ${lengthDescription} ${postType} social media caption for a ${businessTypeText} business. `;
+  
+  if (image) {
+    prompt += `Make sure the caption explicitly mentions key elements visible in the image. `;
+  }
+  
+  prompt += `IMPORTANT: The length constraint is a high priority requirement. `;
   
   // Add specific instructions based on post type
   switch (postType) {
@@ -174,11 +186,6 @@ const generatePrompt = (formState: FormState): string => {
     prompt += `Post description: ${fields.description}. `;
   }
 
-  // If there's an image, mention it in the prompt
-  if (image) {
-    prompt += `The post includes an uploaded image. Make the caption relevant to this image. `;
-  }
-
   // Add hashtags instruction if enabled
   if (includeHashtags) {
     prompt += 'Include relevant hashtags at the end. ';
@@ -193,6 +200,11 @@ const generatePrompt = (formState: FormState): string => {
   
   // Reiterate length constraint at the end
   prompt += `Remember to keep the caption ${lengthDescription}.`;
+  
+  // Final reminder about image priority if image is present
+  if (image) {
+    prompt += ` The caption MUST directly reference what's visible in the uploaded image.`;
+  }
   
   return prompt;
 };
@@ -330,11 +342,16 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
     // Modify the prompt with generation-specific style
     const modifiedPrompt = `${generatePrompt(formState)}\n\n${promptStyle}\nTone should be ${toneModifier}.`;
     
+    // Inside generateCaptions function, update the system message to prioritize image
     // Create base messages array for the API request
+    const systemMessage = formState.image 
+      ? "You are a visual-focused social media caption generator that prioritizes describing the uploaded image content. Focus primarily on what's visible in the image while following length requirements. Generate engaging, image-specific captions."
+      : "You are a creative social media caption generator that strictly follows length requirements. Generate engaging, unique captions that match the exact length specifications provided by the user. Be concise and precise with your word count.";
+    
     const messages: ChatMessage[] = [
       {
         role: "system",
-        content: "You are a creative social media caption generator that strictly follows length requirements. Generate engaging, unique captions that match the exact length specifications provided by the user. Be concise and precise with your word count."
+        content: systemMessage
       },
       {
         role: "user",
