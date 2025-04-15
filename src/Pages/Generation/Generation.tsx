@@ -18,6 +18,7 @@ import { useTheme as useCustomTheme } from '../../context/ThemeContext';
 import Footer from '../../components/Footer/Footer';
 import FeedbackButton from '../../components/FeedbackButton';
 import { usePositiveMessage } from '../../context/PositiveMessageContext';
+import FloatingSettingsButton from '../../components/FloatingSettingsButton';
 
 // ===== TYPES =====
 type PostType = 'promotional' | 'engagement' | 'educational' | 'testimonial' | 'event' | 'product-launch';
@@ -400,6 +401,9 @@ const Generation = () => {
         </IconButton>
       </Paper>
 
+      {/* Floating Settings Button */}
+      <FloatingSettingsButton position="bottom-right" />
+
       <Container maxWidth="lg" sx={{ mb: 5, pt: 2 }}>
         {/* Header */}
         <Box
@@ -550,42 +554,6 @@ const Generation = () => {
                       </Select>
                     </FormControl>
                   ) : (
-                    // <Button
-                    //   fullWidth
-                    //   variant="outlined"
-                    //   onClick={() => handlePostTypeChange(type.value as PostType)}
-                    //   sx={{
-                    //     py: 2,
-                    //     px: 3,
-                    //     height: 'auto',
-                    //     borderRadius: 2,
-                    //     border: `1px solid ${
-                    //       isDarkMode
-                    //         ? 'rgba(255,255,255,0.1)'
-                    //         : 'rgba(0,0,0,0.1)'
-                    //     }`,
-                    //     color: isDarkMode ? '#fff' : '#000',
-                    //     '&:hover': {
-                    //       background: isDarkMode
-                    //         ? 'rgba(255,255,255,0.05)'
-                    //         : 'rgba(0,0,0,0.05)',
-                    //       borderColor: isDarkMode
-                    //         ? 'rgba(64,93,230,0.8)'
-                    //         : 'rgba(64,93,230,0.5)',
-                    //     },
-                    //   }}
-                    // >
-                    //   <Typography
-                    //     variant="subtitle1"
-                    //     sx={{ 
-                    //       fontWeight: 600,
-                    //     }}
-                    //   >
-                    //     {type.label}
-                    //   </Typography>
-                    // </Button>
-                    // Replace the Button component (around line 549) with a FeedbackButton
-
                     <FeedbackButton
                       fullWidth
                       variant="outlined"
@@ -735,35 +703,6 @@ const Generation = () => {
 
           {/* Generate Button */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            {/* <Button
-              variant="contained"
-              disabled={isGenerating}
-              onClick={handleGenerate}
-              startIcon={isGenerating ? <CircularProgress size={isMobile ? 16 : 20} color="inherit" /> : <FaMagic />}
-              sx={{
-                py: { xs: 1.5, sm: 2 },
-                px: { xs: 3, sm: 4 },
-                borderRadius: 3,
-                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
-                },
-                '&:active': {
-                  transform: 'translateY(0)',
-                },
-                '&.Mui-disabled': {
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                },
-              }}
-            >
-              {isGenerating ? 'Generating...' : 'Generate Caption'}
-            </Button> */}
             <FeedbackButton
               variant="contained"
               disabled={isGenerating}
@@ -821,19 +760,6 @@ const Generation = () => {
               >
                 {generatedCaption}
               </Typography>
-              {/* <Button
-                startIcon={<FaCopy />}
-                onClick={handleCopyCaption}
-                sx={{
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  color: isDarkMode ? '#fff' : '#000',
-                  '&:hover': {
-                    background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
-                  },
-                }}
-              >
-                Copy Caption
-              </Button> */}
               <FeedbackButton
                 startIcon={<FaCopy />}
                 onClick={handleCopyCaption}

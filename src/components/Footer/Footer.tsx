@@ -30,6 +30,10 @@ const Footer = () => {
       path: '/generate'
     },
     {
+      label: 'Settings',
+      path: '/settings'
+    },
+    {
       label: 'Privacy & Policy',
       path: '/privacy'
     },
@@ -394,4 +398,4 @@ const Footer = () => {
   );
 };
 
-export default Footer; 
+export default Footer;

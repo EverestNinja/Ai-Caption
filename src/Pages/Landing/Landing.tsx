@@ -7,8 +7,9 @@ import { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
-import FeedbackButton from '../../components/FeedbackButton'
+import FeedbackButton from '../../components/FeedbackButton';
 import { usePositiveMessage } from '../../context/PositiveMessageContext';
+import FloatingSettingsButton from '../../components/FloatingSettingsButton';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -141,6 +142,9 @@ const Landing = () => {
             <BsMoonFill />
           </IconButton>
         </Paper>
+
+        {/* Floating Settings Button */}
+        <FloatingSettingsButton position="bottom-right" />
 
         {/* Background Gradient with Animation */}
         <Box

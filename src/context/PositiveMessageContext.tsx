@@ -3,29 +3,29 @@ import PositiveToast from '../components/PositiveToast';
 
 // Message data
 const SURPRISE_COMPLIMENTS = [
+  "You're on the perfect path—keep it up!",
+  "Your sales game is about to soar—great move!",
+  "You're doing it right—marketing magic incoming!",
+  "Stay positive—your efforts are paying off!",
+  "You've got the vision—success is yours!",
   "You're paving the way to sales glory—keep shining!",
   "Your marketing instincts are spot-on—big wins ahead!",
   "You're unstoppable—success is just around the corner!",
   "Every step you take is pure gold—stay the course!",
-  "You're crafting a sales revolution—brilliant work!",
-  "The right moves, the right time—sales are calling!",
-  "Your energy is magnetic—marketing magic in progress!",
-  "You're on fire—sales success is yours to claim!",
-  "Keep pushing—you're building a winning strategy!",
-  "You're exactly where you need to be—destined for greatness!"
+  "You're crafting a sales revolution—brilliant work!"
 ];
 
 const ACHIEVEMENT_SPARKS = [
-  "Boom! Two captions down—you're crushing your goals!",
-  "This is how legends are made—sales-boosting brilliance!",
-  "You're a caption titan—marketing domination unlocked!",
-  "Two masterpieces in—your dreams are taking flight!",
-  "Sales surge activated—your captions are unstoppable!",
-  "You're rewriting success, one caption at a time—wow!",
-  "Double caption victory—your empire is rising fast!",
-  "Target obliterated—your creativity is a sales weapon!",
-  "Two captions, pure power—you're a marketing maestro!",
-  "Milestone smashed—your path to glory is blazing!"
+  "Wow, you're smashing your caption goals!",
+  "This is how you conquer your dreams—epic caption!",
+  "You're soaring toward sales stardom—brilliant!",
+  "Another big win—your marketing is unstoppable!",
+  "Caption mastery: You're building a sales empire!",
+  "You're crushing targets with every word—amazing!",
+  "This caption? A giant step to your next sale!",
+  "Legend status achieved—two captions, pure fire!",
+  "Your success streak is unstoppable—wow!",
+  "Dreams in action: This caption seals the deal!"
 ];
 
 interface PositiveMessageContextType {
@@ -33,6 +33,7 @@ interface PositiveMessageContextType {
   triggerCompliment: () => void;
   triggerAchievement: () => void;
   setMessagesEnabled: (enabled: boolean) => void;
+  messagesEnabled: boolean;
 }
 
 const PositiveMessageContext = createContext<PositiveMessageContextType | undefined>(undefined);
@@ -44,6 +45,7 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
   const [actionCounter, setActionCounter] = useState(0);
   const [lastMessageTime, setLastMessageTime] = useState(0);
   const [messagesEnabled, setMessagesEnabled] = useState(true);
+  const [recentMessageCount, setRecentMessageCount] = useState(0);
   
   // Load user preference from localStorage
   useEffect(() => {
@@ -53,22 +55,34 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
     }
   }, []);
   
+  // Reset message count every 5 minutes
+  useEffect(() => {
+    const resetInterval = setInterval(() => {
+      setRecentMessageCount(0);
+    }, 300000); // 5 minutes
+    
+    return () => clearInterval(resetInterval);
+  }, []);
+  
   // Get random message
   const getRandomMessage = (isAchievement: boolean): string => {
     const messages = isAchievement ? ACHIEVEMENT_SPARKS : SURPRISE_COMPLIMENTS;
     return messages[Math.floor(Math.random() * messages.length)];
   };
   
-  // Check if we can show a message based on time
+  // Check if we can show a message based on time and message count
   const canShowMessage = useCallback((): boolean => {
     if (!messagesEnabled) return false;
     
     const now = Date.now();
     const timeSinceLastMessage = now - lastMessageTime;
     
-    // Limit to no more than one message every 5 minutes (300000ms)
-    return timeSinceLastMessage > 300000;
-  }, [lastMessageTime, messagesEnabled]);
+    // Don't show messages too close together (at least 10 seconds apart)
+    if (timeSinceLastMessage < 10000) return false;
+    
+    // Cap at 1-2 messages (combined) per 5-minute window
+    return recentMessageCount < 2;
+  }, [lastMessageTime, messagesEnabled, recentMessageCount]);
   
   // Track user actions
   const trackAction = useCallback((isCaption = false) => {
@@ -88,6 +102,7 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
           setCurrentMessage(message);
           setMessageType('achievement');
           setLastMessageTime(Date.now());
+          setRecentMessageCount(prev => prev + 1);
           return 0; // Reset counter after achievement
         }
         return newCount;
@@ -96,11 +111,14 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
     // For general actions, randomly trigger compliments (5-10% chance)
     else {
       const randomChance = Math.random() * 100;
-      if (randomChance <= 7.5 && actionCounter > 5 && canShowMessage()) {
+      const triggerThreshold = Math.min(10, 5 + (actionCounter * 0.5)); // 5-10% chance, increasing with actions
+      
+      if (randomChance <= triggerThreshold && actionCounter >= 3 && canShowMessage()) {
         const message = getRandomMessage(false);
         setCurrentMessage(message);
         setMessageType('compliment');
         setLastMessageTime(Date.now());
+        setRecentMessageCount(prev => prev + 1);
         setActionCounter(0); // Reset action counter
       }
     }
@@ -114,6 +132,7 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
     setCurrentMessage(message);
     setMessageType('compliment');
     setLastMessageTime(Date.now());
+    setRecentMessageCount(prev => Math.min(prev + 1, 2));
   }, [messagesEnabled]);
   
   // Force trigger an achievement
@@ -124,6 +143,7 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
     setCurrentMessage(message);
     setMessageType('achievement');
     setLastMessageTime(Date.now());
+    setRecentMessageCount(prev => Math.min(prev + 1, 2));
     setCaptionCounter(0); // Reset caption counter
   }, [messagesEnabled]);
   
@@ -144,7 +164,8 @@ export const PositiveMessageProvider: React.FC<{children: React.ReactNode}> = ({
         trackAction, 
         triggerCompliment,
         triggerAchievement,
-        setMessagesEnabled: handleSetMessagesEnabled
+        setMessagesEnabled: handleSetMessagesEnabled,
+        messagesEnabled
       }}
     >
       {children}

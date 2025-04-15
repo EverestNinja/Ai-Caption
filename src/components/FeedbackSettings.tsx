@@ -1,10 +1,14 @@
 import React from 'react';
 import { 
   Box, Typography, Switch, Slider, 
-  FormControlLabel, Paper
+  FormControlLabel
 } from '@mui/material';
 import { useFeedback } from '../context/FeedbackContext';
 import { useTheme } from '../context/ThemeContext';
+import { usePositiveMessage } from '../context/PositiveMessageContext';
+
+// Transition constant for consistent styling across the app
+const TRANSITION_TIMING = '0.3s ease';
 
 const FeedbackSettings: React.FC = () => {
   const { 
@@ -17,22 +21,10 @@ const FeedbackSettings: React.FC = () => {
   } = useFeedback();
   
   const { isDarkMode } = useTheme();
+  const { messagesEnabled, setMessagesEnabled } = usePositiveMessage();
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-      }}
-    >
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Feedback Settings
-      </Typography>
-      
+    <Box sx={{ width: '100%' }}>
       <Box sx={{ mb: 2 }}>
         <FormControlLabel
           control={
@@ -40,9 +32,35 @@ const FeedbackSettings: React.FC = () => {
               checked={soundsEnabled}
               onChange={toggleSounds}
               color="primary"
+              sx={{
+                '& .MuiSwitch-switchBase': {
+                  color: isDarkMode ? '#405DE6' : '#757575',
+                  transition: TRANSITION_TIMING,
+                  '&.Mui-checked': {
+                    color: '#405DE6',
+                  },
+                  '&.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#405DE6 !important',
+                  },
+                },
+                '& .MuiSwitch-track': {
+                  backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
+                  opacity: '1 !important',
+                },
+              }}
             />
           }
-          label="Sound Effects"
+          label={
+            <Typography 
+              variant="body2" 
+              sx={{
+                color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                transition: `color ${TRANSITION_TIMING}`,
+              }}
+            >
+              Sound Effects
+            </Typography>
+          }
         />
       </Box>
       
@@ -53,14 +71,86 @@ const FeedbackSettings: React.FC = () => {
               checked={animationsEnabled}
               onChange={toggleAnimations}
               color="primary"
+              sx={{
+                '& .MuiSwitch-switchBase': {
+                  color: isDarkMode ? '#405DE6' : '#757575',
+                  transition: TRANSITION_TIMING,
+                  '&.Mui-checked': {
+                    color: '#405DE6',
+                  },
+                  '&.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#405DE6 !important',
+                  },
+                },
+                '& .MuiSwitch-track': {
+                  backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
+                  opacity: '1 !important',
+                },
+              }}
             />
           }
-          label="Button Animations"
+          label={
+            <Typography 
+              variant="body2" 
+              sx={{
+                color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                transition: `color ${TRANSITION_TIMING}`,
+              }}
+            >
+              Button Animations
+            </Typography>
+          }
+        />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch 
+              checked={messagesEnabled}
+              onChange={(e) => setMessagesEnabled(e.target.checked)}
+              color="primary"
+              sx={{
+                '& .MuiSwitch-switchBase': {
+                  color: isDarkMode ? '#405DE6' : '#757575',
+                  transition: TRANSITION_TIMING,
+                  '&.Mui-checked': {
+                    color: '#405DE6',
+                  },
+                  '&.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#405DE6 !important',
+                  },
+                },
+                '& .MuiSwitch-track': {
+                  backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
+                  opacity: '1 !important',
+                },
+              }}
+            />
+          }
+          label={
+            <Typography 
+              variant="body2" 
+              sx={{
+                color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                transition: `color ${TRANSITION_TIMING}`,
+              }}
+            >
+              Sparks & Compliments
+            </Typography>
+          }
         />
       </Box>
       
       <Box sx={{ mb: 1 }}>
-        <Typography variant="body2" gutterBottom>
+        <Typography 
+          variant="body2" 
+          gutterBottom
+          sx={{
+            color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+            transition: `color ${TRANSITION_TIMING}`,
+          }}
+        >
           Sound Volume
         </Typography>
         <Slider
@@ -71,9 +161,27 @@ const FeedbackSettings: React.FC = () => {
           max={100}
           valueLabelDisplay="auto"
           valueLabelFormat={(value) => `${Math.round(value)}%`}
+          sx={{
+            color: '#405DE6',
+            '& .MuiSlider-thumb': {
+              color: isDarkMode ? '#405DE6' : '#405DE6',
+              transition: `color ${TRANSITION_TIMING}`,
+            },
+            '& .MuiSlider-track': {
+              color: isDarkMode ? '#405DE6' : '#405DE6',
+              transition: `color ${TRANSITION_TIMING}`,
+            },
+            '& .MuiSlider-rail': {
+              color: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+              transition: `color ${TRANSITION_TIMING}`,
+            },
+            '& .Mui-disabled': {
+              color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+            },
+          }}
         />
       </Box>
-    </Paper>
+    </Box>
   );
 };
 
