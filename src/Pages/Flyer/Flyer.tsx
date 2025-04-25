@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Paper, TextField, Button, IconButton, Switch, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { FaImage, FaMagic, FaArrowLeft, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes } from 'react-icons/fa';
+import { FaImage, FaMagic, FaArrowLeft, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes, FaShare } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
+import { useStepContext } from '../../context/StepContext';
 import { generateFlyer, FlyerFormState, GeneratedFlyer, checkXaiApiHealth } from '../../services/flyerapi';
 import Footer from '../../components/Footer/Footer';
+import StepNavigation from '../../components/StepNavigation/StepNavigation';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -16,6 +18,7 @@ const Flyer = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
   const { isDarkMode, toggleTheme } = useTheme();
+  const { currentStep, steps, caption, goToNextStep } = useStepContext();
   const [mounted, setMounted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -62,9 +65,17 @@ const Flyer = () => {
     // Don't wait for API check to complete before setting mounted
     setMounted(true);
     
+    // If we have a caption from the previous step, use it in the description
+    if (caption) {
+      setFormState(prev => ({
+        ...prev,
+        description: caption
+      }));
+    }
+    
     // Run the API health check in the background
     checkApiHealth();
-  }, []);
+  }, [caption]);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormState(prev => ({
@@ -107,6 +118,21 @@ const Flyer = () => {
       companyLogo: null,
       logoPreview: null
     }));
+  };
+
+  const handlePublishContent = () => {
+    // Save the generated flyer URL to localStorage for the publish page
+    if (generatedFlyer) {
+      localStorage.setItem('generatedFlyerUrl', generatedFlyer.imageUrl);
+    }
+    
+    // Navigate to the publish step first
+    goToNextStep();
+    
+    // Close the dialog after a longer delay to ensure navigation completes first
+    setTimeout(() => {
+      setIsPopupOpen(false);
+    }, 500);
   };
 
   const handleGenerate = async () => {
@@ -351,6 +377,14 @@ const Flyer = () => {
             px: { xs: 2, sm: 3 }
           }}
         >
+          {/* Step Navigation */}
+          <StepNavigation 
+            currentStep={currentStep}
+            steps={steps}
+            nextStepLabel="Skip to Publish"
+            nextStepPath="/publish"
+          />
+          
           <Box
             sx={{
               display: 'flex',
@@ -415,6 +449,46 @@ const Flyer = () => {
               transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
+            {caption && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    mb: 1,
+                    color: isDarkMode ? '#fff' : '#000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  Your Selected Caption
+                </Typography>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    background: isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)',
+                    borderRadius: 2,
+                    border: `1px solid ${isDarkMode ? 'rgba(64,93,230,0.2)' : 'rgba(64,93,230,0.1)'}`,
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontStyle: 'italic',
+                      color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
+                      fontSize: '0.95rem',
+                      lineHeight: 1.7,
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {caption}
+                  </Typography>
+                </Paper>
+              </Box>
+            )}
+            
             <Typography
               variant="h6"
               sx={{
@@ -819,6 +893,26 @@ const Flyer = () => {
               }}
             >
               Regenerate
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handlePublishContent}
+              startIcon={<FaShare />}
+              sx={{
+                py: 1.2,
+                px: 3,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(64,93,230,0.4)',
+                },
+              }}
+            >
+              Publish Your Content
             </Button>
           </DialogActions>
         </Dialog>

@@ -9,12 +9,14 @@ import {
 // Icons
 import { MdArrowBack, MdRefresh } from 'react-icons/md';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
-import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck, FaUpload, FaImage, FaTimesCircle } from 'react-icons/fa';
+import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck, FaUpload, FaImage, FaTimesCircle, FaShare } from 'react-icons/fa';
 import { BsEmojiSmile } from 'react-icons/bs';
 // Other imports
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme as useCustomTheme } from '../../context/ThemeContext';
+import { useStepContext } from '../../context/StepContext';
+import StepNavigation from '../../components/StepNavigation/StepNavigation';
 import Footer from '../../components/Footer/Footer';
 import Tooltip from '@mui/material/Tooltip'; // Explicit import for Tooltip
 import Chip from '@mui/material/Chip'; // Explicit import for Chip
@@ -491,6 +493,10 @@ const Generation = () => {
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [selectedCaptionIndex, setSelectedCaptionIndex] = useState(0);
+
+  // Step context for multi-step workflow
+  const { currentStep, steps, setCaption, setHashtags } = useStepContext();
 
   // Reusable menu props for consistent dropdown styling
   const darkModeMenuProps = {
@@ -693,16 +699,18 @@ const Generation = () => {
       return;
     }
 
-      setIsGenerating(true);
-      setError('');
+    setIsGenerating(true);
+    setError('');
     setGeneratedCaptions([]);
+    setSelectedCaptionIndex(0);
 
     try {
       // Pass the complete formState which includes image data
       const captions = await generateCaptions(formState);
       
       if (captions && captions.length > 0) {
-      setGeneratedCaptions(captions);
+        setGeneratedCaptions(captions);
+        // Set the first caption as the selected one
         setGeneratedCaption(captions[0].text);
         setShowResultDialog(true);
         setCanRegenerate(true);
@@ -739,15 +747,30 @@ const Generation = () => {
     setIsRegenerating(false);
   };
 
-  const handleCopyCaption = () => {
-    if (generatedCaption) {
-      navigator.clipboard.writeText(generatedCaption);
+  const handleCopyCaption = (e?: React.MouseEvent, index?: number) => {
+    // Prevent event propagation if event exists
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (generatedCaptions.length > 0) {
+      const selectedCaption = generatedCaptions[index !== undefined ? index : selectedCaptionIndex].text;
+      navigator.clipboard.writeText(selectedCaption);
       setCopiedToClipboard(true);
       
+      // Save caption to StepContext for use in later steps
+      setCaption(selectedCaption);
+      
+      // Extract hashtags if they exist
+      const hashtagRegex = /#[^\s#]+/g;
+      const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
+      setHashtags(extractedHashtags);
+      
       // Reset the copied state after 2 seconds
-    setTimeout(() => {
+      setTimeout(() => {
         setCopiedToClipboard(false);
-    }, 2000);
+      }, 2000);
     }
   };
 
@@ -785,6 +808,76 @@ const Generation = () => {
       image: null,
       imagePreview: null
     }));
+  };
+
+  // Function to go directly to flyer creation (step 2)
+  const handleCreateFlyer = (e?: React.MouseEvent) => {
+    // Prevent event propagation if event exists
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (generatedCaptions.length > 0) {
+      // Save the caption to the context
+      const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
+      setCaption(selectedCaption);
+      
+      // Extract hashtags if they exist
+      const hashtagRegex = /#[^\s#]+/g;
+      const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
+      setHashtags(extractedHashtags);
+      
+      // Clear any previously stored flyer URL to prevent showing old images
+      localStorage.removeItem('generatedFlyerUrl');
+      
+      // Close the dialog
+      setShowResultDialog(false);
+      
+      // Navigate to flyer creation (step 2)
+      const flyerStep = steps.find(step => step.id === 2);
+      if (flyerStep) {
+        // Use setTimeout to ensure the state changes are applied before navigation
+        setTimeout(() => {
+          navigate(flyerStep.path);
+        }, 100);
+      }
+    }
+  };
+  
+  // Function to go directly to the publish page (step 3)
+  const handlePublishContent = (e?: React.MouseEvent) => {
+    // Prevent event propagation if event exists
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (generatedCaptions.length > 0) {
+      // Save the caption to the context
+      const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
+      setCaption(selectedCaption);
+      
+      // Extract hashtags if they exist
+      const hashtagRegex = /#[^\s#]+/g;
+      const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
+      setHashtags(extractedHashtags);
+      
+      // Clear any previously stored flyer URL to prevent showing old images
+      localStorage.removeItem('generatedFlyerUrl');
+      
+      // Navigate to the publish page (step 3)
+      const publishStep = steps.find(step => step.id === 3);
+      if (publishStep) {
+        // Navigate first, then close the dialog after navigation
+        navigate(publishStep.path);
+        
+        // Close the dialog after a brief delay to ensure navigation completes first
+        setTimeout(() => {
+          setShowResultDialog(false);
+        }, 200);
+      }
+    }
   };
 
   if (!mounted) return null;
@@ -910,6 +1003,13 @@ const Generation = () => {
         pt: { xs: 1, sm: 2 },
         px: { xs: 2, sm: 3 } // Less horizontal padding on mobile
       }}>
+          {/* Step Navigation */}
+          <StepNavigation 
+            currentStep={currentStep}
+            steps={steps}
+            nextStepLabel="Skip to Flyer Generator"
+            nextStepPath="/flyer"
+          />
           <Box
             sx={{
               display: 'flex',
@@ -1933,12 +2033,29 @@ const Generation = () => {
                       sx={{
                         p: { xs: 2, sm: 3 }, // Less padding on mobile
                         mb: { xs: 2, sm: 3 }, // Less margin on mobile
-                        background: isDarkMode 
-                          ? 'rgba(255, 255, 255, 0.03)'
-                          : 'rgba(0, 0, 0, 0.02)',
+                        background: index === selectedCaptionIndex
+                          ? isDarkMode 
+                            ? 'rgba(64, 93, 230, 0.1)'
+                            : 'rgba(64, 93, 230, 0.05)'
+                          : isDarkMode 
+                            ? 'rgba(255, 255, 255, 0.03)'
+                            : 'rgba(0, 0, 0, 0.02)',
                         borderRadius: { xs: '8px', sm: '12px' }, // Smaller border radius on mobile
-                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                        border: `1px solid ${index === selectedCaptionIndex 
+                          ? isDarkMode ? 'rgba(64, 93, 230, 0.3)' : 'rgba(64, 93, 230, 0.2)'
+                          : isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          background: isDarkMode 
+                            ? 'rgba(64, 93, 230, 0.08)'
+                            : 'rgba(64, 93, 230, 0.03)',
+                          borderColor: isDarkMode 
+                            ? 'rgba(64, 93, 230, 0.25)'
+                            : 'rgba(64, 93, 230, 0.15)',
+                        },
                       }}
+                      onClick={() => setSelectedCaptionIndex(index)}
                     >
                       {/* Caption header with number and copy button */}
                     <Box sx={{ 
@@ -1947,19 +2064,56 @@ const Generation = () => {
                         alignItems: 'center', 
                         mb: { xs: 1, sm: 2 } // Less margin on mobile
                       }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                            fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
-                          }}
-                        >
-                          Caption {index + 1}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Box 
+                            sx={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              border: `2px solid ${index === selectedCaptionIndex 
+                                ? '#405DE6' 
+                                : isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'}`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {index === selectedCaptionIndex && (
+                              <Box 
+                                sx={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: '50%',
+                                  bgcolor: '#405DE6',
+                                }}
+                              />
+                            )}
+                          </Box>
+                          <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                              color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                              fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
+                            }}
+                          >
+                            Caption {index + 1}
+                          </Typography>
+                        </Box>
                         <IconButton
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCaptionIndex(index);
                             navigator.clipboard.writeText(caption.text);
                             setCopiedToClipboard(true);
+                            
+                            // Save caption to StepContext for use in later steps
+                            setCaption(caption.text);
+                            
+                            // Extract hashtags if they exist
+                            const hashtagRegex = /#[^\s#]+/g;
+                            const extractedHashtags = caption.text.match(hashtagRegex) || [];
+                            setHashtags(extractedHashtags);
+                            
                             setTimeout(() => setCopiedToClipboard(false), 2000);
                           }}
                           size="small"
@@ -2055,90 +2209,168 @@ const Generation = () => {
               pt: { xs: 1, sm: 2 }, // Less padding top on mobile
               borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' }, // Stack buttons on mobile
-              justifyContent: { xs: 'center', sm: 'space-between' },
+              flexDirection: 'row', 
+              justifyContent: 'center',
               alignItems: 'center',
-              gap: { xs: 1, sm: 0 }, // Add gap on mobile
+              gap: 2,
               background: isDarkMode 
                 ? 'linear-gradient(135deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1))' 
                 : 'linear-gradient(135deg, rgba(64,93,230,0.05), rgba(88,81,219,0.05))',
+              flexWrap: 'wrap', // Allow wrapping on small screens
             }}
           >
-            <Box sx={{ width: { xs: '100%', sm: 'auto' }, mb: { xs: 1, sm: 0 } }}>
-              {canRegenerate && (
-                <Button
-                  onClick={handleRegenerate}
-                  variant="outlined"
-                  fullWidth={isMobile}
-                  startIcon={isRegenerating ? <CircularProgress size={isMobile ? 16 : 20} /> : <MdRefresh size={isMobile ? 14 : 18} />}
-                  disabled={isRegenerating}
-            sx={{
-                    mr: { xs: 0, sm: 1 },
-                    py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                    color: isDarkMode ? '#fff' : '#000',
-                    fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
-                    '&:hover': {
-                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
-                      background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                    },
-                    '&.Mui-disabled': {
-                      color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                    },
-                  }}
-                >
-                  {isRegenerating ? 'Regenerating...' : 'Regenerate'}
-                </Button>
-              )}
-            </Box>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, // Stack buttons on mobile
-              width: { xs: '100%', sm: 'auto' },
-              gap: { xs: 1, sm: 0 } // Add gap on mobile
-            }}>
-              <Button
-                onClick={handleCopyCaption}
-                variant="contained"
-                fullWidth={isMobile}
-                startIcon={copiedToClipboard ? <FaCheck size={isMobile ? 12 : 14} /> : <FaCopy size={isMobile ? 12 : 14} />}
-                sx={{
-                  mr: { xs: 0, sm: 1 },
-                  py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRegenerate();
+              }}
+              disabled={isRegenerating || !canRegenerate}
+              variant="contained"
+              startIcon={isRegenerating ? <CircularProgress size={isMobile ? 16 : 20} /> : <MdRefresh size={isMobile ? 14 : 18} />}
+              sx={{
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #757575, #9E9E9E, #BDBDBD)',
+                color: 'white',
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #616161, #757575, #9E9E9E)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                },
+                '&.Mui-disabled': {
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                },
+                m: 0.5,
+              }}
+            >
+              {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+            </Button>
+            
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCopyCaption();
+              }}
+              variant="contained"
+              startIcon={copiedToClipboard ? <FaCheck size={isMobile ? 12 : 14} /> : <FaCopy size={isMobile ? 12 : 14} />}
+              sx={{
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                background: copiedToClipboard
+                  ? 'linear-gradient(45deg, #00c853, #00e676)'
+                  : 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                color: 'white',
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
                   background: copiedToClipboard
-                    ? 'linear-gradient(45deg, #00c853, #00e676)'
-                    : 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                  color: 'white',
-                  fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
-                  transition: 'background 0.3s ease',
-                  '&:hover': {
-                    background: copiedToClipboard
-                      ? 'linear-gradient(45deg, #00e676, #00c853)'
-                      : 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  },
-                }}
-              >
-                {copiedToClipboard ? 'Copied!' : 'Copy Content'}
-              </Button>
-              <Button
-                onClick={() => setShowResultDialog(false)}
-                variant="outlined"
-                fullWidth={isMobile}
-                sx={{
-                  py: { xs: 0.75, sm: 1 }, // Smaller padding on mobile
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                  color: isDarkMode ? '#fff' : '#000',
-                  fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Smaller text on mobile
-                  '&:hover': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
-                    background: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                  },
-                }}
-              >
-                Close
-              </Button>
-            </Box>
+                    ? 'linear-gradient(45deg, #00e676, #00c853)'
+                    : 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                },
+                m: 0.5,
+              }}
+            >
+              {copiedToClipboard ? 'Copied!' : 'Copy Content'}
+            </Button>
+            
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCreateFlyer(e);
+              }}
+              variant="contained"
+              startIcon={<FaImage size={isMobile ? 12 : 14} />}
+              sx={{
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
+                color: 'white',
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                transition: 'background 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #E1306C, #C13584, #833AB4)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              Create Flyer
+            </Button>
+            
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePublishContent(e);
+              }}
+              variant="contained"
+              startIcon={<FaShare size={isMobile ? 12 : 14} />}
+              sx={{
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #4267B2, #5B7BD5, #00B2FF)',
+                color: 'white',
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #00B2FF, #5B7BD5, #4267B2)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                },
+                m: 0.5,
+              }}
+            >
+              Publish Content
+            </Button>
+            
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowResultDialog(false);
+              }}
+              variant="contained"
+              startIcon={<FaTimes size={isMobile ? 12 : 14} />}
+              sx={{
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #F44336, #E57373, #EF9A9A)',
+                color: 'white',
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #EF9A9A, #E57373, #F44336)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                },
+                m: 0.5,
+              }}
+            >
+              Close
+            </Button>
           </DialogActions>
         </Dialog>
 

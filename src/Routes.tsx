@@ -4,6 +4,7 @@ import Generation from './Pages/Generation/Generation';
 import Privacy from './Pages/Privacy/Privacy';
 import Choose from './Pages/Choose/Choose';
 import Flyer from './Pages/Flyer/Flyer';
+import Publish from './Pages/Publish/Publish';
 
 const Routes = () => {
   return (
@@ -13,6 +14,7 @@ const Routes = () => {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/choose" element={<Choose />} />
       <Route path="/flyer" element={<Flyer />} />
+      <Route path="/publish" element={<Publish />} />
     </RouterRoutes>
   );
 };
