@@ -13,35 +13,58 @@ interface ThemeProviderProps {
 
 // Get initial theme from localStorage or system preference
 const getInitialTheme = () => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) {
-    return savedTheme === 'dark';
-  }
-  // If no saved preference, check system preference
-  if (typeof window !== 'undefined') {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (e) {
+    console.warn('Error accessing localStorage:', e);
+    return false;
   }
-  return false; // Default to light theme
 };
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+  const [mounted, setMounted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Save theme preference to localStorage
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    
-    // Apply theme to document
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
+    setMounted(true);
+    setIsDarkMode(getInitialTheme());
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    try {
+      // Save theme preference to localStorage
+      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      
+      // Apply theme to document
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark-mode');
+        document.body.style.backgroundColor = '#121212';
+        document.body.style.color = '#ffffff';
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        document.body.style.backgroundColor = '#ffffff';
+        document.body.style.color = '#121212';
+      }
+    } catch (e) {
+      console.warn('Error saving theme:', e);
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, mounted]);
 
   const toggleTheme = () => {
     setIsDarkMode(prev => !prev);
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>

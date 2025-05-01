@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import Footer from './Footer/Footer';
 import { useTheme } from '../context/ThemeContext';
@@ -14,6 +14,26 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { isDarkMode } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          minHeight: '100vh',
+          width: '100%',
+          backgroundColor: 'transparent',
+          margin: 0,
+          padding: 0,
+        }}
+      />
+    );
+  }
 
   return (
     <Box
@@ -47,6 +67,8 @@ const Layout = ({ children }: LayoutProps) => {
           boxSizing: 'border-box',
           overflowX: 'hidden',
           minHeight: '100vh',
+          backgroundColor: 'inherit',
+          color: 'inherit',
           '& > *': {
             width: '100%'
           }
@@ -57,7 +79,9 @@ const Layout = ({ children }: LayoutProps) => {
           width: '100%',
           margin: 0,
           padding: 0,
-          position: 'relative'
+          position: 'relative',
+          backgroundColor: 'inherit',
+          color: 'inherit'
         }}>
           {children}
         </Box>
