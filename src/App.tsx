@@ -6,7 +6,6 @@ import Routes from './Routes';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import './config/firebase'; // Initialize Firebase
 import Layout from './components/Layout';
-import Terms from './Pages/Terms/Terms';
 
 const App = () => {
   return (

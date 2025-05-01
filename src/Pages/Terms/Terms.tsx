@@ -1,10 +1,9 @@
-import { Box, Container, Typography, useMediaQuery } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 
 const Terms = () => {
   const { isDarkMode } = useTheme();
-  const isMobile = useMediaQuery('(max-width:600px)');
 
   return (
     <Container
