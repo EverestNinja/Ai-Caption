@@ -34,6 +34,10 @@ const Footer = () => {
       path: '/privacy'
     },
     {
+      label: 'Terms of Service',
+      path: '/terms'
+    },
+    {
       label: 'Report Issues',
       path: '/report'
     }
@@ -79,16 +83,6 @@ const Footer = () => {
         }`,
         transition: 'all 0.3s ease',
         position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-          opacity: 0.5,
-        },
       }}
     >
       <Container maxWidth="lg">

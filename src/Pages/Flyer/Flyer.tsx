@@ -7,8 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import { generateFlyer, FlyerFormState, GeneratedFlyer, checkXaiApiHealth } from '../../services/flyerapi';
-import Footer from '../../components/Footer/Footer';
 import StepNavigation from '../../components/StepNavigation/StepNavigation';
+import { checkUsageLimit, incrementUsage, getRemainingUsage, LIMITS } from '../../services/usageLimit';
+import { getAuth } from 'firebase/auth';
+import { clearDailyUsage } from '../../services/usageLimit';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -25,6 +27,8 @@ const Flyer = () => {
   const [generatedFlyer, setGeneratedFlyer] = useState<GeneratedFlyer | null>(null);
   const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [remainingUsage, setRemainingUsage] = useState<number>(3);
+  const auth = getAuth();
 
   const [formState, setFormState] = useState<FlyerFormState>({
     description: '',
@@ -75,7 +79,13 @@ const Flyer = () => {
     
     // Run the API health check in the background
     checkApiHealth();
-  }, [caption]);
+
+    // Update remaining usage count
+    setRemainingUsage(getRemainingUsage('flyers'));
+    
+    // Clear old usage data
+    clearDailyUsage();
+  }, [caption, auth.currentUser]);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormState(prev => ({
@@ -136,6 +146,11 @@ const Flyer = () => {
   };
 
   const handleGenerate = async () => {
+    if (!checkUsageLimit('flyers')) {
+      setError('You have reached your daily limit for free flyers. Please login to generate unlimited flyers.');
+      return;
+    }
+
     if (!formState.description.trim()) {
       setError('Please provide a description for your flyer');
       return;
@@ -150,6 +165,10 @@ const Flyer = () => {
       console.log('Generated flyer:', flyer);
       setGeneratedFlyer(flyer);
       setIsPopupOpen(true);
+      
+      // Increment usage after successful generation
+      incrementUsage('flyers');
+      setRemainingUsage(getRemainingUsage('flyers'));
     } catch (err) {
       console.error('Error in handleGenerate:', err);
       if (err instanceof Error) {
@@ -349,25 +368,94 @@ const Flyer = () => {
           </IconButton>
         </Paper>
 
-        {/* Background Gradient */}
-        <Box
-          component={motion.div}
-          animate={{
-            background: isDarkMode
-              ? 'radial-gradient(circle at 50% 50%, rgba(131, 58, 180, 0.15) 0%, rgba(193, 53, 132, 0.08) 50%, transparent 100%)'
-              : 'radial-gradient(circle at 50% 50%, rgba(131, 58, 180, 0.08) 0%, rgba(193, 53, 132, 0.04) 50%, transparent 100%)',
-          }}
-          transition={{ duration: 0.4 }}
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 0,
-            transition: TRANSITION_TIMING,
-          }}
-        />
+        {/* Usage Limit Indicator */}
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              position: 'fixed',
+              top: 80,
+              right: 20,
+              zIndex: 1100,
+              p: 2,
+              borderRadius: 2,
+              background: isDarkMode 
+                ? auth.currentUser 
+                  ? 'rgba(0,200,83,0.1)' 
+                  : 'rgba(64,93,230,0.1)' 
+                : auth.currentUser
+                  ? 'rgba(0,200,83,0.05)'
+                  : 'rgba(64,93,230,0.05)',
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${isDarkMode 
+                ? auth.currentUser 
+                  ? 'rgba(0,200,83,0.2)' 
+                  : 'rgba(64,93,230,0.2)' 
+                : auth.currentUser
+                  ? 'rgba(0,200,83,0.1)'
+                  : 'rgba(64,93,230,0.1)'}`,
+              boxShadow: isDarkMode 
+                ? auth.currentUser
+                  ? '0 4px 20px rgba(0,200,83,0.2)'
+                  : '0 4px 20px rgba(64,93,230,0.2)'
+                : '0 4px 20px rgba(0,0,0,0.1)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FaInfoCircle 
+                color={isDarkMode 
+                  ? auth.currentUser 
+                    ? '#00C853' 
+                    : '#A78BFA' 
+                  : auth.currentUser
+                    ? '#00C853'
+                    : '#7F56D9'} 
+                size={20} 
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
+                  fontWeight: 600,
+                  fontSize: '0.9rem'
+                }}
+              >
+                {auth.currentUser ? 'Premium Access' : 'Daily Usage Limit'}
+              </Typography>
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{
+                color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                mt: 1,
+                fontSize: '0.85rem'
+              }}
+            >
+              {auth.currentUser 
+                ? 'Unlimited flyers available' 
+                : `${remainingUsage} / ${LIMITS.flyers.daily} flyers remaining`}
+            </Typography>
+            {!auth.currentUser && (
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => navigate('/login')}
+                sx={{
+                  mt: 1,
+                  color: isDarkMode ? '#A78BFA' : '#7F56D9',
+                  textTransform: 'none',
+                  fontSize: '0.8rem',
+                  fontWeight: 500,
+                  '&:hover': {
+                    background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
+                  }
+                }}
+              >
+                Login for unlimited access
+              </Button>
+            )}
+          </Paper>
+        </Container>
 
         <Container 
           maxWidth="lg" 
@@ -935,8 +1023,6 @@ const Flyer = () => {
             {error}
           </Alert>
         </Snackbar>
-
-        <Footer />
       </Box>
     </AnimatePresence>
   );

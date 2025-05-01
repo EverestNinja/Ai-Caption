@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import StepNavigation from '../../components/StepNavigation/StepNavigation';
-import Footer from '../../components/Footer/Footer';
 // Comment out problematic import temporarily
 // import { Context } from '../../Context/ContextProvider';
 
@@ -958,7 +957,6 @@ const Publish = () => {
             </Box>
           </Box>
         </Container>
-        <Footer />
       </Box>
     </AnimatePresence>
   );
