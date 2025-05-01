@@ -1,4 +1,4 @@
-import { Box, Button, Container, Typography, Paper, useMediaQuery } from '@mui/material';
+import { Box, Button, Container, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
