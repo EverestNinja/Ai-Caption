@@ -267,7 +267,7 @@ const Generation = () => {
     if (isStringField(field) && field.startsWith('custom') && formState[field.replace('custom', '').toLowerCase()] === 'custom') {
       if (!value) return 'This field is required when using a custom option';
     }
-
+    
     if (field === 'businessType' && value === 'custom' && !formState.customBusinessType) {
       return 'Please enter your custom business type';
     }
@@ -335,8 +335,8 @@ const Generation = () => {
   };
 
   const handlePostTypeChange = (type: PostType) => {
-    setFormState(prev => ({
-      ...prev,
+    setFormState(prev => ({ 
+      ...prev, 
       postType: type,
       // Reset fields when post type changes
       ...Object.fromEntries(
@@ -576,13 +576,13 @@ const Generation = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Box sx={{ 
-        minHeight: '100vh',
-        background: isDarkMode 
-          ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
-          : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
-        transition: `background-color ${TRANSITION_TIMING}`,
-        position: 'relative',
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
+        : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
+      transition: `background-color ${TRANSITION_TIMING}`,
+      position: 'relative',
       }}>
         {/* Usage Limit Indicator */}
         <Paper
