@@ -11,6 +11,11 @@ html {
   padding: 0;
 }
 
+/* Initial theme to prevent flash */
+:root {
+  color-scheme: light dark;
+}
+
 body {
   width: 100%;
   min-height: 100vh;
@@ -28,9 +33,10 @@ body {
   color: #121212;
 }
 
+/* Ensure immediate theme application */
 body.dark-mode {
-  background-color: #121212;
-  color: #ffffff;
+  background-color: #121212 !important;
+  color: #ffffff !important;
 }
 
 #root {
@@ -40,6 +46,8 @@ body.dark-mode {
   flex-direction: column;
   margin: 0;
   padding: 0;
+  background-color: inherit;
+  color: inherit;
 }
 
 :root {
@@ -94,6 +102,7 @@ button:focus-visible {
   color: #ffffff;
 }
 
+/* Ensure proper theme application during load */
 @media (prefers-color-scheme: dark) {
   body:not(.light-mode) {
     background-color: #121212;
@@ -104,4 +113,9 @@ button:focus-visible {
     background-color: #2a2a2a;
     color: #ffffff;
   }
+}
+
+/* Hide content during theme change */
+.theme-transitioning * {
+  transition: none !important;
 }

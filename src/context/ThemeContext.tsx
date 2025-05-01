@@ -27,32 +27,43 @@ const getInitialTheme = () => {
   }
 };
 
+// Apply theme to document
+const applyTheme = (isDark: boolean) => {
+  if (typeof document === 'undefined') return;
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (isDark) {
+    root.classList.add('dark-mode');
+    body.style.backgroundColor = '#121212';
+    body.style.color = '#ffffff';
+  } else {
+    root.classList.remove('dark-mode');
+    body.style.backgroundColor = '#ffffff';
+    body.style.color = '#121212';
+  }
+};
+
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [mounted, setMounted] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const initialTheme = getInitialTheme();
+    // Apply theme immediately during initialization
+    applyTheme(initialTheme);
+    return initialTheme;
+  });
 
   useEffect(() => {
     setMounted(true);
-    setIsDarkMode(getInitialTheme());
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
 
     try {
-      // Save theme preference to localStorage
       localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-      
-      // Apply theme to document
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark-mode');
-        document.body.style.backgroundColor = '#121212';
-        document.body.style.color = '#ffffff';
-      } else {
-        document.documentElement.classList.remove('dark-mode');
-        document.body.style.backgroundColor = '#ffffff';
-        document.body.style.color = '#121212';
-      }
+      applyTheme(isDarkMode);
     } catch (e) {
       console.warn('Error saving theme:', e);
     }
@@ -62,8 +73,13 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     setIsDarkMode(prev => !prev);
   };
 
+  // Return early with a proper loading state
   if (!mounted) {
-    return null;
+    return (
+      <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+        {children}
+      </ThemeContext.Provider>
+    );
   }
 
   return (
