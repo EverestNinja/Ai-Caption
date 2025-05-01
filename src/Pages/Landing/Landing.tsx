@@ -2,7 +2,7 @@ import { Box, Button, Container, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
 
@@ -29,16 +29,25 @@ const Landing = () => {
   const [mounted, setMounted] = useState(false);
   const [isThemeChanging] = useState(false);
 
-  useEffect(() => {
+  // Use useLayoutEffect to prevent flash of wrong theme
+  useLayoutEffect(() => {
     setMounted(true);
+    // Apply initial theme immediately
+    document.body.style.transition = 'none';
+    document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+    document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
+    // Re-enable transitions after initial render
+    requestAnimationFrame(() => {
+      document.body.style.transition = `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`;
+    });
   }, []);
 
   useEffect(() => {
-    // Apply theme to document body with synchronized transition
-    document.body.style.transition = `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`;
-    document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-    document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
-  }, [isDarkMode]);
+    if (mounted) {
+      document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
+      document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
+    }
+  }, [isDarkMode, mounted]);
 
   const commonTransition = {
     transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
