@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Container, Box, Paper, useMediaQuery, 
-  Snackbar, Alert
-} from "@mui/material";
-import { AnimatePresence } from 'framer-motion';
+  Snackbar, Alert, Typography, Fade, Grow,
+  Divider} from "@mui/material";
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import BackButton from '../../components/BackButton';
-import { getAuth } from 'firebase/auth';
 import { generateCaptions } from '../../services/api';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 // Component imports
 import SimpleMode from './SimpleMode';
@@ -50,7 +50,6 @@ const Generation = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const auth = getAuth();
   const { steps, setCaption, setHashtags } = useStepContext();
   
   // State management
@@ -73,7 +72,7 @@ const Generation = () => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedCaptionIndex, setSelectedCaptionIndex] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarMessage] = useState<string>('');
 
   // Menu props for consistent dropdown styling
   const darkModeMenuProps = {
@@ -88,6 +87,27 @@ const Generation = () => {
           }
         }
       }
+    }
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 100 }
     }
   };
 
@@ -292,50 +312,171 @@ const Generation = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
+  // We'll use an effect to add a subtle animation when component mounts
+  useEffect(() => {
+    // Any initialization can go here
+  }, []);
+
   return (
     <AnimatePresence mode="wait">
-      <Box sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: isDarkMode 
-          ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
-          : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <BackButton />
-
-        <Container maxWidth="lg" sx={{ 
-          py: { xs: 3, sm: 5 }, 
-          px: { xs: 2, sm: 3 },
-          flex: 1,
+      <Box 
+        component={motion.div}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        sx={{ 
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
+          background: isDarkMode 
+            ? 'linear-gradient(135deg, #121212 0%, #1e1e2d 100%)' 
+            : 'linear-gradient(135deg, #f5f7fa 0%, #f8f9fa 100%)',
           position: 'relative',
-          zIndex: 2
-        }}>
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkMode 
+              ? 'radial-gradient(circle at 20% 20%, rgba(64, 93, 230, 0.2), transparent 40%)' 
+              : 'radial-gradient(circle at 20% 20%, rgba(64, 93, 230, 0.1), transparent 40%)',
+            zIndex: 1
+          }
+        }}
+      >
+        <BackButton />
+
+        <Container 
+          maxWidth="lg" 
+          component={motion.div}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          sx={{ 
+            py: { xs: 4, sm: 6 }, 
+            px: { xs: 2, sm: 3 },
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            zIndex: 2
+          }}
+        >
+          {/* Header Section */}
+          <Box 
+            component={motion.div}
+            variants={itemVariants}
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              mb: 5,
+              textAlign: 'center'
+            }}
+          >
+            <Grow in timeout={800}>
+              <Box sx={{ 
+                bgcolor: 'primary.main', 
+                borderRadius: '50%', 
+                p: 1.8, 
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: `0 8px 20px ${isDarkMode ? 'rgba(64, 93, 230, 0.3)' : 'rgba(64, 93, 230, 0.2)'}`,
+                transform: 'translateY(0)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: `0 12px 24px ${isDarkMode ? 'rgba(64, 93, 230, 0.4)' : 'rgba(64, 93, 230, 0.3)'}`,
+                }
+              }}>
+                <AutoFixHighIcon sx={{ fontSize: 38, color: '#fff' }} />
+              </Box>
+            </Grow>
+            
+            <Typography 
+              variant="h3" 
+              component={motion.h1}
+              variants={itemVariants}
+              gutterBottom 
+              sx={{ 
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                fontWeight: 800,
+                color: isDarkMode ? '#fff' : '#2d3748',
+                textShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                letterSpacing: '-0.5px'
+              }}
+            >
+              Generate Your Content
+            </Typography>
+            
+            <Typography 
+              variant="subtitle1" 
+              component={motion.p}
+              variants={itemVariants}
+              sx={{ 
+                maxWidth: 600,
+                mb: 5,
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                lineHeight: 1.6
+              }}
+            >
+              Create engaging content that captures attention and drives engagement
+            </Typography>
+            
+            <Divider 
+              component={motion.div}
+              variants={itemVariants}
+              sx={{ 
+                width: '90%', 
+                maxWidth: '500px',
+                mb: 5,
+                opacity: 0.1,
+                borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
+              }} 
+            />
+          </Box>
+
           {/* Mode toggle component */}
-          <ModeToggle 
-            captionMode={captionMode}
-            handleModeChange={handleModeChange}
-            isDarkMode={isDarkMode}
-          />
+          <Box component={motion.div} variants={itemVariants} mb={3}>
+            <ModeToggle 
+              captionMode={captionMode}
+              handleModeChange={handleModeChange}
+              isDarkMode={isDarkMode}
+            />
+          </Box>
 
           {/* Main content based on mode */}
           <Paper
-            elevation={3}
+            component={motion.div}
+            variants={itemVariants}
+            elevation={isDarkMode ? 4 : 2}
             sx={{
-              p: { xs: 2, sm: 3 },
+              p: { xs: 3, sm: 4 },
               width: '100%',
-              background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              background: isDarkMode 
+                ? 'rgba(30,30,45,0.6)' 
+                : 'rgba(255,255,255,0.8)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '24px',
+              border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
               boxShadow: isDarkMode 
-                ? '0 10px 30px rgba(0, 0, 0, 0.2)' 
-                : '0 10px 30px rgba(0, 0, 0, 0.05)',
+                ? '0 20px 40px rgba(0, 0, 0, 0.3)' 
+                : '0 20px 40px rgba(0, 0, 0, 0.07)',
               mb: 4,
+              overflow: 'hidden',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode 
+                  ? '0 25px 50px rgba(0, 0, 0, 0.4)' 
+                  : '0 25px 50px rgba(0, 0, 0, 0.1)',
+              }
             }}
           >
             {captionMode === 'simple' ? (
@@ -389,8 +530,22 @@ const Generation = () => {
           autoHideDuration={6000} 
           onClose={() => setError('')}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          TransitionComponent={Fade}
         >
-          <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
+          <Alert 
+            onClose={() => setError('')} 
+            severity="error" 
+            elevation={6}
+            sx={{ 
+              width: '100%',
+              borderRadius: '12px',
+              bgcolor: isDarkMode ? 'rgba(40, 40, 50, 0.9)' : undefined,
+              color: isDarkMode ? '#fff' : undefined,
+              '& .MuiAlert-icon': {
+                color: isDarkMode ? '#ff5252' : undefined
+              }
+            }}
+          >
             {error}
           </Alert>
         </Snackbar>
@@ -401,8 +556,22 @@ const Generation = () => {
           autoHideDuration={4000}
           onClose={handleSnackbarClose}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          TransitionComponent={Fade}
         >
-          <Alert onClose={handleSnackbarClose} severity="success">
+          <Alert 
+            onClose={handleSnackbarClose} 
+            severity="success"
+            elevation={6}
+            sx={{ 
+              width: '100%',
+              borderRadius: '12px',
+              bgcolor: isDarkMode ? 'rgba(40, 40, 50, 0.9)' : undefined,
+              color: isDarkMode ? '#fff' : undefined,
+              '& .MuiAlert-icon': {
+                color: isDarkMode ? '#4caf50' : undefined
+              }
+            }}
+          >
             {snackbarMessage}
           </Alert>
         </Snackbar>

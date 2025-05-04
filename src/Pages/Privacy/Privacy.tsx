@@ -4,10 +4,7 @@ import {
   Container, 
   Typography, 
   Paper, 
-  IconButton, 
-  Switch
-} from '@mui/material';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
+  IconButton} from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../../components/Layout';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +17,7 @@ const TRANSITION_TIMING = '0.3s ease';
 const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
 
 const Privacy = () => {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode } = useTheme();
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 

@@ -297,13 +297,13 @@ const CustomMode: React.FC<CustomModeProps> = ({
         <Box>
           {/* Form Fields Section - Rendered in a 2x2 grid */}
           <Grid container spacing={isMobile ? 1.5 : 3}>
-            {FORM_FIELDS[formState.postType]
-              .filter(field => {
+            {FORM_FIELDS[formState.postType as PostType]
+              .filter((field: FormField) => {
                 // Show field if it doesn't depend on another field, or if its dependency is satisfied
                 if (!field.dependsOn) return true;
                 return formState[field.dependsOn.field] === field.dependsOn.value;
               })
-              .map((field) => (
+              .map((field: FormField) => (
                 <Grid item xs={12} md={field.id === 'description' ? 12 : 6} key={field.id}>
                   <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
                     <Box sx={{ 
@@ -346,7 +346,7 @@ const CustomMode: React.FC<CustomModeProps> = ({
                           value={formState[field.id] || ''}
                           onChange={(e) => handleChange(field.id, e.target.value)}
                           MenuProps={darkModeMenuProps}
-                          renderValue={(selected) => {
+                          renderValue={(selected: string) => {
                             const option = field.options?.find(opt => opt.value === selected);
                             return option ? option.label : '';
                           }}

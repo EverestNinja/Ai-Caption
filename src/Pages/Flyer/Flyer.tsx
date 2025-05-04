@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, TextField, Button, IconButton, Switch, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Container, Typography, Paper, TextField, Button, IconButton, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { FaImage, FaMagic, FaArrowLeft, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes, FaShare } from 'react-icons/fa';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
+import { FaImage, FaMagic, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes, FaShare } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
@@ -20,7 +19,7 @@ const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, tran
 const Flyer = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode } = useTheme();
   const { currentStep, steps, caption, goToNextStep } = useStepContext();
   const [mounted, setMounted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
