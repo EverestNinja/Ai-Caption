@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import StepNavigation from '../../components/StepNavigation/StepNavigation';
+import { getAuth } from 'firebase/auth';
+import { clearDailyUsage } from '../../services/usageLimit';
+import BackButton from '../../components/BackButton';
 // Comment out problematic import temporarily
 // import { Context } from '../../Context/ContextProvider';
 
@@ -340,23 +343,7 @@ const Publish = () => {
         pt: 10,
       }}>
         {/* Back Button */}
-        <IconButton
-          onClick={() => goToPreviousStep()}
-          sx={{
-            position: 'fixed',
-            top: 20,
-            left: 20,
-            color: isDarkMode ? '#ffffff' : '#121212',
-            bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            zIndex: 1100,
-            '&:hover': {
-              bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-            },
-            transition: TRANSITION_TIMING,
-          }}
-        >
-          <FaArrowLeft />
-        </IconButton>
+        <BackButton />
 
         {/* Background Gradient */}
         <Box

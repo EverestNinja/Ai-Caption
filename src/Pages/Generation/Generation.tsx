@@ -1,42 +1,25 @@
-import { useState, useEffect } from 'react';
-// MUI Components
+import { useState } from 'react';
 import { 
-  Container, Typography, Box, IconButton, 
-  Paper, Switch, useMediaQuery, CircularProgress,
-  Snackbar, Alert, Button, TextField, MenuItem, FormControl, Select, Grid, Dialog,
-  DialogTitle, DialogContent, DialogActions, FormControlLabel, Slider, Tooltip, Chip
+  Container, Box, Paper, useMediaQuery, 
+  Snackbar, Alert
 } from "@mui/material";
-// Icons
-import { MdRefresh } from 'react-icons/md';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
-import { FaMagic, FaInfoCircle, FaCopy, FaTimes, FaHashtag, FaCheck, FaUpload, FaImage, FaTimesCircle, FaShare, FaArrowLeft } from 'react-icons/fa';
-import { BsEmojiSmile } from 'react-icons/bs';
-// Other imports
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useTheme as useCustomTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
-import StepNavigation from '../../components/StepNavigation/StepNavigation';
+import BackButton from '../../components/BackButton';
 import { getAuth } from 'firebase/auth';
 import { generateCaptions } from '../../services/api';
-import { LIMITS } from '../../services/usageLimit';
 
-// ===== TYPES =====
+// Component imports
+import SimpleMode from './SimpleMode';
+import CustomMode from './CustomMode';
+import ModeToggle from './ModeToggle';
+import ResultDialog from './ResultDialog';
+
+// Types
 type PostType = 'promotional' | 'engagement' | 'testimonial' | 'event' | 'product-launch' | 'custom';
 type BusinessType = 'restaurant' | 'computer-shop' | 'clothing' | 'coffee-shop' | 'custom';
-
-interface FormField {
-  id: string;
-  label: string;
-  placeholder?: string;
-  type?: 'select' | 'multiline';
-  options?: { value: string; label: string; }[];
-  required?: boolean;
-  tooltip?: string;
-  multiline?: boolean;
-  rows?: number;
-  dependsOn?: { field: string; value: string; };
-}
 
 interface FormState {
   postType: PostType | '';
@@ -45,9 +28,7 @@ interface FormState {
   numberOfGenerations: number;
   includeHashtags: boolean;
   includeEmojis: boolean;
-  image?: File | null;
-  imagePreview?: string | null;
-  captionLength: number; // Added new field
+  captionLength: number;
   [key: string]: any;
 }
 
@@ -57,112 +38,44 @@ interface FormErrors {
 
 interface GeneratedCaption {
   text: string;
-  // Add any other necessary properties here
 }
 
-// ===== CONSTANTS =====
-const TRANSITION_TIMING = '0.3s ease';
-const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
-
-const POST_TYPES: Array<{ value: PostType; label: string }> = [
-  { value: 'promotional', label: 'Promotional Post' },
-  { value: 'engagement', label: 'Engagement Post' },
-  { value: 'testimonial', label: 'Testimonial Post' },
-  { value: 'event', label: 'Event Post' },
-  { value: 'product-launch', label: 'Product Launch Post' },
-  { value: 'custom', label: 'Custom Post' }
-];
-
-const BUSINESS_TYPES: Array<{ value: BusinessType; label: string }> = [
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'computer-shop', label: 'Computer Shop' },
-  { value: 'clothing', label: 'Clothing' },
-  { value: 'coffee-shop', label: 'Coffee Shop' },
-  { value: 'custom', label: 'Custom Business' }
-];
-
-const FORM_FIELDS: { [key in PostType]: FormField[] } = {
-  promotional: [
-    { 
-      id: 'product', 
-      label: "What Are You Selling?", 
-      placeholder: "e.g., Handmade Candles",
-      tooltip: "Enter the product or service you want to promote"
-    },
-    // ... rest of the promotional fields ...
-  ],
-  engagement: [
-    { id: 'topic', label: "What's Your Question or Hook?", placeholder: "e.g., What's your go-to snack?" },
-    // ... rest of the engagement fields ...
-  ],
-  testimonial: [
-    { id: 'name', label: "Customer's Name", placeholder: "e.g., Mike R." },
-    // ... rest of the testimonial fields ...
-  ],
-  event: [
-    { id: 'name', label: "What's the Event?", placeholder: "e.g., Holiday Sale" },
-    // ... rest of the event fields ...
-  ],
-  'product-launch': [
-    { id: 'product', label: "What's the New Product?", placeholder: "e.g., Eco-Friendly Mug" },
-    // ... rest of the product-launch fields ...
-  ],
-  custom: [
-    {
-      id: 'tone',
-      label: 'Select Tone',
-      type: 'select',
-      options: [
-        { value: 'funny', label: 'Funny' },
-        { value: 'sarcastic', label: 'Sarcastic' },
-        { value: 'professional', label: 'Professional' },
-        { value: 'inspirational', label: 'Inspirational' },
-        { value: 'romantic', label: 'Romantic' },
-        { value: 'custom', label: 'Custom Tone' }
-      ],
-      tooltip: 'Choose a tone for your caption',
-      multiline: false
-    },
-    // ... rest of the custom fields ...
-  ]
-};
+// Form field definitions
+import { POST_TYPES, BUSINESS_TYPES, FORM_FIELDS } from './formConfig';
 
 /**
- * Main Generation component for creating social media captions
+ * Main Generation component that coordinates the caption generation UI
  */
 const Generation = () => {
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useCustomTheme();
-  const [mounted, setMounted] = useState<boolean>(false);
+  const { isDarkMode } = useTheme();
   const isMobile = useMediaQuery('(max-width:600px)');
+  const auth = getAuth();
+  const { steps, setCaption, setHashtags } = useStepContext();
+  
+  // State management
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [captionMode, setCaptionMode] = useState<'simple' | 'custom'>('simple');
   const [formState, setFormState] = useState<FormState>({
     postType: '',
     businessType: '',
     numberOfGenerations: 1,
     includeHashtags: false,
     includeEmojis: false,
-    image: null,
-    imagePreview: null,
-    captionLength: 2, // Default to medium length
+    captionLength: 2,
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [generatedCaptions, setGeneratedCaptions] = useState<GeneratedCaption[]>([]);
-  const [generatedCaption, setGeneratedCaption] = useState('');
-  const [showPreview] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [canRegenerate, setCanRegenerate] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedCaptionIndex, setSelectedCaptionIndex] = useState(0);
-  const [remainingUsage, setRemainingUsage] = useState<number>(5);
-  const auth = getAuth();
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 
-  // Step context for multi-step workflow
-  const { currentStep, steps, setCaption, setHashtags } = useStepContext();
-
-  // Reusable menu props for consistent dropdown styling
+  // Menu props for consistent dropdown styling
   const darkModeMenuProps = {
     PaperProps: {
       sx: {
@@ -178,162 +91,23 @@ const Generation = () => {
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.transition = `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`;
-    document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-    document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
-    
-    // Add global styles for form inputs in dark mode
-    const style = document.createElement('style');
-    if (isDarkMode) {
-      style.innerHTML = `
-        /* Text colors */
-        .MuiInputBase-input, 
-        .MuiMenuItem-root,
-        .MuiTypography-root,
-        .MuiFormControlLabel-label,
-        .MuiListItemText-primary {
-          color: white !important;
-        }
-        
-        /* Secondary text colors */
-        .MuiFormLabel-root,
-        .MuiFormHelperText-root,
-        .MuiSelect-icon,
-        .MuiListItemText-secondary {
-          color: rgba(255,255,255,0.7) !important;
-        }
-        
-        /* Accent colors */
-        .MuiFormLabel-root.Mui-focused {
-          color: #405DE6 !important;
-        }
-        
-        /* Dropdown/Menu backgrounds */
-        .MuiMenu-paper,
-        .MuiPopover-paper,
-        .MuiMenu-list {
-          background-color: #1e1e2d !important;
-          color: white !important;
-          border-radius: 8px !important;
-        }
-        
-        /* Menu item hover state */
-        .MuiMenuItem-root:hover {
-          background-color: rgba(64,93,230,0.15) !important;
-        }
-        
-        /* Table styles */
-        .MuiTableCell-head {
-          color: white !important;
-        }
-        .MuiTableCell-body {
-          color: rgba(255,255,255,0.8) !important;
-        }
-      `;
-    } else {
-      style.innerHTML = '';
-    }
-    style.id = 'dark-mode-styles';
-    
-    const existingStyle = document.getElementById('dark-mode-styles');
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-    
-    document.head.appendChild(style);
-    
-    return () => {
-      if (document.getElementById('dark-mode-styles')) {
-        document.getElementById('dark-mode-styles')?.remove();
-      }
-    };
-  }, [isDarkMode]);
-
-  // Update validateField function for better custom field validation
-  const validateField = (field: keyof FormState, value: any): string => {
-    // Type guard to check if field is a string
-    const isStringField = (f: keyof FormState): f is string => typeof f === 'string';
-
-    if (field === 'numberOfGenerations') {
-      if (value < 1 || value > 5) return 'Number of generations must be between 1 and 5';
-      return '';
-    }
-
-    if (isStringField(field) && field.startsWith('custom') && formState[field.replace('custom', '').toLowerCase()] === 'custom') {
-      if (!value) return 'This field is required when using a custom option';
-    }
-    
-    if (field === 'businessType' && value === 'custom' && !formState.customBusinessType) {
-      return 'Please enter your custom business type';
-    }
-
-    if (field === 'description' && value) {
-      const wordCount = value.trim().split(/\s+/).length;
-      if (wordCount < 3) return 'Description must be at least 3 words long';
-    }
-
-    // Custom fields validations using a mapping approach
-    if (field === 'tone' && value === 'custom' && !formState.customTone) {
-      return 'Please enter your custom tone';
-    }
-    
-    if (field === 'topic' && value === 'custom' && !formState.customTopic) {
-      return 'Please enter your custom topic';
-    }
-    
-    if (field === 'audience' && value === 'custom' && !formState.customAudience) {
-      return 'Please enter your custom audience';
-    }
-    
-    if (field === 'style' && value === 'custom' && !formState.customStyle) {
-      return 'Please enter your custom writing style';
-    }
-    
-    if (field === 'cta' && value === 'custom' && !formState.customCta) {
-      return 'Please enter your custom call to action';
-    }
-    
-    if (field === 'goal' && value === 'custom' && !formState.customGoal) {
-      return 'Please enter your custom goal';
-    }
-
-    // General required field validation
-    if (!value && field !== 'includeHashtags' && field !== 'includeEmojis' && 
-        !(typeof field === 'string' && field.startsWith('custom'))) { // Don't validate custom fields unless needed
-      return 'This field is required';
-    }
-    
-    return '';
-  };
-
+  // Validate form fields
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
     
-    // Validate required fields
-    if (!formState.postType) errors.postType = 'Please select a post type';
-    if (!formState.businessType) errors.businessType = 'Please select a business type';
-    if (formState.businessType === 'custom' && !formState.customBusinessType) {
-      errors.customBusinessType = 'Please enter your custom business type';
-    }
-
-    // Validate form fields based on post type
-    if (formState.postType && FORM_FIELDS[formState.postType]) {
-      FORM_FIELDS[formState.postType].forEach(field => {
-        if (field.required && !formState[field.id]) {
-          errors[field.id] = `${field.label} is required`;
-        }
-      });
+    if (captionMode === 'custom') {
+      if (!formState.postType) errors.postType = 'Please select a post type';
+      if (!formState.businessType) errors.businessType = 'Please select a business type';
+      if (formState.businessType === 'custom' && !formState.customBusinessType) {
+        errors.customBusinessType = 'Please enter your custom business type';
+      }
     }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // Handle UI interactions
   const handlePostTypeChange = (type: PostType) => {
     setFormState(prev => ({ 
       ...prev, 
@@ -342,9 +116,7 @@ const Generation = () => {
       ...Object.fromEntries(
         Object.keys(prev).filter(key => 
           key !== 'postType' && 
-          key !== 'businessType' && 
-          key !== 'image' && 
-          key !== 'imagePreview'
+          key !== 'businessType'
         ).map(key => [key, ''])
       )
     }));
@@ -358,72 +130,79 @@ const Generation = () => {
     }));
   };
 
-  const handleChange = (field: keyof FormState, value: string | number | boolean) => {
+  const handleChange = (field: string, value: any) => {
     setFormState(prev => ({ 
       ...prev, 
-      [field]: value,
-      // Clear other fields when changing business type
-      ...(field === 'businessType' ? {
-        customBusinessType: '',
-        ...Object.fromEntries(
-          Object.keys(prev)
-            .filter(key => key !== 'postType' && key !== 'businessType' && key !== 'customBusinessType' && key !== 'numberOfGenerations' && key !== 'includeHashtags' && key !== 'includeEmojis' && key !== 'image')
-            .map(key => [key, ''])
-        )
-      } : {})
+      [field]: value
     }));
-    setFormErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
+    
+    // Clear related form errors
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
+  const handleModeChange = (mode: 'simple' | 'custom') => {
+    setCaptionMode(mode);
+  };
+
+  // Caption generation
   const handleGenerate = async () => {
+    // For simple mode, validate only the required fields
+    if (captionMode === 'simple') {
+      if (!formState.businessType?.trim()) {
+        setError('Please enter your business type');
+        return;
+      }
+      
+      // Prepare data for simple mode
+      const simpleFormData = {
+        businessType: 'custom',
+        customBusinessType: formState.businessType,
+        product: formState.product || '',
+        description: formState.additionalDetails || '',
+        numberOfGenerations: 1,
+        includeHashtags: true,
+        includeEmojis: true,
+        captionLength: 2
+      };
+      
+      await generateWithFormData(simpleFormData);
+      return;
+    }
+    
+    // For custom mode, use full validation
     if (!validateForm()) {
       setError('Please fill in all required fields');
       return;
     }
 
-    if (!auth.currentUser && remainingUsage <= 0) {
-      setError('Daily usage limit reached. Please login for unlimited access.');
-      return;
-    }
-
+    await generateWithFormData(formState);
+  };
+  
+  const generateWithFormData = async (data: any) => {
     setIsGenerating(true);
     setError('');
     setGeneratedCaptions([]);
     setSelectedCaptionIndex(0);
 
     try {
-      // Pass the complete formState which includes image data
-      const captions = await generateCaptions(formState);
+      const captions = await generateCaptions(data);
       
       if (captions && captions.length > 0) {
         setGeneratedCaptions(captions);
-        // Set the first caption as the selected one
-        setGeneratedCaption(captions[0].text);
         setShowResultDialog(true);
         setCanRegenerate(true);
-        
-        // Update remaining usage for non-premium users
-        if (!auth.currentUser) {
-          setRemainingUsage(prev => Math.max(0, prev - 1));
-        }
       } else {
         setError('No captions were generated. Please try again.');
       }
     } catch (err) {
       if (err instanceof Error) {
-        if (err.message.includes('API key is missing')) {
-          setError('API key is missing. Please check your environment configuration.');
-        } else if (err.message.includes('API authentication failed')) {
-          setError('Invalid API key. Please check your API key configuration.');
-        } else if (err.message.includes('Network error')) {
-          setError('Network error. Please check your internet connection.');
-        } else if (err.message.includes('rate limit')) {
-          setError('API rate limit exceeded. Please try again in a few minutes.');
-        } else if (err.message.includes('image')) {
-          setError(`Image error: ${err.message}`);
-        } else {
-          setError(`Failed to generate caption: ${err.message}`);
-        }
+        setError(`Failed to generate caption: ${err.message}`);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -439,8 +218,8 @@ const Generation = () => {
     setIsRegenerating(false);
   };
 
+  // Handle result actions
   const handleCopyCaption = (e?: React.MouseEvent, index?: number) => {
-    // Prevent event propagation if event exists
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -451,1720 +230,182 @@ const Generation = () => {
       navigator.clipboard.writeText(selectedCaption);
       setCopiedToClipboard(true);
       
-      // Save caption to StepContext for use in later steps
+      // Save caption to context
       setCaption(selectedCaption);
       
-      // Extract hashtags if they exist
+      // Extract hashtags
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
       
-      // Reset the copied state after 2 seconds
-      setTimeout(() => {
-        setCopiedToClipboard(false);
-      }, 2000);
+      setTimeout(() => setCopiedToClipboard(false), 2000);
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const selectedFile = event.target.files[0];
-      
-      // Check file size (limit to 5MB)
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        setError('Image file size should not exceed 5MB');
-        return;
-      }
-      
-      // Check file type
-      if (!selectedFile.type.match('image.*')) {
-        setError('Please select an image file');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormState(prev => ({
-          ...prev,
-          image: selectedFile,
-          imagePreview: e.target?.result as string
-        }));
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  };
-
-  const removeImage = () => {
-    setFormState(prev => ({
-      ...prev,
-      image: null,
-      imagePreview: null
-    }));
-  };
-
-  // Function to go directly to flyer creation (step 2)
   const handleCreateFlyer = (e?: React.MouseEvent) => {
-    // Prevent event propagation if event exists
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
     if (generatedCaptions.length > 0) {
-      // Save the caption to the context
       const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
       setCaption(selectedCaption);
       
-      // Extract hashtags if they exist
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
       
-      // Clear any previously stored flyer URL to prevent showing old images
       localStorage.removeItem('generatedFlyerUrl');
-      
-      // Close the dialog
       setShowResultDialog(false);
       
-      // Navigate to flyer creation (step 2)
       const flyerStep = steps.find(step => step.id === 2);
       if (flyerStep) {
-        // Use setTimeout to ensure the state changes are applied before navigation
-        setTimeout(() => {
-          navigate(flyerStep.path);
-        }, 100);
+        navigate(flyerStep.path);
       }
     }
   };
   
-  // Function to go directly to the publish page (step 3)
   const handlePublishContent = (e?: React.MouseEvent) => {
-    // Prevent event propagation if event exists
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
     if (generatedCaptions.length > 0) {
-      // Save the caption to the context
       const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
       setCaption(selectedCaption);
       
-      // Extract hashtags if they exist
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
       
-      // Clear any previously stored flyer URL to prevent showing old images
       localStorage.removeItem('generatedFlyerUrl');
       
-      // Navigate to the publish page (step 3)
       const publishStep = steps.find(step => step.id === 3);
       if (publishStep) {
-        // Navigate first, then close the dialog after navigation
         navigate(publishStep.path);
-        
-        // Close the dialog after a brief delay to ensure navigation completes first
-        setTimeout(() => {
-          setShowResultDialog(false);
-        }, 200);
+        setTimeout(() => setShowResultDialog(false), 200);
       }
     }
   };
 
-  if (!mounted) return null;
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
   return (
     <AnimatePresence mode="wait">
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: isDarkMode 
-        ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
-        : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
-      transition: `background-color ${TRANSITION_TIMING}`,
-      position: 'relative',
+      <Box sx={{ 
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: isDarkMode 
+          ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
+          : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        {/* Usage Limit Indicator */}
-        <Paper
-          elevation={3}
-          sx={{
-            position: 'fixed',
-            top: 80,
-            right: 20,
-            zIndex: 1100,
-            p: 2,
-            borderRadius: 2,
-            background: isDarkMode 
-              ? auth.currentUser 
-                ? 'rgba(0,200,83,0.1)' 
-                : 'rgba(64,93,230,0.1)' 
-              : auth.currentUser
-                ? 'rgba(0,200,83,0.05)'
-                : 'rgba(64,93,230,0.05)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode 
-              ? auth.currentUser 
-                ? 'rgba(0,200,83,0.2)' 
-                : 'rgba(64,93,230,0.2)' 
-              : auth.currentUser
-                ? 'rgba(0,200,83,0.1)'
-                : 'rgba(64,93,230,0.1)'}`,
-            boxShadow: isDarkMode 
-              ? auth.currentUser
-                ? '0 4px 20px rgba(0,200,83,0.2)'
-                : '0 4px 20px rgba(64,93,230,0.2)'
-              : '0 4px 20px rgba(0,0,0,0.1)',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FaInfoCircle 
-              color={isDarkMode 
-                ? auth.currentUser 
-                  ? '#00C853' 
-                  : '#A78BFA' 
-                : auth.currentUser
-                  ? '#00C853'
-                  : '#7F56D9'} 
-              size={20} 
-            />
-            <Typography
-              variant="body2"
-              sx={{
-                color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
-                fontWeight: 600,
-                fontSize: '0.9rem'
-              }}
-            >
-              {auth.currentUser ? 'Premium Access' : 'Daily Usage Limit'}
-            </Typography>
-          </Box>
-          <Typography
-            variant="body2"
-            sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
-              mt: 1,
-              fontSize: '0.85rem'
-            }}
-          >
-            {auth.currentUser 
-              ? 'Unlimited captions available' 
-              : `${remainingUsage} / ${LIMITS.captions.daily} captions remaining`}
-          </Typography>
-          {!auth.currentUser && (
-            <Button
-              variant="text"
-              size="small"
-              onClick={() => navigate('/login')}
-              sx={{
-                mt: 1,
-                color: isDarkMode ? '#A78BFA' : '#7F56D9',
-                textTransform: 'none',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                '&:hover': {
-                  background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
-                }
-              }}
-            >
-              Login for unlimited access
-            </Button>
-          )}
-        </Paper>
+        <BackButton />
 
-        {/* Back Button */}
-        <IconButton
-          onClick={() => navigate(-1)}
-          sx={{
-            position: 'fixed',
-            top: 20,
-            left: 20,
-            color: isDarkMode ? '#ffffff' : '#121212',
-            bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            zIndex: 1100,
-            '&:hover': {
-              bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-            },
-            transition: TRANSITION_TIMING,
-          }}
-        >
-          <FaArrowLeft />
-        </IconButton>
-
-        <Paper
-          elevation={3}
-          sx={{
-            position: 'fixed',
-            top: 20,
-            right: 20,
-            borderRadius: '50px',
-            p: { xs: '2px', sm: '4px' },
-            display: 'flex',
-            alignItems: 'center',
-            gap: { xs: 0.5, sm: 1 },
-            background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            color: isDarkMode ? '#fff' : '#000',
-            filter: 'blur(0.3px)',
-            transform: 'scale(1) !important',
-            transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
-            border: 0,
-            backdropFilter: 'blur(10px)',
-            zIndex: 1100,
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
-            }
-          }}
-        >
-          <IconButton 
-            size="small" 
-            onClick={toggleTheme}
-            sx={{ 
-              color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
-              transform: `scale(${!isDarkMode ? 1.2 : 1})`,
-              transition: TRANSITION_TIMING,
-            }}
-          >
-            <BsSunFill />
-          </IconButton>
-          <Switch
-            checked={isDarkMode}
-            onChange={toggleTheme}
-            sx={{
-              '& .MuiSwitch-switchBase': {
-                color: isDarkMode ? '#405DE6' : '#757575',
-                transition: TRANSITION_TIMING,
-                '&.Mui-checked': {
-                  color: '#405DE6',
-                },
-                '&.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#405DE6 !important',
-                },
-              },
-              '& .MuiSwitch-track': {
-                backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
-                opacity: '1 !important',
-              },
-            }}
+        <Container maxWidth="lg" sx={{ 
+          py: { xs: 3, sm: 5 }, 
+          px: { xs: 2, sm: 3 },
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          {/* Mode toggle component */}
+          <ModeToggle 
+            captionMode={captionMode}
+            handleModeChange={handleModeChange}
+            isDarkMode={isDarkMode}
           />
-          <IconButton 
-            size="small"
-            onClick={toggleTheme}
-            sx={{ 
-              color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
-              transform: `scale(${isDarkMode ? 1.2 : 1})`,
-              transition: TRANSITION_TIMING,
-            }}
-          >
-            <BsMoonFill />
-          </IconButton>
-        </Paper>
 
-        {/* Background Gradient */}
-        <Box
-          component={motion.div}
-          animate={{
-            background: isDarkMode
-              ? 'radial-gradient(circle at 50% 50%, rgba(131, 58, 180, 0.15) 0%, rgba(193, 53, 132, 0.08) 50%, transparent 100%)'
-              : 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.08) 0%, rgba(131, 58, 180, 0.04) 50%, transparent 100%)',
-          }}
-          transition={{ duration: 0.4 }}
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 0,
-            transition: TRANSITION_TIMING,
-          }}
-        />
-
-      <Container maxWidth="lg" sx={{ 
-        mb: 5, 
-        pt: { xs: 1, sm: 2 },
-        px: { xs: 2, sm: 3 } // Less horizontal padding on mobile
-      }}>
-          {/* Step Navigation */}
-          <StepNavigation 
-            currentStep={currentStep}
-            steps={steps}
-            nextStepLabel="Skip to Flyer Generator"
-            nextStepPath="/flyer"
-          />
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              mb: { xs: 1, sm: 4 }, // Less margin on mobile
-            }}
-          >
-            <Box
-              component={motion.div}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 100 }}
-              sx={{
-                mb: { xs: 1, sm: 1.5 },
-                p: { xs: 1, sm: 1.5 },
-                borderRadius: '50%',
-                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <FaMagic size={isMobile ? 20 : 28} color="white" />
-            </Box>
-            <Typography
-              variant="h1"
-              sx={{
-                fontSize: { xs: '1.75rem', sm: '2.25rem' },
-                fontWeight: 700,
-                mb: 1,
-                textAlign: 'center',
-                color: isDarkMode ? '#fff' : '#000'
-              }}
-            >
-              Generate Your Content
-            </Typography>
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: { xs: '0.9rem', sm: '1.1rem' },
-                color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                mb: 2,
-                textAlign: 'center'
-              }}
-            >
-              Create engaging content that captures attention and drives engagement
-            </Typography>
-          </Box>
-
+          {/* Main content based on mode */}
           <Paper
             elevation={3}
             sx={{
-              p: { xs: 1.5, sm: 3 }, // Less padding on mobile
+              p: { xs: 2, sm: 3 },
+              width: '100%',
               background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(10px)',
-              borderRadius: { xs: '12px', sm: '16px' }, // Smaller border radius on mobile
+              borderRadius: '16px',
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
               boxShadow: isDarkMode 
                 ? '0 10px 30px rgba(0, 0, 0, 0.2)' 
                 : '0 10px 30px rgba(0, 0, 0, 0.05)',
-              transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+              mb: 4,
             }}
           >
-            <Box sx={{ mb: { xs: 2, sm: 4 } }}> {/* Less margin on mobile */}
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: { xs: 1, sm: 2 }, // Less margin on mobile
-                  color: isDarkMode ? '#fff' : '#000',
-                  textAlign: 'center',
-                  fontWeight: 600,
-                  fontSize: { xs: '1.1rem', sm: '1.25rem' } // Smaller heading on mobile
-                }}
-              >
-                Choose Your Post Type
-                </Typography>
-              <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
-                {POST_TYPES.map((type) => (
-                  <Grid 
-                    item 
-                    xs={6}
-                    sm={formState.postType ? 6 : 4} 
-                    md={formState.postType ? 6 : 4}
-                    key={type.value} 
-                  sx={{ 
-                      display: formState.postType && formState.postType !== type.value ? 'none' : 'block',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {formState.postType === type.value ? (
-                      <FormControl fullWidth>
-                <Select
-                          value={formState.postType}
-                          onChange={(e) => handlePostTypeChange(e.target.value as PostType)}
-                          MenuProps={darkModeMenuProps}
-                  sx={{
-                            py: 1.5,
-                            px: 2,
-                            height: '56px',
-                            borderRadius: 2,
-                            background: isDarkMode 
-                              ? 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))'
-                              : 'linear-gradient(45deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1), rgba(131,58,180,0.1))',
-                            border: `1px solid ${
-                              isDarkMode
-                                ? 'rgba(64,93,230,0.5)'
-                                : 'rgba(64,93,230,0.3)'
-                            }`,
-                            color: isDarkMode ? '#fff' : '#000',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                              border: 'none',
-                            },
-                            '&:hover': {
-                              background: isDarkMode 
-                                ? 'linear-gradient(45deg, rgba(64,93,230,0.3), rgba(88,81,219,0.3), rgba(131,58,180,0.3))'
-                                : 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))',
-                            },
-                            '& .MuiSelect-select': {
-                              py: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            },
-                          }}
-                        >
-                          {POST_TYPES.map((option) => (
-                            <MenuItem 
-                              key={option.value} 
-                              value={option.value}
-                              sx={{
-                                py: 1.5,
-                                px: 2,
-                                '&:hover': {
-                                  background: isDarkMode 
-                                    ? 'rgba(64,93,230,0.1)'
-                                    : 'rgba(64,93,230,0.05)',
-                    },
-                  }}
-                >
-                              <Typography
-                                variant="subtitle1"
-                                sx={{ 
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {option.label}
-                              </Typography>
-                            </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-                    ) : (
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => handlePostTypeChange(type.value as PostType)}
-                  sx={{ 
-                          py: 1.5,
-                          px: 1,
-                          height: '56px',
-                          borderRadius: 2,
-                          border: `1px solid ${
-                            isDarkMode
-                              ? 'rgba(255,255,255,0.1)'
-                              : 'rgba(0,0,0,0.1)'
-                          }`,
-                          color: isDarkMode ? '#fff' : '#000',
-                          '&:hover': {
-                            background: isDarkMode
-                              ? 'rgba(255,255,255,0.05)'
-                              : 'rgba(0,0,0,0.05)',
-                            borderColor: isDarkMode
-                              ? 'rgba(64,93,230,0.8)'
-                              : 'rgba(64,93,230,0.5)',
-                    },
-                  }}
-                >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ 
-                            fontWeight: 600,
-                            fontSize: { xs: '0.8rem', sm: '0.9rem' }
-                          }}
-                        >
-                          {type.label}
-                        </Typography>
-                      </Button>
-                    )}
-                  </Grid>
-                ))}
-
-                {/* Business Type Selection */}
-                {formState.postType && (
-                  <Grid item xs={6} sm={6} md={6}>
-                    <FormControl fullWidth>
-                <Select
-                        value={formState.businessType}
-                        onChange={(e) => handleBusinessTypeChange(e.target.value as BusinessType)}
-                        displayEmpty
-                        MenuProps={darkModeMenuProps}
-                  sx={{
-                          height: '56px',
-                          borderRadius: 2,
-                          background: isDarkMode 
-                            ? 'rgba(255,255,255,0.05)'
-                            : 'rgba(255,255,255,0.8)',
-                          color: isDarkMode ? '#fff' : '#000',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                          },
-                          '& .MuiSelect-select': {
-                            py: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                          },
-                        }}
-                        renderValue={(selected) => {
-                          if (!selected) {
-                            return <Typography sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
-                              Business Type
-                            </Typography>;
-                          }
-                          return BUSINESS_TYPES.find(type => type.value === selected)?.label || selected;
-                        }}
-                      >
-                        {BUSINESS_TYPES.map((type) => (
-                          <MenuItem 
-                            key={type.value} 
-                            value={type.value}
-                            sx={{
-                              py: 1.5,
-                              px: 2,
-                            }}
-                          >
-                            {type.label}
-                          </MenuItem>
-                  ))}
-                </Select>
-                      {formErrors.businessType && (
-                        <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
-                          {formErrors.businessType}
-                        </Typography>
-                      )}
-              </FormControl>
-                  </Grid>
-                )}
-              </Grid>
-
-              {/* Custom Business Type Input */}
-              {formState.businessType === 'custom' && (
-                <Box sx={{ 
-                  mt: 2, 
-                  width: '100%',
-                  px: 1
-                }}>
-                  <TextField
-                    fullWidth
-                    label="Custom Business Type"
-                    placeholder="Enter your business type"
-                    value={formState.customBusinessType || ''}
-                    onChange={(e) => handleChange('customBusinessType', e.target.value)}
-                    size="small"
-                    error={!!formErrors.customBusinessType}
-                    helperText={formErrors.customBusinessType}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        color: isDarkMode ? '#fff' : '#000',
-                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
-                        '& fieldset': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: isDarkMode ? 'rgba(131, 58, 180, 0.6)' : 'rgba(131, 58, 180, 0.6)',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-            </Box>
-
-            {formState.postType && (
-            <Box>
-                {/* Form Fields Section - Rendered in a 2x2 grid */}
-                <Grid container spacing={isMobile ? 1.5 : 3}>
-                  {FORM_FIELDS[formState.postType]
-                    .filter(field => {
-                      // Show field if it doesn't depend on another field, or if its dependency is satisfied
-                      if (!field.dependsOn) return true;
-                      return formState[field.dependsOn.field] === field.dependsOn.value;
-                    })
-                    .map((field) => (
-                    <Grid item xs={12} md={field.id === 'description' ? 12 : 6} key={field.id}>
-                      <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          mb: { xs: 0.5, sm: 1 }, 
-                          flexWrap: 'wrap' // Allow wrapping on very small screens
-                        }}>
-                          <Typography 
-                            variant="subtitle1" 
-                            sx={{ 
-                              mr: 1, 
-                              fontWeight: 500, 
-                              color: isDarkMode ? '#fff' : '#000',
-                              fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
-                            }}
-                          >
-                            {field.label}
-                </Typography>
-                          {field.tooltip && (
-                            <Tooltip title={field.tooltip}>
-                              <IconButton 
-                                size="small" 
-                  sx={{ 
-                                  color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                                  padding: { xs: 0.1, sm: 0.2 }, // Smaller padding on mobile
-                                  '&:hover': {
-                                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                  }
-                                }}
-                              >
-                                <FaInfoCircle size={isMobile ? 12 : 14} />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-                        {field.type === 'select' ? (
-                          <FormControl fullWidth error={!!formErrors[field.id]} size="small">
-                <Select
-                              value={formState[field.id] || ''}
-                              onChange={(e) => handleChange(field.id, e.target.value)}
-                              MenuProps={darkModeMenuProps}
-                              renderValue={(selected) => {
-                                const option = field.options?.find(opt => opt.value === selected);
-                                return option ? option.label : '';
-                              }}
-                  sx={{
-                                color: isDarkMode ? '#fff' : '#000',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                },
-                                '& .MuiSelect-select': {
-                                  padding: '8px 14px',
-                                }
-                              }}
-                            >
-                              {field.options?.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </MenuItem>
-                  ))}
-                </Select>
-                            {formErrors[field.id] && (
-                              <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
-                                {formErrors[field.id]}
-                              </Typography>
-                            )}
-              </FormControl>
-                        ) : (
-                          <TextField
-                            fullWidth
-                            placeholder={field.placeholder}
-                            value={formState[field.id] || ''}
-                            onChange={(e) => handleChange(field.id, e.target.value)}
-                            error={!!formErrors[field.id]}
-                            helperText={formErrors[field.id]}
-                            multiline={field.multiline}
-                            rows={field.rows || 1}
-                            size="small"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                color: isDarkMode ? '#fff' : '#000',
-                                '& fieldset': {
-                                  borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                },
-                              },
-                              '& .MuiInputLabel-root': {
-                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                {/* Generation Options */}
-                <Paper 
-                  elevation={0}
-                  sx={{ 
-                    mt: { xs: 2, sm: 4 }, // Less margin on mobile
-                    mb: { xs: 2, sm: 3 }, // Less margin on mobile
-                    p: { xs: 2, sm: 3 }, // Less padding on mobile
-                    borderRadius: 2,
-                    background: isDarkMode 
-                      ? 'rgba(255,255,255,0.03)' 
-                      : 'rgba(0,0,0,0.02)',
-                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
-                  }}
-                >
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      mb: { xs: 1.5, sm: 3 }, // Less margin on mobile
-                      color: isDarkMode ? '#fff' : '#000', 
-                      fontWeight: 600,
-                      fontSize: { xs: '1rem', sm: '1.25rem' } // Smaller text on mobile
-                    }}
-                  >
-                    Generation Options
-                  </Typography>
-                  
-                  <Grid container spacing={isMobile ? 1.5 : 3}>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ width: '100%', mb: 2 }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            mb: { xs: 1, sm: 1.5 }, 
-                            color: isDarkMode ? '#fff' : '#000', 
-                            fontWeight: 500,
-                            fontSize: { xs: '0.9rem', sm: '1rem' }
-                          }}
-                        >
-                          Number of Generations
-                        </Typography>
-              <Box sx={{ 
-                          px: { xs: 1, sm: 2 },
-                display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center' 
-                        }}>
-                          <Slider
-                            value={formState.numberOfGenerations}
-                            onChange={(_, value) => handleChange('numberOfGenerations', value as number)}
-                            step={1}
-                            marks={[
-                              { value: 1, label: '1' },
-                              { value: 2, label: '2' },
-                              { value: 3, label: '3' },
-                              { value: 4, label: '4' },
-                              { value: 5, label: '5' },
-                            ]}
-                            min={1}
-                            max={5}
-                            sx={{
-                              width: '100%',
-                              maxWidth: { xs: '100%', sm: '280px' },
-                              '& .MuiSlider-rail': {
-                                height: isMobile ? 3 : 4,
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                opacity: 0.8,
-                              },
-                              '& .MuiSlider-track': {
-                                height: isMobile ? 3 : 4,
-                                backgroundColor: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)',
-                                border: 'none',
-                              },
-                              '& .MuiSlider-thumb': {
-                                width: isMobile ? 22 : 28,
-                                height: isMobile ? 22 : 28,
-                                backgroundColor: isDarkMode ? '#fff' : '#fff',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                '&::before': {
-                                  boxShadow: '0 0 1px 8px rgba(64,93,230,0.1)',
-                                },
-                                '&:hover, &.Mui-focusVisible': {
-                                  boxShadow: '0 0 0 8px rgba(64,93,230,0.16)',
-                                },
-                                '&::after': {
-                                  content: '""',
-                                  position: 'absolute',
-                                  width: isMobile ? 16 : 20,
-                                  height: isMobile ? 16 : 20,
-                                  borderRadius: '50%',
-                                  backgroundColor: '#405DE6',
-                                },
-                              },
-                              '& .MuiSlider-mark': {
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                height: isMobile ? 3 : 4,
-                                width: isMobile ? 3 : 4,
-                                borderRadius: '50%',
-                              },
-                              '& .MuiSlider-markActive': {
-                                backgroundColor: isDarkMode ? '#fff' : '#405DE6',
-                              },
-                              '& .MuiSlider-markLabel': {
-                                fontSize: isMobile ? '0.8rem' : '0.9rem',
-                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                                marginTop: 1,
-                              },
-                              '& .MuiSlider-valueLabel': {
-                                background: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.7)',
-                                borderRadius: '6px',
-                                padding: '2px 6px',
-                                fontSize: isMobile ? '0.75rem' : '0.85rem',
-                                fontWeight: 'bold',
-                                '&:before': {
-                                  display: 'none',
-                                },
-                              },
-                            }}
-                            valueLabelDisplay="auto"
-                          />
-                        </Box>
-                      </Box>
-
-                      <Box sx={{ width: '100%', mb: 2 }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            mb: { xs: 1, sm: 1.5 }, 
-                            color: isDarkMode ? '#fff' : '#000', 
-                            fontWeight: 500,
-                            fontSize: { xs: '0.9rem', sm: '1rem' }
-                          }}
-                        >
-                          Content Length
-                        </Typography>
-                        <Box sx={{ 
-                          px: { xs: 1, sm: 2 },
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center' 
-                        }}>
-                          <Slider
-                            value={formState.captionLength}
-                            onChange={(_, value) => handleChange('captionLength', value as number)}
-                            step={1}
-                            marks={[
-                              { value: 1, label: 'Short (≤30 words)' },
-                              { value: 2, label: 'Medium (30-60)' },
-                              { value: 3, label: 'Long (60-100)' },
-                            ]}
-                            min={1}
-                            max={3}
-                            sx={{
-                              width: '100%',
-                              maxWidth: { xs: '100%', sm: '280px' },
-                              '& .MuiSlider-rail': {
-                                height: isMobile ? 3 : 4,
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                opacity: 0.8,
-                              },
-                              '& .MuiSlider-track': {
-                                height: isMobile ? 3 : 4,
-                                backgroundColor: isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)',
-                                border: 'none',
-                              },
-                              '& .MuiSlider-thumb': {
-                                width: isMobile ? 22 : 28,
-                                height: isMobile ? 22 : 28,
-                                backgroundColor: isDarkMode ? '#fff' : '#fff',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                '&::before': {
-                                  boxShadow: '0 0 1px 8px rgba(64,93,230,0.1)',
-                                },
-                                '&:hover, &.Mui-focusVisible': {
-                                  boxShadow: '0 0 0 8px rgba(64,93,230,0.16)',
-                                },
-                                '&::after': {
-                                  content: '""',
-                                  position: 'absolute',
-                                  width: isMobile ? 16 : 20,
-                                  height: isMobile ? 16 : 20,
-                                  borderRadius: '50%',
-                                  backgroundColor: '#405DE6',
-                                },
-                              },
-                              '& .MuiSlider-mark': {
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                height: isMobile ? 3 : 4,
-                                width: isMobile ? 3 : 4,
-                                borderRadius: '50%',
-                              },
-                              '& .MuiSlider-markActive': {
-                                backgroundColor: isDarkMode ? '#fff' : '#405DE6',
-                              },
-                              '& .MuiSlider-markLabel': {
-                                fontSize: isMobile ? '0.8rem' : '0.9rem',
-                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                                marginTop: 1,
-                              },
-                              '& .MuiSlider-valueLabel': {
-                                display: 'none',
-                              },
-                            }}
-                          />
-                        </Box>
-                      </Box>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%', justifyContent: 'center' }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                              checked={formState.includeHashtags}
-                              onChange={(e) => handleChange('includeHashtags', e.target.checked)}
-                        sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                              color: '#405DE6',
-                          },
-                        }}
-                      />
-                    }
-                          label={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <FaHashtag size={isMobile ? 14 : 16} />
-                              <Typography 
-                                variant="body2" 
-                    sx={{
-                                  fontSize: { xs: '0.85rem', sm: '0.95rem' } 
-                    }}
-                              >
-                                Include Hashtags
-                              </Typography>
-                </Box>
-                          }
-                          sx={{ color: isDarkMode ? '#fff' : '#000' }}
-                        />
-
-                  <FormControlLabel
-                    control={
-                      <Switch
-                              checked={formState.includeEmojis}
-                              onChange={(e) => handleChange('includeEmojis', e.target.checked)}
-                        sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                              color: '#405DE6',
-                          },
-                        }}
-                      />
-                    }
-                          label={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <BsEmojiSmile size={isMobile ? 14 : 16} />
-                              <Typography 
-                                variant="body2" 
-                    sx={{
-                                  fontSize: { xs: '0.85rem', sm: '0.95rem' } 
-                                }}
-                              >
-                                Include Emojis
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{ color: isDarkMode ? '#fff' : '#000' }}
-                  />
-                </Box>
-                    </Grid>
-
-                    {/* Image Upload Section */}
-                    <Grid item xs={12}>
-                      <Box sx={{ 
-                        mt: 2, 
-                        p: { xs: 2, sm: 3 },
-                        border: formState.imagePreview 
-                          ? `2px solid ${isDarkMode ? 'rgba(64,93,230,0.8)' : 'rgba(64,93,230,0.6)'}` 
-                          : `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
-                        borderRadius: 2,
-                        backgroundColor: formState.imagePreview
-                          ? isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)'
-                          : isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-                        transition: 'all 0.3s ease',
-                      }}>
-                        <Typography 
-                          variant="subtitle1" 
-                          sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            mb: { xs: 1, sm: 2 },
-                            color: isDarkMode ? '#fff' : '#000', 
-                            fontWeight: 500,
-                            fontSize: { xs: '0.9rem', sm: '1rem' }
-                          }}
-                        >
-                          <FaImage style={{ marginRight: '8px', fontSize: '0.9rem' }} />
-                          {formState.imagePreview ? (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span style={{ color: isDarkMode ? 'rgba(64,93,230,1)' : 'rgba(64,93,230,1)' }}>
-                                Image Uploaded
-                              </span>
-                              <Typography variant="caption" sx={{ 
-                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                                fontStyle: 'italic'
-                              }}>
-                                (Caption will focus on image content)
-                </Typography>
-                            </Box>
-                          ) : (
-                            'Upload Image (Optional)'
-                          )}
-                        </Typography>
-                        
-                        {formState.imagePreview ? (
-                          <Box sx={{ position: 'relative', mb: 1 }}>
-                            <Box 
-                              component="img"
-                              src={formState.imagePreview}
-                              alt="Preview"
-                              sx={{ 
-                                width: '100%',
-                                maxHeight: { xs: '150px', sm: '200px' },
-                                objectFit: 'contain',
-                                borderRadius: 1,
-                              }}
-                            />
-                            <IconButton
-                              onClick={removeImage}
-                              size="small"
-                              sx={{
-                                position: 'absolute',
-                                top: 4,
-                                right: 4,
-                                backgroundColor: 'rgba(0,0,0,0.5)',
-                                color: '#fff',
-                                padding: { xs: '4px', sm: '8px' }, // Smaller padding on mobile
-                                '&:hover': {
-                                  backgroundColor: 'rgba(0,0,0,0.7)',
-                                }
-                              }}
-                            >
-                              <FaTimesCircle size={isMobile ? 14 : 16} />
-                  </IconButton>
-              </Box>
-                        ) : (
-                          <Box 
-                sx={{
-                              textAlign: 'center',
-                              p: { xs: 1.5, sm: 3 },
-                              cursor: 'pointer',
-                              '&:hover': {
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                              }
-                            }}
-                            onClick={() => document.getElementById('image-upload')?.click()}
-                          >
-                            <FaUpload size={isMobile ? 20 : 28} color={isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
-                            <Typography 
-                              variant="body2"
-                              sx={{ 
-                                mt: 1, 
-                                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                                fontSize: { xs: '0.8rem', sm: '0.95rem' }
-                              }}
-                            >
-                              Click to upload an image
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                display: 'block', 
-                                mt: 0.5, 
-                      color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                                fontSize: { xs: '0.7rem', sm: '0.75rem' }
-                              }}
-                            >
-                              PNG, JPG or JPEG (max. 5MB)
-                            </Typography>
-                          </Box>
-                        )}
-                        
-                        <input
-                          type="file"
-                          id="image-upload"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={handleFileChange}
-                        />
-                        
-                        {!formState.imagePreview && (
-                          <Button
-                            startIcon={<FaUpload size={isMobile ? 12 : 14} />}
-                            variant="outlined"
-                            size="small"
-                            onClick={() => document.getElementById('image-upload')?.click()}
-                            sx={{
-                              mt: { xs: 1, sm: 2 },
-                              py: { xs: 0.5, sm: 1 },
-                              borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                              color: isDarkMode ? '#fff' : '#000',
-                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                              '&:hover': {
-                                borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                              }
-                            }}
-                          >
-                            Browse Files
-                          </Button>
-                        )}
-            </Box>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Box>
-            )}
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, sm: 4 } }}>
-            <Button
-              variant="contained"
-                disabled={isGenerating}
-              onClick={handleGenerate}
-                startIcon={isGenerating ? 
-                  <CircularProgress size={isMobile ? 14 : 20} color="inherit" /> : 
-                  <FaMagic size={isMobile ? 16 : 20} />
-                }
-              sx={{
-                  py: { xs: 1, sm: 2 },
-                  px: { xs: 3, sm: 5 },
-                borderRadius: 3,
-                background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                boxShadow: isDarkMode ? '0 4px 15px rgba(64,93,230,0.3)' : '0 4px 15px rgba(0,0,0,0.2)',
-                  transition: 'all 0.3s ease',
-                  fontSize: { xs: '0.8rem', sm: '1rem' }, // Smaller text on mobile
-                  fontWeight: 'bold',
-                  letterSpacing: '0.5px',
-                  textTransform: 'none',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: isDarkMode ? '0 6px 20px rgba(64,93,230,0.4)' : '0 6px 20px rgba(0,0,0,0.3)',
-                },
-                '&:active': {
-                  transform: 'translateY(0)',
-                },
-                '&.Mui-disabled': {
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                },
-              }}
-            >
-                {isGenerating ? 'Generating...' : 'Generate Content'}
-              </Button>
-            </Box>
-
-            {showPreview && (
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 3,
-                  mt: 4,
-                  background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                }}
-              >
-                <Typography variant="h6" sx={{ mb: 2, color: isDarkMode ? '#fff' : '#000' }}>
-                  Generated Content
-                </Typography>
-                <Typography
-                  sx={{
-                    mb: 2,
-                    color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {generatedCaption}
-                </Typography>
-                <Button
-                  startIcon={<FaCopy />}
-                  onClick={handleCopyCaption}
-                  sx={{
-                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                    color: isDarkMode ? '#fff' : '#000',
-                    '&:hover': {
-                      background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
-                    },
-                  }}
-                >
-                  Copy Content
-            </Button>
-              </Paper>
+            {captionMode === 'simple' ? (
+              <SimpleMode
+                formState={formState}
+                handleChange={handleChange}
+                handleGenerate={handleGenerate}
+                isDarkMode={isDarkMode}
+                isGenerating={isGenerating}
+              />
+            ) : (
+              <CustomMode
+                formState={formState}
+                formErrors={formErrors}
+                POST_TYPES={POST_TYPES}
+                BUSINESS_TYPES={BUSINESS_TYPES}
+                FORM_FIELDS={FORM_FIELDS}
+                handleChange={handleChange}
+                handlePostTypeChange={handlePostTypeChange}
+                handleBusinessTypeChange={handleBusinessTypeChange}
+                handleGenerate={handleGenerate}
+                isDarkMode={isDarkMode}
+                isGenerating={isGenerating}
+                darkModeMenuProps={darkModeMenuProps}
+              />
             )}
           </Paper>
         </Container>
 
-        <Snackbar
-          open={!!error}
-          autoHideDuration={6000}
+        {/* Result dialog */}
+        <ResultDialog
+          open={showResultDialog}
+          onClose={() => setShowResultDialog(false)}
+          generatedCaptions={generatedCaptions}
+          selectedCaptionIndex={selectedCaptionIndex}
+          setSelectedCaptionIndex={setSelectedCaptionIndex}
+          copiedToClipboard={copiedToClipboard}
+          isRegenerating={isRegenerating}
+          canRegenerate={canRegenerate}
+          handleRegenerate={handleRegenerate}
+          handleCopyCaption={handleCopyCaption}
+          handleCreateFlyer={handleCreateFlyer}
+          handlePublishContent={handlePublishContent}
+          isDarkMode={isDarkMode}
+          isMobile={isMobile}
+        />
+
+        {/* Error messages */}
+        <Snackbar 
+          open={!!error} 
+          autoHideDuration={6000} 
           onClose={() => setError('')}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert
-            onClose={() => setError('')}
-            severity="error"
-            sx={{
-              width: '100%',
-              backgroundColor: isDarkMode ? '#ff5252' : '#ffebee',
-              color: isDarkMode ? '#fff' : '#c62828',
-            }}
-          >
+          <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
             {error}
           </Alert>
         </Snackbar>
-
-        <Dialog
-          open={showResultDialog}
-          onClose={() => setShowResultDialog(false)}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            sx: {
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
-              borderRadius: { xs: '12px', sm: '16px' }, // Smaller border radius on mobile
-              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)',
-              maxWidth: { xs: '95%', sm: '600px' }, // Wider on mobile
-              margin: { xs: '10px', sm: '20px' }, // Less margin on mobile
-              overflow: 'hidden',
-            }
-          }}
+        
+        {/* General messages */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={4000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <DialogTitle 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              pb: { xs: 1, sm: 2 }, // Less padding on mobile
-              pt: { xs: 1.5, sm: 2 }, // Less padding on mobile
-              px: { xs: 2, sm: 3 }, // Less padding on mobile
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2))' 
-                : 'linear-gradient(135deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1))',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FaMagic size={isMobile ? 16 : 20} color={isDarkMode ? '#fff' : '#000'} />
-              <Typography
-                variant="h5" 
-                sx={{
-                  fontWeight: 600,
-                  color: isDarkMode ? '#fff' : '#000',
-                  fontSize: { xs: '1.2rem', sm: '1.5rem' }, // Smaller heading on mobile
-                }}
-              >
-                Generated Content
-              </Typography>
-            </Box>
-              <IconButton
-              onClick={() => setShowResultDialog(false)}
-              size={isMobile ? "small" : "medium"} // Smaller button on mobile
-                sx={{
-                color: isDarkMode ? '#fff' : '#000',
-                  '&:hover': {
-                  background: isDarkMode 
-                    ? 'rgba(255, 255, 255, 0.1)' 
-                    : 'rgba(0, 0, 0, 0.1)',
-                }
-                }}
-              >
-                <FaTimes size={isMobile ? 16 : 24} />
-              </IconButton>
-          </DialogTitle>
-
-          <DialogContent sx={{ p: { xs: 2, sm: 3 } }}> {/* Less padding on mobile */}
-                  <Paper
-                    elevation={0}
-                    sx={{
-                p: { xs: 2, sm: 3 }, // Less padding on mobile
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)'
-                  : 'rgba(0, 0, 0, 0.02)',
-                borderRadius: { xs: '8px', sm: '12px' }, // Smaller border radius on mobile
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              }}
-            >
-              <Box
-                sx={{
-                  maxHeight: { xs: '50vh', sm: '60vh' }, // Smaller height on mobile
-                  overflowY: 'auto',
-                  '&::-webkit-scrollbar': {
-                    width: { xs: '6px', sm: '8px' }, // Thinner scrollbar on mobile
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                      '&:hover': {
-                      background: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                    },
-                      },
-                    }}
-                  >
-                {generatedCaptions.map((caption, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: { xs: 2, sm: 3 }, // Less padding on mobile
-                        mb: { xs: 2, sm: 3 }, // Less margin on mobile
-                        background: index === selectedCaptionIndex
-                          ? isDarkMode 
-                            ? 'rgba(64, 93, 230, 0.1)'
-                            : 'rgba(64, 93, 230, 0.05)'
-                          : isDarkMode 
-                            ? 'rgba(255, 255, 255, 0.03)'
-                            : 'rgba(0, 0, 0, 0.02)',
-                        borderRadius: { xs: '8px', sm: '12px' }, // Smaller border radius on mobile
-                        border: `1px solid ${index === selectedCaptionIndex 
-                          ? isDarkMode ? 'rgba(64, 93, 230, 0.3)' : 'rgba(64, 93, 230, 0.2)'
-                          : isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          background: isDarkMode 
-                            ? 'rgba(64, 93, 230, 0.08)'
-                            : 'rgba(64, 93, 230, 0.03)',
-                          borderColor: isDarkMode 
-                            ? 'rgba(64, 93, 230, 0.25)'
-                            : 'rgba(64, 93, 230, 0.15)',
-                        },
-                      }}
-                      onClick={() => setSelectedCaptionIndex(index)}
-                    >
-                      {/* Caption header with number and copy button */}
-                    <Box sx={{ 
-                      display: 'flex',
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        mb: { xs: 1, sm: 2 } // Less margin on mobile
-                      }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Box 
-                            sx={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: '50%',
-                              border: `2px solid ${index === selectedCaptionIndex 
-                                ? '#405DE6' 
-                                : isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'}`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {index === selectedCaptionIndex && (
-                              <Box 
-                                sx={{
-                                  width: 10,
-                                  height: 10,
-                                  borderRadius: '50%',
-                                  bgcolor: '#405DE6',
-                                }}
-                              />
-                            )}
-                          </Box>
-                          <Typography 
-                            variant="subtitle1" 
-                            sx={{ 
-                              color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                              fontSize: { xs: '0.9rem', sm: '1rem' } // Smaller text on mobile
-                            }}
-                          >
-                            Caption {index + 1}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCaptionIndex(index);
-                            navigator.clipboard.writeText(caption.text);
-                            setCopiedToClipboard(true);
-                            
-                            // Save caption to StepContext for use in later steps
-                            setCaption(caption.text);
-                            
-                            // Extract hashtags if they exist
-                            const hashtagRegex = /#[^\s#]+/g;
-                            const extractedHashtags = caption.text.match(hashtagRegex) || [];
-                            setHashtags(extractedHashtags);
-                            
-                            setTimeout(() => setCopiedToClipboard(false), 2000);
-                          }}
-                          size="small"
-                          sx={{
-                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                            padding: { xs: '4px', sm: '8px' }, // Smaller padding on mobile
-                            '&:hover': {
-                              color: isDarkMode ? '#fff' : '#000',
-                            },
-                          }}
-                        >
-                          <FaCopy size={isMobile ? 14 : 16} />
-                        </IconButton>
-                    </Box>
-                      {/* Caption text */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          whiteSpace: 'pre-wrap',
-                          lineHeight: 1.8,
-                          color: isDarkMode ? '#fff' : '#000',
-                          fontFamily: '"Inter", sans-serif',
-                          fontSize: { xs: '0.95rem', sm: '1.1rem' }, // Smaller text on mobile
-                        }}
-                      >
-                        {caption.text.split('\n\n').map((part, partIndex) => {
-                          const isHashtags = part.startsWith('#');
-                          return isHashtags ? null : (
-                            <span key={partIndex}>
-                              {part}
-                              {partIndex < caption.text.split('\n\n').length - 1 && <><br /><br /></>}
-                            </span>
-                          );
-                        })}
-                      </Typography>
-                      
-                      {/* Hashtags */}
-                      {caption.text.includes('#') && (
-                        <Box sx={{ 
-                          mt: { xs: 1.5, sm: 2 }, // Less margin on mobile
-                          pt: { xs: 1.5, sm: 2 }, // Less padding on mobile
-                          borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                        }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
-                              fontFamily: '"Inter", sans-serif',
-                              fontSize: { xs: '0.85rem', sm: '0.95rem' }, // Smaller text on mobile
-                              lineHeight: 1.8,
-                            }}
-                          >
-                            {caption.text.split('\n\n').map((part, partIndex) => {
-                              if (part.startsWith('#')) {
-                                return part.split(' ').map((tag, i) => (
-                                  <Chip
-                                    key={`${partIndex}-${i}`}
-                                    label={tag}
-                                    size="small"
-                                    sx={{
-                                      m: { xs: 0.3, sm: 0.5 }, // Less margin on mobile
-                                      background: isDarkMode 
-                                        ? 'rgba(64,93,230,0.2)' 
-                                        : 'rgba(64,93,230,0.1)',
-                                      color: isDarkMode ? '#fff' : '#000',
-                                      fontSize: { xs: '0.7rem', sm: '0.8rem' }, // Smaller text on mobile
-                                      height: { xs: '24px', sm: '32px' }, // Smaller height on mobile
-                                      '&:hover': {
-                                        background: isDarkMode 
-                                          ? 'rgba(64,93,230,0.3)' 
-                                          : 'rgba(64,93,230,0.2)',
-                                        cursor: 'pointer'
-                                      },
-                                    }}
-                                  />
-                                ));
-                              }
-                              return null;
-                            })}
-                          </Typography>
-                        </Box>
-                      )}
-                  </Paper>
-                  </motion.div>
-              ))}
-          </Box>
-            </Paper>
-          </DialogContent>
-
-          <DialogActions 
-            sx={{ 
-              p: { xs: 2, sm: 3 }, // Less padding on mobile
-              pt: { xs: 1, sm: 2 }, // Less padding top on mobile
-              borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-              display: 'flex',
-              flexDirection: 'row', 
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 2,
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1))' 
-                : 'linear-gradient(135deg, rgba(64,93,230,0.05), rgba(88,81,219,0.05))',
-              flexWrap: 'wrap', // Allow wrapping on small screens
-            }}
-          >
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleRegenerate();
-              }}
-              disabled={isRegenerating || !canRegenerate}
-              variant="contained"
-              startIcon={isRegenerating ? <CircularProgress size={isMobile ? 16 : 20} /> : <MdRefresh size={isMobile ? 14 : 18} />}
-              sx={{
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                background: 'linear-gradient(45deg, #757575, #9E9E9E, #BDBDBD)',
-                color: 'white',
-                fontSize: '0.875rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #616161, #757575, #9E9E9E)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                },
-                '&.Mui-disabled': {
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                  color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                },
-                m: 0.5,
-              }}
-            >
-              {isRegenerating ? 'Regenerating...' : 'Regenerate'}
-            </Button>
-            
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleCopyCaption();
-              }}
-              variant="contained"
-              startIcon={copiedToClipboard ? <FaCheck size={isMobile ? 12 : 14} /> : <FaCopy size={isMobile ? 12 : 14} />}
-              sx={{
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                background: copiedToClipboard
-                  ? 'linear-gradient(45deg, #00c853, #00e676)'
-                  : 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                color: 'white',
-                fontSize: '0.875rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: copiedToClipboard
-                    ? 'linear-gradient(45deg, #00e676, #00c853)'
-                    : 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                },
-                m: 0.5,
-              }}
-            >
-              {copiedToClipboard ? 'Copied!' : 'Copy Content'}
-            </Button>
-            
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleCreateFlyer(e);
-              }}
-              variant="contained"
-              startIcon={<FaImage size={isMobile ? 12 : 14} />}
-              sx={{
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
-                color: 'white',
-                fontSize: '0.875rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                transition: 'background 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #E1306C, #C13584, #833AB4)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                },
-              }}
-            >
-              Create Flyer
-            </Button>
-            
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePublishContent(e);
-              }}
-              variant="contained"
-              startIcon={<FaShare size={isMobile ? 12 : 14} />}
-              sx={{
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                background: 'linear-gradient(45deg, #4267B2, #5B7BD5, #00B2FF)',
-                color: 'white',
-                fontSize: '0.875rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #00B2FF, #5B7BD5, #4267B2)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                },
-                m: 0.5,
-              }}
-            >
-              Publish Content
-            </Button>
-            
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowResultDialog(false);
-              }}
-              variant="contained"
-              startIcon={<FaTimes size={isMobile ? 12 : 14} />}
-              sx={{
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                background: 'linear-gradient(45deg, #F44336, #E57373, #EF9A9A)',
-                color: 'white',
-                fontSize: '0.875rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #EF9A9A, #E57373, #F44336)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                },
-                m: 0.5,
-              }}
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Box sx={{ 
-          position: 'relative',
-          zIndex: 1,
-          mt: 'auto',
-          background: isDarkMode 
-            ? 'linear-gradient(to top, rgba(30, 30, 40, 0.9), transparent)'
-            : 'linear-gradient(to top, rgba(245, 247, 250, 0.9), transparent)',
-          paddingTop: 5
-        }}>
-          {/* Footer content */}
-        </Box>
+          <Alert onClose={handleSnackbarClose} severity="success">
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </AnimatePresence>
   );

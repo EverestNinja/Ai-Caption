@@ -5,8 +5,9 @@ import { useTheme } from '../context/ThemeContext';
 import Sidebar from './Sidebar/Sidebar';
 
 const TRANSITION_TIMING = '0.3s ease';
-const TRANSITION_PROPERTIES = 'background-color, color, border-color';
-const SIDEBAR_WIDTH_COLLAPSED = 64;
+const TRANSITION_PROPERTIES = 'background-color, color, border-color, margin, padding';
+const SIDEBAR_WIDTH_COLLAPSED = 52; // 3.25rem in pixels
+const SIDEBAR_PADDING = 32; // 2rem in pixels
 
 interface LayoutProps {
   children: ReactNode;
@@ -48,7 +49,6 @@ const Layout = ({ children }: LayoutProps) => {
         padding: 0,
         boxSizing: 'border-box',
         overflowX: 'hidden',
-        gap: 0
       }}
     >
       <Sidebar />
@@ -56,12 +56,17 @@ const Layout = ({ children }: LayoutProps) => {
         component="main"
         sx={{ 
           flex: 1,
-          width: { xs: '100%', sm: `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` },
-          ml: 0,
+          width: { 
+            xs: `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)`,
+            sm: `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` 
+          },
+          marginLeft: { 
+            xs: `${SIDEBAR_WIDTH_COLLAPSED}px`,
+            sm: `${SIDEBAR_WIDTH_COLLAPSED}px` 
+          },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
-          margin: 0,
           padding: 0,
           position: 'relative',
           boxSizing: 'border-box',
@@ -69,16 +74,12 @@ const Layout = ({ children }: LayoutProps) => {
           minHeight: '100vh',
           backgroundColor: 'inherit',
           color: 'inherit',
-          '& > *': {
-            width: '100%'
-          }
+          transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
         }}
       >
         <Box sx={{ 
           flex: 1, 
           width: '100%',
-          margin: 0,
-          padding: 0,
           position: 'relative',
           backgroundColor: 'inherit',
           color: 'inherit'

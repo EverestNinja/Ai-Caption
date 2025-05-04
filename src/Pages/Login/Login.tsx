@@ -9,6 +9,7 @@ import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import BackButton from '../../components/BackButton';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.3s ease';
@@ -99,92 +100,7 @@ const AuthPage = () => {
         ...commonTransition
       }}>
         {/* Back Button */}
-        <IconButton
-          onClick={() => navigate(-1)}
-          sx={{
-            position: 'fixed',
-            top: 20,
-            left: 20,
-            color: isDarkMode ? '#ffffff' : '#121212',
-            bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            zIndex: 1100,
-            '&:hover': {
-              bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-            },
-            transition: TRANSITION_TIMING,
-          }}
-        >
-          <FaArrowLeft />
-        </IconButton>
-
-        {/* Theme Toggle */}
-        <Paper
-          elevation={3}
-          sx={{
-            position: 'fixed',
-            top: 20,
-            right: 20,
-            borderRadius: '50px',
-            p: { xs: '2px', sm: '4px' },
-            display: 'flex',
-            alignItems: 'center',
-            gap: { xs: 0.5, sm: 1 },
-            background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            color: isDarkMode ? '#fff' : '#000',
-            filter: 'blur(0.3px)',
-            transform: 'scale(1) !important',
-            transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
-            border: 0,
-            backdropFilter: 'blur(10px)',
-            zIndex: 1100,
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
-            }
-          }}
-        >
-          <IconButton 
-            size="small" 
-            onClick={toggleTheme}
-            sx={{ 
-              color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
-              transform: `scale(${!isDarkMode ? 1.2 : 1})`,
-              transition: TRANSITION_TIMING,
-            }}
-          >
-            <BsSunFill />
-          </IconButton>
-          <Switch
-            checked={isDarkMode}
-            onChange={toggleTheme}
-            sx={{
-              '& .MuiSwitch-switchBase': {
-                color: isDarkMode ? '#405DE6' : '#757575',
-                transition: TRANSITION_TIMING,
-                '&.Mui-checked': {
-                  color: '#405DE6',
-                },
-                '&.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: '#405DE6 !important',
-                },
-              },
-              '& .MuiSwitch-track': {
-                backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
-                opacity: '1 !important',
-              },
-            }}
-          />
-          <IconButton 
-            size="small"
-            onClick={toggleTheme}
-            sx={{ 
-              color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
-              transform: `scale(${isDarkMode ? 1.2 : 1})`,
-              transition: TRANSITION_TIMING,
-            }}
-          >
-            <BsMoonFill />
-          </IconButton>
-        </Paper>
+        <BackButton />
 
         <Box sx={{ 
           display: 'flex',

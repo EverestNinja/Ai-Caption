@@ -1,707 +1,354 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Drawer, 
-  List, 
-  ListItem, 
-  IconButton,
-  useTheme as useMuiTheme,
-  useMediaQuery,
-  Tooltip,
-  ListItemText,
-  Typography,
-  Button,
-  Snackbar,
-  Alert
-} from '@mui/material';
-import { 
-  FaHome,
-  FaMagic, 
-  FaImage, 
-  FaSave, 
-  FaBars,
-  FaChevronLeft,
-  FaSignOutAlt,
-  FaSignInAlt
-} from 'react-icons/fa';
-import { IoDocumentTextOutline } from 'react-icons/io5';
-import { useNavigate, useLocation } from 'react-router-dom';
+import './Sidebar.css';
+import glocapLogo from '../../assets/Glocap.png';
 import { useTheme } from '../../context/ThemeContext';
-import { getAuth } from 'firebase/auth';
-import GlocapLogo from '../../assets/Glocap.png';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
-const COLLAPSED_WIDTH = 64;
-const EXPANDED_WIDTH = 240;
+type SidebarLinkProps = {
+  to: string;
+  tooltip: string;
+  icon: React.ReactNode;
+  text: string;
+};
 
-interface NavItem {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) => {
+  return (
+    <li className="sidebar__item">
+      <Link to={to} className="sidebar__link" data-tooltip={tooltip}>
+        <span className="icon">{icon}</span>
+        <span className="text">{text}</span>
+      </Link>
+    </li>
+  );
+};
+
+type SidebarSectionProps = {
   title: string;
-  path: string;
-  icon: React.ReactElement;
-  requiresAuth?: boolean;
-}
+  links: SidebarLinkProps[];
+};
 
-const Sidebar = () => {
+const SidebarSection: React.FC<SidebarSectionProps> = ({ title, links }) => {
+  return (
+    <ul className="sidebar__list">
+      <li className="sidebar__item item--heading">
+        <h2 className="sidebar__item--heading">{title}</h2>
+      </li>
+      {links.map((link, index) => (
+        <SidebarLink key={index} {...link} />
+      ))}
+    </ul>
+  );
+};
+
+const Sidebar: React.FC = () => {
+  // Initialize isExpanded state from localStorage, defaulting to false (closed)
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    const savedState = localStorage.getItem('sidebarExpanded');
+    return savedState !== null ? JSON.parse(savedState) : false;
+  });
+  
   const { isDarkMode, toggleTheme } = useTheme();
+  const [showLogoutPopup, setShowLogoutPopup] = useState<boolean>(false);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
+  
+  // Get Firebase auth and React Router navigate
+  const auth = getAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const muiTheme = useMuiTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(!isMobile);
-  const auth = getAuth();
-  
-  // Add state for snackbar
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
-  // Update isCollapsed when screen size changes
+  // Listen for auth state changes
   useEffect(() => {
-    if (isMobile) {
-      setIsCollapsed(false);
-    }
-  }, [isMobile]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
+      setCurrentUser(user);
+      
+      // Force a re-render on auth state change
+      setIsExpanded(prev => {
+        // Check current checkbox state and adjust if needed
+        const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
+        if (checkbox) {
+          checkbox.checked = prev;
+        }
+        return prev;
+      });
+    });
+    
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [auth]);
 
-  const handleDrawerToggle = () => {
-    if (isMobile) {
-      setMobileOpen(!mobileOpen);
+  // Force refresh when route changes to ensure sidebar updates with auth state
+  useEffect(() => {
+    // Update current user on route change
+    setCurrentUser(auth.currentUser);
+  }, [location.pathname, auth.currentUser]);
+
+  // Apply dark theme class to body and ensure it persists
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-theme');
     } else {
-      setIsCollapsed(!isCollapsed);
+      document.body.classList.remove('dark-theme');
     }
+  }, [isDarkMode]);
+
+  // Save sidebar state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('sidebarExpanded', JSON.stringify(isExpanded));
+    
+    // Synchronize the checkbox state with the isExpanded state
+    const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
+    if (checkbox && checkbox.checked !== isExpanded) {
+      checkbox.checked = isExpanded;
+    }
+    
+    // Inform the SidebarContext about the change
+    const event = new CustomEvent('sidebarStateChanged', { 
+      detail: { isExpanded } 
+    });
+    document.dispatchEvent(event);
+  }, [isExpanded]);
+  
+  // Synchronize the checkbox state with isExpanded on initial render and after navigation
+  useEffect(() => {
+    const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
+    if (checkbox && checkbox.checked !== isExpanded) {
+      checkbox.checked = isExpanded;
+    }
+  }, [isExpanded, location.pathname]);
+
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
   };
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
+  const handleLogin = () => {
+    // Navigate to login page
+    navigate('/login');
   };
 
-  const handleAuth = async () => {
-    if (auth.currentUser) {
-      // Logout logic
-      try {
-        await auth.signOut();
-        navigate('/');
-        
-        // Show success message
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setShowLogoutPopup(false);
+      
+      // Show success snackbar
         setSnackbarMessage('You have been logged out successfully');
-        setSnackbarSeverity('success');
         setSnackbarOpen(true);
+      
+      // Redirect to home page
+      navigate('/');
       } catch (error) {
         console.error('Error signing out:', error);
-        
-        // Show error message
         setSnackbarMessage('Error signing out. Please try again.');
-        setSnackbarSeverity('error');
         setSnackbarOpen(true);
-      }
-    } else {
-      // Login navigation
-      navigate('/login');
     }
   };
 
+  const toggleLogoutPopup = () => {
+    setShowLogoutPopup(!showLogoutPopup);
+  };
+  
+  // Close snackbar
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  const navItems: NavItem[] = [
-    { title: 'Home', path: '/', icon: <FaHome size={16} /> },
-    { title: 'Caption Generator', path: '/caption', icon: <FaMagic size={16} /> },
-    { title: 'Flyer Generator', path: '/flyer', icon: <IoDocumentTextOutline size={16} /> },
-    { title: 'Saved Items', path: '/saved', icon: <FaSave size={16} /> },
-    { title: 'Publish', path: '/publish', icon: <FaImage size={16} /> },
+  // Updated General section links with React Router
+  const generalLinks: SidebarLinkProps[] = [
+    {
+      to: "/",
+      tooltip: "Home",
+      text: "Home",
+      icon: (
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
+          <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293l6-6Z"/>
+        </svg>
+      )
+    },
+    {
+      to: "/generate",
+      tooltip: "Caption Generator",
+      text: "Caption Generator",
+      icon: (
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+          <path d="M6.854 4.646a.5.5 0 0 1 0 .708L4.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0zm2.292 0a.5.5 0 0 0 0 .708L11.793 8l-2.647 2.646a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708 0z"/>
+        </svg>
+      )
+    },
+    {
+      to: "/flyer",
+      tooltip: "Flyer Generator",
+      text: "Flyer Generator",
+      icon: (
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+          <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+        </svg>
+      )
+    },
+    {
+      to: "/publish",
+      tooltip: "Publish",
+      text: "Publish",
+      icon: (
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+          <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+        </svg>
+      )
+    }
   ];
 
-  const drawerContent = (
-    <>
-      {/* Top Section */}
-      <Box 
-        sx={{ 
-          pt: 2,
-          pb: isCollapsed ? 1 : 2,
-          px: isCollapsed ? 0 : 2,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: isCollapsed ? 'center' : 'space-between',
-          gap: isCollapsed ? 1 : 0,
-          flexWrap: isCollapsed ? 'wrap' : 'nowrap',
-          margin: 0,
-        }}
-      >
-        {/* Logo Section */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          flexDirection: isCollapsed ? 'column' : 'row',
-          gap: 1.5 
-        }}>
-          {/* Circle Button or Logo */}
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: isCollapsed ? '50%' : '5px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: isCollapsed 
-                ? (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'white')
-                : '#4285F4',
-              boxShadow: isDarkMode 
-                ? '0px 1px 3px rgba(0, 0, 0, 0.2)'
-                : '0px 1px 3px rgba(0, 0, 0, 0.1)',
-              color: isCollapsed 
-                ? (isDarkMode ? 'rgba(255, 255, 255, 0.9)' : '#6E7BB3')
-                : 'white',
-            }}
-          >
-            {isCollapsed ? (
-              <FaBars size={14} onClick={handleDrawerToggle} style={{ cursor: 'pointer' }} />
-            ) : (
-              <Box
-                component="img"
-                src={GlocapLogo}
-                alt="Logo"
-                sx={{
-                  width: 20,
-                  height: 'auto',
-                  objectFit: 'contain',
-                }}
-              />
-            )}
-          </Box>
-          
-          {/* Logo in collapsed mode */}
-          {isCollapsed && (
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '5px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: '#4285F4',
-                boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <Box
-                component="img"
-                src={GlocapLogo}
-                alt="Logo"
-                sx={{
-                  width: 20,
-                  height: 'auto',
-                  objectFit: 'contain',
-                }}
-              />
-            </Box>
-          )}
-          
-          {/* App Title - Only visible when expanded */}
-          {!isCollapsed && (
-            <Typography 
-              variant="subtitle1" 
-              sx={{
-                fontWeight: 600,
-                color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : '#333',
-              }}
-            >
-              GloCap
-            </Typography>
-          )}
-        </Box>
-        
-        {/* Collapse button - Only visible when expanded */}
-        {!isCollapsed && (
-          <IconButton 
-            onClick={handleDrawerToggle}
-            sx={{
-              width: 24,
-              height: 24,
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#6E7BB3',
-            }}
-          >
-            <FaChevronLeft size={14} />
-          </IconButton>
-        )}
-      </Box>
-
-      {/* Navigation Items */}
-      <List 
-        sx={{ 
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: isCollapsed ? 'center' : 'flex-start',
-          px: isCollapsed ? 0 : 2,
-          py: 0,
-          gap: 1,
-          margin: 0,
-          '& .MuiListItem-root': {
-            margin: 0,
-            padding: isCollapsed ? '4px 0' : '4px 12px',
-          }
-        }}
-      >
-        {navItems.map((item) => {
-          if (item.requiresAuth && !auth.currentUser) return null;
-
-          const isActive = location.pathname === item.path;
+  // Account section links
+  const accountLinks: SidebarLinkProps[] = [
+    {
+      to: "/settings",
+      tooltip: "Settings",
+      text: "Settings",
+      icon: (
+        <svg width="16" height="16" fill="currentColor" className="bi bi-gear" viewBox="0 0 16 16">
+          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492a3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+        </svg>
+      )
+    }
+  ];
           
           return (
-            <Tooltip 
-              key={item.path} 
-              title={isCollapsed ? item.title : ""}
-              placement="right"
-              arrow
+    <aside className="vertical-sidebar">
+      <input 
+        type="checkbox" 
+        role="switch" 
+        id="checkbox-input" 
+        className="checkbox-input" 
+        checked={isExpanded}
+        onChange={toggleSidebar}
+      />
+      <nav>
+        <header>
+          <div className="sidebar__toggle-container">
+            <label 
+              tabIndex={0} 
+              htmlFor="checkbox-input" 
+              id="label-for-checkbox-input" 
+              className="nav__toggle"
             >
-              <ListItem
-                onClick={() => handleNavigation(item.path)}
-                sx={{
-                  width: '100%',
-                  padding: isCollapsed ? 0 : '8px 12px',
-                  margin: 0,
-                  borderRadius: isCollapsed ? '4px' : '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: isCollapsed ? 'center' : 'flex-start',
-                  bgcolor: isActive 
-                    ? isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'white'
-                    : 'transparent',
-                  border: isActive 
-                    ? isDarkMode 
-                        ? '1px solid rgba(255, 255, 255, 0.1)'
-                        : '1px solid rgba(0, 0, 0, 0.05)' 
-                    : 'none',
-                  boxShadow: isActive 
-                    ? isDarkMode 
-                        ? '0px 1px 3px rgba(0, 0, 0, 0.2)'
-                        : '0px 1px 3px rgba(0, 0, 0, 0.1)'
-                    : 'none',
-                  '&:hover': {
-                    bgcolor: isActive 
-                      ? isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'white'
-                      : isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: isCollapsed ? 32 : 24,
-                    height: isCollapsed ? 32 : 24,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: isActive
-                      ? isDarkMode ? '#FFFFFF' : '#4285F4'
-                      : isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#6E7BB3',
-                    minWidth: isCollapsed ? 32 : 24,
-                  }}
-                >
-                  {item.icon}
-                </Box>
-                
-                {!isCollapsed && (
-                  <ListItemText
-                    primary={item.title}
-                    sx={{
-                      ml: 1.5,
-                      '& .MuiTypography-root': {
-                        fontSize: '14px',
-                        fontWeight: isActive ? 500 : 400,
-                        color: isActive
-                          ? isDarkMode ? '#FFFFFF' : '#4285F4'
-                          : isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#6E7BB3',
-                      }
-                    }}
-                  />
-                )}
-              </ListItem>
-            </Tooltip>
-          );
-        })}
-      </List>
-
-      {/* Bottom Section */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-          pb: 3,
-          mt: 2,
-          borderTop: isDarkMode 
-            ? '1px solid rgba(255, 255, 255, 0.1)'
-            : '1px solid rgba(0, 0, 0, 0.1)',
-          pt: isCollapsed ? 0 : 2,
-        }}
-      >
-        {/* Theme Toggle Section */}
-        {isCollapsed ? (
-          // Vertical toggle for collapsed mode
-          <Box 
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-              mt: 4,
-              mb: 2,
-            }}
-          >
-            {/* Moon Icon */}
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: isDarkMode ? '#FFFFFF' : '#6E7BB3',
-              }}
-            >
-              <BsMoonFill size={14} />
-            </Box>
-
-            {/* Toggle Switch - Oval Track */}
-            <Box
-              onClick={toggleTheme}
-              sx={{
-                width: 22,
-                height: 44,
-                borderRadius: 30,
-                position: 'relative',
-                cursor: 'pointer',
-                bgcolor: '#D1D5DB',
-                padding: '2px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}
-            >
-              {/* Circular Thumb */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: isDarkMode ? '4px' : 'calc(100% - 22px)',
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  bgcolor: 'white',
-                  transition: 'top 0.3s',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                }}
-              />
-            </Box>
-
-            {/* Sun Icon */}
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: isDarkMode ? '#6E7BB3' : '#FFB020',
-              }}
-            >
-              <BsSunFill size={16} />
-            </Box>
-          </Box>
-        ) : (
-          // Horizontal toggle for expanded mode
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              px: 2,
-              py: 1.5,
-              borderRadius: '8px',
-            }}
-          >
-            <Typography variant="body2" sx={{ 
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#6E7BB3',
-              fontSize: '13px',
-            }}>
-              {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-            </Typography>
-            
-            <Box
-              onClick={toggleTheme}
-              sx={{
-                width: 44,
-                height: 22,
-                bgcolor: '#D1D5DB',
-                borderRadius: 30,
-                position: 'relative',
-                cursor: 'pointer',
-                padding: '2px',
-              }}
-            >
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: isDarkMode ? 'calc(100% - 22px)' : '4px',
-                  top: '2px',
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  bgcolor: 'white',
-                  transition: 'left 0.3s',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                }}
-              />
-            </Box>
-          </Box>
-        )}
-
-        {/* Profile Section */}
-        <Box
-          sx={{
-            width: isCollapsed ? 'auto' : '100%',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: isCollapsed ? 'center' : 'flex-start',
-            gap: 1.5,
-            mt: 1,
-            px: isCollapsed ? 0 : 2,
-          }}
-        >
-          {auth.currentUser ? (
-            // Show profile when logged in
-            <>
-              <Box
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                }}
-              >
-                <img 
-                  src={auth.currentUser?.photoURL || "https://randomuser.me/api/portraits/men/32.jpg"} 
-                  alt={auth.currentUser?.displayName || "User"} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </Box>
-              
-              {!isCollapsed && auth.currentUser && (
-                <Box sx={{ overflow: 'hidden' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
-                    {auth.currentUser.displayName || 'User Name'}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#6E7BB3' }}>
-                    {auth.currentUser.email || 'user@example.com'}
-                  </Typography>
-                </Box>
-              )}
-            </>
-          ) : (
-            // Show login button when not logged in
-            isCollapsed ? (
-              <Tooltip title="Login" placement="right" arrow>
-                <IconButton
-                  onClick={handleAuth}
-                  sx={{
-                    color: '#6E7BB3',
-                    width: 36,
-                    height: 36,
-                    borderRadius: '8px',
-                    '&:hover': {
-                      color: '#4285F4',
-                      bgcolor: 'rgba(66, 133, 244, 0.05)',
-                    },
-                  }}
-                >
-                  <FaSignInAlt size={14} />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Button
-                startIcon={<FaSignInAlt size={14} />}
-                onClick={handleAuth}
-                variant="outlined"
-                sx={{
-                  py: 1,
-                  px: 2,
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  color: '#4285F4',
-                  borderColor: 'rgba(66, 133, 244, 0.3)',
-                  '&:hover': {
-                    borderColor: '#4285F4',
-                    bgcolor: 'rgba(66, 133, 244, 0.05)',
-                  },
-                }}
-              >
-                Login
-              </Button>
-            )
-          )}
-        </Box>
+              <span className="toggle--icons" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" className="toggle-svg-icon toggle--open">
+                  <path d="M3 5a1 1 0 1 0 0 2h18a1 1 0 1 0 0-2zM2 12a1 1 0 0 1 1-1h18a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1M2 18a1 1 0 0 1 1-1h18a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1"></path>
+                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" className="toggle-svg-icon toggle--close">
+                  <path d="M18.707 6.707a1 1 0 0 0-1.414-1.414L12 10.586 6.707 5.293a1 1 0 0 0-1.414 1.414L10.586 12l-5.293 5.293a1 1 0 1 0 1.414 1.414L12 13.414l5.293 5.293a1 1 0 0 0 1.414-1.414L13.414 12z"></path>
+                </svg>
+              </span>
+            </label>
+          </div>
+          <figure>
+            <img className="glocap-logo" src={glocapLogo} alt="GloCap AI Logo" />
+            <figcaption>
+              <p className="user-id">GloCap AI</p>
+              <p className="user-role">Intelligent Assistant</p>
+            </figcaption>
+          </figure>
+        </header>
+        <section className="sidebar__wrapper">
+          <SidebarSection title="General" links={generalLinks} />
+          <SidebarSection title="Account" links={accountLinks} />
+        </section>
         
-        {/* Auth Button (Logout/Login) */}
-        {auth.currentUser && (
-          <Box
-            sx={{
-              width: isCollapsed ? 'auto' : '100%',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              mt: 1,
-              px: isCollapsed ? 0 : 2,
-            }}
-          >
-            {isCollapsed ? (
-              <Tooltip title="Logout" placement="right" arrow>
-                <IconButton
-                  onClick={handleAuth}
-                  sx={{
-                    color: '#6E7BB3',
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      color: '#E53E3E',
-                      bgcolor: 'rgba(229, 62, 62, 0.05)',
-                    },
-                  }}
-                >
-                  <FaSignOutAlt size={14} />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Box
-                onClick={handleAuth}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  py: 1,
-                  px: 2,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  width: '100%',
-                  color: '#6E7BB3',
-                  '&:hover': {
-                    color: '#E53E3E',
-                    bgcolor: 'rgba(229, 62, 62, 0.05)',
-                  },
-                }}
-              >
-                <FaSignOutAlt size={14} />
-                <Typography variant="body2">Logout</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-      </Box>
-    </>
-  );
-
-  return (
-    <>
-      {/* Mobile Hamburger - Only show in mobile */}
-      {isMobile && (
-        <IconButton
-          onClick={handleDrawerToggle}
-          sx={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 1200,
-            width: 40,
-            height: 40,
-            borderRadius: '12px',
-            bgcolor: isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(255,255,255,0.9)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            '&:hover': {
-              bgcolor: isDarkMode ? 'rgba(26, 26, 46, 0.95)' : 'rgba(255,255,255,0.95)',
-            },
-          }}
-        >
-          <FaBars size={16} color={isDarkMode ? '#fff' : '#000'} />
-        </IconButton>
-      )}
-
-      {/* Drawer */}
-      <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? mobileOpen : true}
-        onClose={handleDrawerToggle}
-        anchor="left"
-        sx={{
-          display: isMobile ? (mobileOpen ? 'block' : 'none') : 'block',
-          width: isMobile ? EXPANDED_WIDTH : (isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH),
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: isMobile ? EXPANDED_WIDTH : (isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH),
-            maxWidth: isMobile ? '100%' : 'none',
-            boxSizing: 'border-box',
-            bgcolor: isDarkMode ? '#1A1A2E' : '#EDF1FD',
-            border: 'none',
-            overflowX: 'hidden',
-            margin: 0,
-            padding: 0,
-            boxShadow: isMobile ? '4px 0 24px rgba(0,0,0,0.15)' : 'none',
-          },
-          '& .MuiBackdrop-root': {
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(4px)',
-          },
-        }}
-      >
-        <Box
-          sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            margin: 0,
-            padding: 0,
-          }}
-        >
-          {drawerContent}
-        </Box>
-      </Drawer>
-
-      {/* Logout Notification */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleSnackbarClose} 
-          severity={snackbarSeverity}
-          sx={{ 
-            width: '100%',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            bgcolor: snackbarSeverity === 'success' ? (isDarkMode ? '#1E4620' : '#EDF7ED') : (isDarkMode ? '#5F2120' : '#FDEDED'),
-            color: isDarkMode ? 'white' : 'inherit',
-            '& .MuiAlert-icon': {
-              color: isDarkMode ? 'white' : undefined
-            }
-          }}
-        >
+        {/* Footer section with theme toggle and user avatar */}
+        <div className="sidebar__footer">
+          <div className="theme-toggle-container" data-tooltip="Theme">
+            <span className="theme-icon sun-icon">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+              </svg>
+            </span>
+            <label className="switch">
+              <input 
+                type="checkbox" 
+                checked={isDarkMode} 
+                onChange={toggleTheme} 
+                aria-label="Toggle theme"
+              />
+              <span className="slider"></span>
+            </label>
+            <span className="theme-icon moon-icon">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+              </svg>
+            </span>
+          </div>
+          
+          {/* Conditional User Profile Section */}
+          {currentUser ? (
+            <div 
+              className="user-profile" 
+              onClick={toggleLogoutPopup}
+              data-tooltip={isExpanded ? "" : "User Profile"}
+            >
+              <div className="user-avatar-container">
+                <img 
+                  src={currentUser.photoURL || "https://randomuser.me/api/portraits/men/32.jpg"} 
+                  alt={currentUser.displayName || "User"} 
+                  className="user-avatar" 
+                />
+              </div>
+              <div className="user-info">
+                <p className="user-name">{currentUser.displayName || "User"}</p>
+                <p className="user-email">{currentUser.email || "user@example.com"}</p>
+              </div>
+              
+              {/* Logout Popup */}
+              {showLogoutPopup && (
+                <div className="logout-popup">
+                  <button className="logout-button" onClick={handleLogout}>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                      <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                    </svg>
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div 
+              className="login-button-container" 
+              data-tooltip={isExpanded ? "" : "Login"}
+              onClick={handleLogin}
+            >
+              <div className="login-icon">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                  <path fillRule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                </svg>
+              </div>
+              {isExpanded && (
+                <span className="login-text">Login</span>
+              )}
+            </div>
+          )}
+        </div>
+      </nav>
+      
+      {/* Snackbar for notifications */}
+      {snackbarOpen && (
+        <div className={`snackbar ${isDarkMode ? 'dark' : ''}`}>
           {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </>
+          <button onClick={handleSnackbarClose} className="snackbar-close">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+            </svg>
+          </button>
+        </div>
+      )}
+    </aside>
   );
 };
 

@@ -1,3 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(32deg, hsl(193, 6%, 76%), hsl(196, 9%, 69%) 50%);
+  min-height: 100vh;
+  margin: 0;
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 2rem;
+  margin-left: calc(3.25rem + 10vmin); /* Account for collapsed sidebar + margin */
+  transition: margin-left 300ms ease-out;
+}
+
+/* Adjust content margin when sidebar is expanded */
+input:checked ~ .content {
+  margin-left: calc(16.875rem + 10vmin); /* Account for expanded sidebar + margin */
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

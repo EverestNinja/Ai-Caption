@@ -1,6 +1,7 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { StepProvider } from './context/StepContext';
+import { SidebarProvider } from './context/SidebarContext';
 import { Analytics } from '@vercel/analytics/react';
 import Routes from './Routes';
 import GoogleAnalytics from './components/GoogleAnalytics';
@@ -40,11 +41,13 @@ const App = () => {
     <ThemeProvider>
       <Router>
         <StepProvider>
-          <GoogleAnalytics />
-          <Layout>
-            <Routes />
-          </Layout>
-          <Analytics />
+          <SidebarProvider>
+            <GoogleAnalytics />
+            <Layout>
+              <Routes />
+            </Layout>
+            <Analytics />
+          </SidebarProvider>
         </StepProvider>
       </Router>
     </ThemeProvider>
