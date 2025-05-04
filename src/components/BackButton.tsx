@@ -4,9 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useSidebar } from "../context/SidebarContext";
 
-// Define transition constants
-const TRANSITION_TIMING = '0.3s ease';
-
 interface BackButtonProps {
   customTop?: number | string;
   customLeft?: number | string;

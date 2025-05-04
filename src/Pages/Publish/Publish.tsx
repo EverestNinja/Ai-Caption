@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, Button, IconButton, CircularProgress, Alert } from '@mui/material';
+import { Box, Container, Typography, Paper, Button, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import StepNavigation from '../../components/StepNavigation/StepNavigation';
-import { getAuth } from 'firebase/auth';
-import { clearDailyUsage } from '../../services/usageLimit';
 import BackButton from '../../components/BackButton';
 // Comment out problematic import temporarily
 // import { Context } from '../../Context/ContextProvider';
@@ -92,7 +90,7 @@ const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, tran
 const Publish = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  const { currentStep, steps, caption, goToPreviousStep } = useStepContext();
+  const { currentStep, steps, caption } = useStepContext();
   // Comment out Context usage for now
   // const { selectedCaption, hashtags } = useContext(Context);
   const [mounted, setMounted] = useState(false);

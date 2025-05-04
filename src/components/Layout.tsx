@@ -7,7 +7,6 @@ import Sidebar from './Sidebar/Sidebar';
 const TRANSITION_TIMING = '0.3s ease';
 const TRANSITION_PROPERTIES = 'background-color, color, border-color, margin, padding';
 const SIDEBAR_WIDTH_COLLAPSED = 52; // 3.25rem in pixels
-const SIDEBAR_PADDING = 32; // 2rem in pixels
 
 interface LayoutProps {
   children: ReactNode;

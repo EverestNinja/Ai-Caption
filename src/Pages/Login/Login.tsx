@@ -1,23 +1,17 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Button, Checkbox, FormControlLabel, IconButton, Paper, Switch } from '@mui/material';
+import { Box, Typography, TextField, Button, Checkbox, FormControlLabel } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
-import { FaArrowLeft } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '../../components/BackButton';
 
-// Define transition constants
-const TRANSITION_TIMING = '0.3s ease';
-const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
-
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode } = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,7 +23,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
 
   const commonTransition = {
-    transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+    transition: `background-color, color, border-color, box-shadow, transform, opacity 0.3s ease`,
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
