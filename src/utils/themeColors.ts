@@ -76,6 +76,7 @@ export const themeColors = {
   
   // Common accent/primary colors
   primary: '#405DE6',
+  primaryHover: '#3550cc', // Slightly darker shade of primary for hover states
   secondary: '#833AB4',
   accent: '#bdb3fa',
   
