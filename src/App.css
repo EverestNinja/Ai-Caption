@@ -136,6 +136,43 @@ input:checked ~ .content {
   }
 }
 
+/* Fix for only footer showing issue */
+@media (max-width: 768px) {
+  /* Reset fixed positioning on body */
+  body {
+    position: static !important;
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+  
+  /* Ensure root has proper layout */
+  #root {
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    display: flex;
+    flex-direction: column;
+    overflow-y: visible;
+    position: static;
+  }
+  
+  /* Fix main content visibility */
+  .content, .app-container, .MuiContainer-root {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 0 auto !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
+  }
+  
+  /* Ensure footer is at the bottom but not covering content */
+  footer {
+    flex-shrink: 0;
+    position: relative !important;
+    bottom: auto !important;
+    margin-top: auto;
+  }
+}
+
 /* Fix for any absolutely positioned footers */
 footer {
   position: relative;
@@ -177,4 +214,98 @@ footer {
 
 .read-the-docs {
   color: #888;
+}
+
+/* Footer mobile fixes */
+@media (max-width: 768px) {
+  /* Prevent footer content overflow */
+  footer .MuiContainer-root {
+    padding: 1rem !important;
+    max-width: 100% !important;
+  }
+  
+  /* Prevent duplicate logo display */
+  footer .MuiGrid-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Proper spacing for grid items */
+  footer .MuiGrid-item {
+    padding: 8px 0 !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+  
+  /* Fix double logo layout */
+  footer .MuiGrid-item:first-of-type .MuiBox-root {
+    flex-direction: column !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+  
+  /* Ensure content is centered */
+  footer .MuiTypography-root {
+    text-align: center !important;
+    width: 100% !important;
+  }
+  
+  /* Fix social media icons spacing */
+  footer [rel="noopener noreferrer"] {
+    margin: 0 8px !important;
+  }
+  
+  /* Better copyright spacing */
+  footer .MuiDivider-root + .MuiBox-root {
+    display: flex;
+    flex-direction: column !important;
+    text-align: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  
+  /* Improve touch targets on footer links */
+  footer [style*="cursor: pointer"] {
+    padding: 6px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+}
+
+/* Additional footer mobile fixes */
+@media (max-width: 768px) {
+  /* Fix logo alignment in footer */
+  footer .MuiGrid-item:first-child .MuiBox-root > .MuiBox-root {
+    flex-direction: column !important;
+  }
+  
+  /* Adjust spacing for footer items */
+  footer .MuiGrid-container > .MuiGrid-item {
+    margin-bottom: 12px !important;
+  }
+  
+  /* Fix spacing for quick links */
+  footer .MuiGrid-item:nth-child(2) .MuiBox-root:last-child > .MuiTypography-root {
+    margin: 4px 0 !important;
+  }
+  
+  /* Center social media icons properly */
+  footer .MuiGrid-item:nth-child(3) .MuiBox-root:last-child {
+    justify-content: center !important;
+  }
+
+  /* Ensure all footer text is readable */
+  footer .MuiTypography-root {
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Better spacing for section titles */
+  footer .MuiTypography-subtitle1 {
+    margin-bottom: 12px !important;
+    font-size: 1.1rem !important;
+  }
 }

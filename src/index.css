@@ -3,9 +3,10 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
-html {
+html, body {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -17,11 +18,13 @@ html {
 /* Initial theme to prevent flash */
 :root {
   color-scheme: light dark;
+  touch-action: manipulation;
 }
 
 body {
   width: 100%;
   min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -37,6 +40,7 @@ body {
   color: #121212;
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
+  overscroll-behavior-y: none;
 }
 
 /* Ensure immediate theme application */
@@ -57,6 +61,7 @@ body.menu-open {
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -65,6 +70,7 @@ body.menu-open {
   color: inherit;
   overflow-x: hidden;
   position: relative;
+  overscroll-behavior-y: none;
 }
 
 :root {
@@ -155,6 +161,7 @@ button:focus-visible {
   @supports (-webkit-touch-callout: none) {
     html, body {
       height: -webkit-fill-available;
+      min-height: -webkit-fill-available;
     }
     
     #root {
@@ -163,7 +170,44 @@ button:focus-visible {
     
     body.menu-open {
       height: -webkit-fill-available;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
     }
+  }
+  
+  /* Fix for Safari */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    html {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+  
+  /* REMOVED fixed positioning from body that was causing the issue */
+  body {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: visible;
+    overflow-x: hidden;
+  }
+  
+  /* Adjusted root positioning */
+  #root {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: visible;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
 }
 

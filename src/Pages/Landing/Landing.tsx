@@ -97,71 +97,71 @@ const Landing = () => {
           maxWidth: '100vw',
         }}
       >
-      {/* Background Gradient with Animation */}
-      <Box
-        component={motion.div}
-        animate={{
-          background: isDarkMode
-            ? themeColors.dark.overlay
-            : themeColors.light.overlay,
-          opacity: isThemeChanging ? 0.5 : 0.8,
-        }}
-        transition={{ duration: 0.4 }}
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0,
-          ...commonTransition,
-        }}
-      />
-
-      <Container 
-        maxWidth="md"
-        component={motion.div}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        sx={{
-          position: 'relative',
-          zIndex: 1,
-          pt: { xs: 4, sm: 3 },
-          px: { xs: 2, sm: 2, md: 3 },
-          pb: { xs: 3, sm: 4 },
-          flex: 1,
-          width: '100%',
-          maxWidth: '100%',
-          margin: '0 auto',
-          boxSizing: 'border-box',
-          left: 'auto',
-          right: 'auto',
-          overflowX: 'hidden',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-          {/* Enhanced Hero Section */}
+        {/* Background Gradient with Animation */}
         <Box
           component={motion.div}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          animate={{
+            background: isDarkMode
+              ? themeColors.dark.overlay
+              : themeColors.light.overlay,
+            opacity: isThemeChanging ? 0.5 : 0.8,
+          }}
+          transition={{ duration: 0.4 }}
           sx={{
-            pt: { xs: 4, sm: 6, md: 8 },
-              pb: { xs: 6, sm: 8 },
-            textAlign: 'center',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0,
+            ...commonTransition,
+          }}
+        />
+
+        <Container 
+          maxWidth="md"
+          component={motion.div}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          sx={{
             position: 'relative',
             zIndex: 1,
-              overflow: 'hidden',
+            pt: { xs: 4, sm: 3 },
+            px: { xs: 2, sm: 2, md: 3 },
+            pb: { xs: 3, sm: 4 },
+            flex: 1,
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
+            left: 'auto',
+            right: 'auto',
+            overflowX: 'hidden',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
+          {/* Enhanced Hero Section */}
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            sx={{
+              pt: { xs: 4, sm: 6, md: 8 },
+              pb: { xs: 6, sm: 8 },
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              overflow: 'hidden',
+            }}
+          >
             {/* Logo with enhanced animation */}
-          <motion.div
+            <motion.div
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ 
@@ -169,14 +169,14 @@ const Landing = () => {
                 stiffness: 100, 
                 damping: 10 
               }}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 marginBottom: '2rem',
                 position: 'relative'
-            }}
-          >
+              }}
+            >
               {/* Animated background circles */}
               <Box
                 sx={{
@@ -217,38 +217,38 @@ const Landing = () => {
                 ))}
               </Box>
 
-            <Box
-              component="img"
-              src={GlocapLogo}
-              alt="GloCap Logo"
-              sx={{
-                width: { xs: 80, sm: 100, md: 120 },
-                height: 'auto',
-                objectFit: 'contain',
-                filter: isDarkMode 
-                      ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
-                  : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
-                transition: 'all 0.4s ease',
-                animation: isDarkMode ? 'glow 2s ease-in-out infinite alternate' : 'none',
-                '@keyframes glow': {
-                  '0%': {
-                        filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
-                  },
-                  '100%': {
-                        filter: 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)) drop-shadow(0 0 25px rgba(255,255,255,0.4)) drop-shadow(0 0 35px rgba(255,255,255,0.3))'
-                  }
-                },
-                '&:hover': {
-                  transform: 'scale(1.03)',
+              <Box
+                component="img"
+                src={GlocapLogo}
+                alt="GloCap Logo"
+                sx={{
+                  width: { xs: 80, sm: 100, md: 120 },
+                  height: 'auto',
+                  objectFit: 'contain',
                   filter: isDarkMode 
-                        ? 'brightness(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(255,255,255,0.4))'
-                    : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
+                        ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
+                    : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
+                  transition: 'all 0.4s ease',
+                  animation: isDarkMode ? 'glow 2s ease-in-out infinite alternate' : 'none',
+                  '@keyframes glow': {
+                    '0%': {
+                          filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
                     },
-                    position: 'relative',
-                    zIndex: 2,
-              }}
-            />
-          </motion.div>
+                    '100%': {
+                          filter: 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)) drop-shadow(0 0 25px rgba(255,255,255,0.4)) drop-shadow(0 0 35px rgba(255,255,255,0.3))'
+                    }
+                  },
+                  '&:hover': {
+                    transform: 'scale(1.03)',
+                    filter: isDarkMode 
+                          ? 'brightness(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(255,255,255,0.4))'
+                      : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
+                      },
+                      position: 'relative',
+                      zIndex: 2,
+                }}
+              />
+            </motion.div>
 
             {/* Hero Heading with improved animation */}
             <motion.div
@@ -256,23 +256,23 @@ const Landing = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
             >
-          <Typography
-            variant="h1"
-            sx={{
-              fontWeight: 800,
-              fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' },
-              lineHeight: { xs: 1.2, sm: 1.3 },
-              background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              color: 'transparent',
-              mb: { xs: 2, sm: 3 },
+              <Typography
+                variant="h1"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' },
+                  lineHeight: { xs: 1.2, sm: 1.3 },
+                  background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  mb: { xs: 2, sm: 3 },
                   ...commonTransition,
                   textShadow: isDarkMode ? '0 0 30px rgba(64,93,230,0.3)' : 'none',
-            }}
-          >
+                }}
+              >
                 GloCap - Best Content Generator
-          </Typography>
+              </Typography>
             </motion.div>
 
             {/* Subtitle with improved animation */}
@@ -281,20 +281,20 @@ const Landing = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.5 }}
             >
-          <Typography
-            variant="h2"
-            sx={{
+              <Typography
+                variant="h2"
+                sx={{
                   fontSize: { xs: '1rem', sm: '1.2rem', md: '1.5rem' },
                   fontWeight: 500,
-              mb: { xs: 4, sm: 5 },
+                  mb: { xs: 4, sm: 5 },
                   color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                   ...commonTransition,
                   maxWidth: { xs: '100%', sm: '90%', md: '80%' },
-              mx: 'auto',
-            }}
-          >
+                  mx: 'auto',
+                }}
+              >
                 Transform your social media presence with AI-powered content that engages, inspires, and converts
-          </Typography>
+              </Typography>
             </motion.div>
 
             {/* CTA Button with improved animation */}
@@ -309,24 +309,24 @@ const Landing = () => {
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              variant="contained"
+            >
+              <Button
+                variant="contained"
                 size={isMobile ? "medium" : "large"}
-              onClick={() => navigate('/generate')}
-              sx={{
-                py: { xs: 1.5, sm: 2 },
+                onClick={() => navigate('/generate')}
+                sx={{
+                  py: { xs: 1.5, sm: 2 },
                   px: { xs: 4, sm: 8 },
                   borderRadius: 3,
                   fontSize: { xs: '1rem', sm: '1.2rem' },
                   background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
                   width: { xs: '90%', sm: 'auto' },
-                '&:hover': {
+                  '&:hover': {
                     background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
                     boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-                  transform: 'translateY(-2px)',
-                },
+                    transform: 'translateY(-2px)',
+                  },
                   '@media (hover: none)': {
                     '&:hover': {
                       background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
@@ -350,128 +350,60 @@ const Landing = () => {
                     '100%': { left: '100%' },
                   },
                 }}
-            >
+              >
                 Get Started Free
-            </Button>
+              </Button>
             </motion.div>
-
-            {/* Stats Section - New Addition */}
-            <Box
-              component={motion.div}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.9 }}
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: { xs: 3, md: 6 },
-                mt: { xs: 6, sm: 8 },
-                mb: { xs: 2, sm: 3 },
-                mx: 'auto',
-                maxWidth: { xs: '100%', md: '80%' },
-              }}
-            >
-              {[
-                { value: '5k+', label: 'Active Users' },
-                { value: '100k+', label: 'Captions Generated' },
-                { value: '4.8', label: 'User Rating' },
-              ].map((stat, index) => (
-                <Paper
-                  key={index}
-                  elevation={0}
-                  sx={{
-                    py: { xs: 2, sm: 2.5 },
-                    px: { xs: 4, sm: 5 },
-                    borderRadius: 3,
-                    ...commonBoxStyles,
-                    background: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    minWidth: { xs: '40%', md: '20%' },
-                    transform: 'scale(1) !important',
-                '&:hover': {
-                      background: isDarkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
-                    }
-                  }}
-                >
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                      fontWeight: 700,
-                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      color: 'transparent',
-                      mb: 0.5,
-                    }}
-                  >
-                    {stat.value}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                      fontSize: { xs: '0.9rem', sm: '1rem' },
-              }}
-            >
-                    {stat.label}
-                  </Typography>
-                </Paper>
-              ))}
           </Box>
-        </Box>
 
           {/* Features Section - Keep existing but add scroll animation */}
-        <Box
-          component={motion.div}
+          <Box
+            component={motion.div}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-          sx={{
+            sx={{
               py: { xs: 4, sm: 5, md: 6 },
               px: { xs: 2, sm: 0 },
               width: '100%',
-          }}
-        >
-          <Typography
-            variant="h3"
-            sx={{
-              textAlign: 'center',
+            }}
+          >
+            <Typography
+              variant="h3"
+              sx={{
+                textAlign: 'center',
                 mb: { xs: 3, sm: 4, md: 5 },
-              color: isDarkMode ? '#fff' : '#000',
+                color: isDarkMode ? '#fff' : '#000',
                 fontWeight: 700,
                 fontSize: { xs: '1.4rem', sm: '1.6rem', md: '1.8rem' },
                 ...commonTransition,
-            }}
-          >
+              }}
+            >
               Why Choose Us?
-          </Typography>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
                   lg: 'repeat(4, 1fr)'
-              },
-              gap: { xs: 3, sm: 4 },
-            }}
-          >
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
+                },
+                gap: { xs: 3, sm: 4 },
+              }}
+            >
+              {features.map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Paper
+                    elevation={0}
+                    sx={{
                       p: { xs: 3, sm: 4 },
                       borderRadius: { xs: 3, sm: 4 },
                       ...commonBoxStyles,
@@ -569,10 +501,10 @@ const Landing = () => {
               {/* Introduction Section */}
               <Box
                 sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Typography
@@ -725,22 +657,22 @@ const Landing = () => {
                         variant="h6"
                         sx={{
                           fontSize: { xs: '1.1rem', sm: '1.2rem' },
-                      mb: 1,
+                          mb: 1,
                           fontWeight: 600,
-                      color: isDarkMode ? '#fff' : '#000',
-                    }}
-                  >
+                          color: isDarkMode ? '#fff' : '#000',
+                        }}
+                      >
                         {item.title}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: '0.9rem', sm: '1rem' },
-                      color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                    }}
-                  >
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: { xs: '0.9rem', sm: '1rem' },
+                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                        }}
+                      >
                         {item.description}
-                  </Typography>
-                </Paper>
+                      </Typography>
+                    </Paper>
                   ))}
                 </Box>
               </Box>
@@ -781,9 +713,9 @@ const Landing = () => {
                   Get Your Captions Now
                 </Button>
               </Box>
+            </Box>
           </Box>
-        </Box>
-      </Container>
+        </Container>
       </Box>
     </AnimatePresence>
   );
