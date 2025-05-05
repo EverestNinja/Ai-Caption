@@ -136,43 +136,6 @@ input:checked ~ .content {
   }
 }
 
-/* Fix for only footer showing issue */
-@media (max-width: 768px) {
-  /* Reset fixed positioning on body */
-  body {
-    position: static !important;
-    height: auto !important;
-    overflow-y: visible !important;
-  }
-  
-  /* Ensure root has proper layout */
-  #root {
-    min-height: 100vh;
-    min-height: calc(var(--vh, 1vh) * 100);
-    display: flex;
-    flex-direction: column;
-    overflow-y: visible;
-    position: static;
-  }
-  
-  /* Fix main content visibility */
-  .content, .app-container, .MuiContainer-root {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 0 auto !important;
-    min-height: 0 !important;
-    overflow-y: visible !important;
-  }
-  
-  /* Ensure footer is at the bottom but not covering content */
-  footer {
-    flex-shrink: 0;
-    position: relative !important;
-    bottom: auto !important;
-    margin-top: auto;
-  }
-}
-
 /* Fix for any absolutely positioned footers */
 footer {
   position: relative;

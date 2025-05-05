@@ -26,13 +26,6 @@ const fixMobileViewport = () => {
   
   // Initialize the viewport height
   setViewportHeight();
-  
-  // Fix for only footer showing issue - ensure body is not fixed position
-  if (window.innerWidth <= 768) {
-    document.body.style.position = 'relative';
-    document.body.style.height = 'auto';
-    document.body.style.overflowY = 'visible';
-  }
 };
 
 // Mobile detection

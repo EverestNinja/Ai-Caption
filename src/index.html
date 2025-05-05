@@ -157,29 +157,6 @@
           align-items: center !important;
         }
       }
-      
-      /* Fix for only footer showing issue */
-      @media (max-width: 768px) {
-        body {
-          position: relative !important;
-          height: auto !important;
-          min-height: 100vh !important;
-          overflow-y: visible !important;
-        }
-        
-        #root {
-          position: relative !important;
-          height: auto !important;
-          min-height: 100vh !important;
-          overflow-y: visible !important;
-          display: flex !important;
-          flex-direction: column !important;
-        }
-        
-        .mobile-overlay {
-          position: fixed !important;
-        }
-      }
     </style>
   </head>
   <body>
@@ -220,30 +197,5 @@
       });
     </script>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Fix for "only footer showing" issue -->
-    <script>
-      // Immediate fix for mobile display issues
-      (function() {
-        if (window.innerWidth <= 768) {
-          // Fix body positioning
-          document.body.style.position = 'relative';
-          document.body.style.height = 'auto';
-          document.body.style.minHeight = '100vh';
-          document.body.style.overflowY = 'visible';
-          
-          // Fix root element
-          const root = document.getElementById('root');
-          if (root) {
-            root.style.position = 'relative';
-            root.style.height = 'auto';
-            root.style.minHeight = '100vh';
-            root.style.overflowY = 'visible';
-            root.style.display = 'flex';
-            root.style.flexDirection = 'column';
-          }
-        }
-      })();
-    </script>
   </body>
 </html> 
