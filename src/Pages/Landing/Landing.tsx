@@ -91,6 +91,7 @@ const Landing = () => {
           boxSizing: 'border-box',
           overflowX: 'hidden',
           position: 'relative',
+          maxWidth: '100vw',
         }}
       >
       {/* Background Gradient with Animation */}
@@ -132,7 +133,11 @@ const Landing = () => {
           margin: '0 auto',
           boxSizing: 'border-box',
           left: 'auto',
-          right: 'auto'
+          right: 'auto',
+          overflowX: 'hidden',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
         }}
       >
           {/* Enhanced Hero Section */}

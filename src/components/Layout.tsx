@@ -51,6 +51,8 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
         padding: 0,
         boxSizing: 'border-box',
         overflowX: 'hidden',
+        position: 'relative',
+        maxWidth: '100vw',
       }}
     >
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
@@ -77,6 +79,8 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           backgroundColor: 'inherit',
           color: 'inherit',
           transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         <Box sx={{ 
@@ -84,7 +88,8 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           width: '100%',
           position: 'relative',
           backgroundColor: 'inherit',
-          color: 'inherit'
+          color: 'inherit',
+          overflowX: 'hidden',
         }}>
           {children}
         </Box>
