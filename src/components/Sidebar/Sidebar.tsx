@@ -18,10 +18,12 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) =>
   const location = useLocation();
   const isActive = location.pathname === to;
   const isMobile = window.innerWidth <= 768;
+  const linkRef = useRef<HTMLAnchorElement>(null);
   
   return (
     <li className="sidebar__item">
       <Link 
+        ref={linkRef}
         to={to} 
         className={`sidebar__link ${isActive ? 'active' : ''}`} 
         data-tooltip={tooltip}
@@ -32,8 +34,17 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) =>
             target.style.backgroundColor = 'var(--bg--active)';
             setTimeout(() => {
               target.style.backgroundColor = '';
+              // Remove focus
+              target.blur();
             }, 150);
+          } else {
+            // Remove focus on desktop too
+            e.currentTarget.blur();
           }
+        }}
+        onMouseDown={(e) => {
+          // Prevent default focus behavior on mousedown
+          e.preventDefault();
         }}
       >
         <span className="icon">{icon}</span>
@@ -213,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       icon: (
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
-          <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293l6-6Z"/>
+          <path d="M2.5 9v5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V9.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V14a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V9" />
         </svg>
       )
     },

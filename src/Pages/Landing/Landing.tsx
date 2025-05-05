@@ -79,7 +79,10 @@ const Landing = () => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          minHeight: {
+            xs: 'calc(var(--vh, 1vh) * 100)',
+            sm: '100vh'
+          },
           width: '100%',
           background: isDarkMode 
             ? themeColors.dark.background
@@ -138,6 +141,8 @@ const Landing = () => {
           '&::-webkit-scrollbar': {
             display: 'none',
           },
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
           {/* Enhanced Hero Section */}
@@ -428,7 +433,8 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
           sx={{
               py: { xs: 4, sm: 5, md: 6 },
-              px: { xs: 2, sm: 0 }
+              px: { xs: 2, sm: 0 },
+              width: '100%',
           }}
         >
           <Typography
@@ -530,7 +536,9 @@ const Landing = () => {
             transition={{ duration: 0.8 }}
             sx={{ 
               py: { xs: 4, sm: 5, md: 6 },
-              px: { xs: 2, sm: 0 }
+              px: { xs: 2, sm: 0 },
+              width: '100%',
+              mb: { xs: 4, sm: 5, md: 6 },
             }}>
             <Typography
               variant="h3"

@@ -85,9 +85,20 @@ const Footer = () => {
         }`,
         transition: `${themeColors.transition.properties} ${themeColors.transition.timing}`,
         position: 'relative',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 5,
       }}
     >
-      <Container maxWidth="lg">
+      <Container 
+        maxWidth="lg"
+        sx={{
+          px: { xs: 2, sm: 3 },
+          maxWidth: '100%',
+          overflowX: 'hidden',
+        }}
+      >
         <Grid 
           container 
           spacing={{ xs: 2, md: 3 }}
@@ -384,6 +395,8 @@ const Footer = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: { xs: 0.75, sm: 0 },
+            flexWrap: 'wrap',
+            fontSize: { xs: '0.75rem', sm: '0.85rem' },
           }}
         >
           <Typography
@@ -391,10 +404,13 @@ const Footer = () => {
             sx={{
               color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
               textAlign: { xs: 'center', sm: 'left' },
-              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+              fontSize: 'inherit',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: { xs: 'center', sm: 'flex-start' },
               gap: 0.5,
+              flexWrap: 'wrap',
+              width: { xs: '100%', sm: 'auto' },
             }}
           >
             © {new Date().getFullYear()} GloCap. Made with <FaHeart style={{ color: isDarkMode ? '#ff4081' : '#ff4081' }} /> by Deltabyte
@@ -404,7 +420,8 @@ const Footer = () => {
             sx={{
               color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
               textAlign: { xs: 'center', sm: 'right' },
-              fontSize: { xs: '0.85rem', sm: '0.9rem' },
+              fontSize: 'inherit',
+              width: { xs: '100%', sm: 'auto' },
             }}
           >
             All rights reserved.

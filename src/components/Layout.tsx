@@ -21,6 +21,24 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Fix iOS height issue
+    const handleResize = () => {
+      // Set a CSS variable with the viewport height
+      document.documentElement.style.setProperty(
+        '--vh', 
+        `${window.innerHeight * 0.01}px`
+      );
+    };
+    
+    handleResize(); // Call once on mount
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   if (!mounted) {
@@ -42,7 +60,10 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
     <Box
       sx={{
         display: 'flex',
-        minHeight: '100vh',
+        minHeight: {
+          xs: 'calc(var(--vh, 1vh) * 100)',
+          sm: '100vh'
+        },
         width: '100%',
         backgroundColor: isDarkMode ? '#121212' : '#EDF1FD',
         color: isDarkMode ? '#ffffff' : '#121212',
@@ -61,11 +82,11 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
         sx={{ 
           flex: 1,
           width: { 
-            xs: isMobile ? '100%' : `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)`,
+            xs: '100%',
             sm: isMobile ? '100%' : `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` 
           },
           marginLeft: { 
-            xs: isMobile ? '0' : `${SIDEBAR_WIDTH_COLLAPSED}px`,
+            xs: '0',
             sm: isMobile ? '0' : `${SIDEBAR_WIDTH_COLLAPSED}px` 
           },
           display: 'flex',
@@ -75,7 +96,10 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           position: 'relative',
           boxSizing: 'border-box',
           overflowX: 'hidden',
-          minHeight: '100vh',
+          minHeight: {
+            xs: 'calc(var(--vh, 1vh) * 100)',
+            sm: '100vh'
+          },
           backgroundColor: 'inherit',
           color: 'inherit',
           transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
@@ -90,6 +114,8 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           backgroundColor: 'inherit',
           color: 'inherit',
           overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {children}
         </Box>

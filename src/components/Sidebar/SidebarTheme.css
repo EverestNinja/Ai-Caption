@@ -8,11 +8,11 @@ body:not(.dark-theme) nav {
 }
 
 body:not(.dark-theme) .sidebar__link:hover {
-  background-color: var(--theme-sidebar-hover);
+  background-color: rgba(0, 0, 0, 0.08);
 }
 
 body:not(.dark-theme) .sidebar__link.active {
-  background-color: var(--theme-sidebar-active);
+  background-color: rgba(64, 93, 230, 0.15);
   border-left: 3px solid var(--theme-sidebar-active-border);
 }
 
@@ -25,7 +25,13 @@ body:not(.dark-theme) .text {
 }
 
 body:not(.dark-theme) .sidebar__link.active .text {
-  color: var(--theme-sidebar-active-text);
+  color: #405DE6;
+  font-weight: 600;
+}
+
+body:not(.dark-theme) .sidebar__link.active .icon svg {
+  color: #405DE6;
+  fill: #405DE6;
 }
 
 /* Dark mode theme colors from themeColors utility */
@@ -36,11 +42,11 @@ body.dark-theme nav {
 }
 
 body.dark-theme .sidebar__link:hover {
-  background-color: var(--theme-sidebar-hover-dark);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 body.dark-theme .sidebar__link.active {
-  background-color: var(--theme-sidebar-active-dark);
+  background-color: rgba(64, 93, 230, 0.25);
   border-left: 3px solid var(--theme-sidebar-active-border-dark);
 }
 
@@ -53,7 +59,13 @@ body.dark-theme .text {
 }
 
 body.dark-theme .sidebar__link.active .text {
-  color: var(--theme-sidebar-active-text-dark);
+  color: #6B8AFF;
+  font-weight: 600;
+}
+
+body.dark-theme .sidebar__link.active .icon svg {
+  color: #6B8AFF;
+  fill: #6B8AFF;
 }
 
 /* Mobile menu styling */
@@ -76,4 +88,71 @@ body.dark-theme .mobile-hamburger .line {
 /* Transitions */
 nav, .sidebar__link, .icon svg, .text, .mobile-hamburger, .mobile-hamburger .line {
   transition: var(--theme-transition);
+}
+
+/* Sidebar theme adjustments */
+.checkbox-input:not(:checked) ~ nav {
+  background-color: var(--bg--primary);
+}
+
+body.dark-theme .checkbox-input:not(:checked) ~ nav {
+  background-color: var(--dark-bg--primary);
+}
+
+.checkbox-input:checked ~ nav {
+  background-color: var(--bg--primary);
+}
+
+body.dark-theme .checkbox-input:checked ~ nav {
+  background-color: var(--dark-bg--primary);
+}
+
+/* Remove focus outlines and tap highlights for all interactive elements */
+.sidebar__link,
+.nav__toggle,
+.theme-toggle-container,
+.user-profile,
+.login-button-container,
+.logout-button,
+.switch,
+.slider,
+input[type="checkbox"] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+}
+
+.sidebar__link:focus,
+.nav__toggle:focus,
+.theme-toggle-container:focus,
+.user-profile:focus,
+.login-button-container:focus,
+.logout-button:focus,
+.switch:focus,
+.slider:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Focus background should only be removed when not active */
+.sidebar__link:focus:not(.active) {
+  background-color: transparent !important;
+}
+
+/* iOS Safari focus fix */
+@supports (-webkit-touch-callout: none) {
+  .sidebar__link,
+  .nav__toggle,
+  .theme-toggle-container,
+  .user-profile,
+  .login-button-container,
+  .logout-button,
+  .switch,
+  .slider {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
+
+/* Define active state properly for iOS */
+.sidebar__link:active:not(.active) {
+  background-color: transparent !important;
 } 
