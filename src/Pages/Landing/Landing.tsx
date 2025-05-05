@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useLayoutEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
+import themeColors from '../../utils/themeColors';
 
 // Define transition constants
-const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, transform, opacity, filter';
+const TRANSITION_TIMING = themeColors.transition.timing;
+const TRANSITION_PROPERTIES = themeColors.transition.properties;
 
 // Animation variants
 const containerVariants = {
@@ -35,8 +36,8 @@ const Landing = () => {
     setMounted(true);
     // Apply initial theme immediately
     document.body.style.transition = 'none';
-    document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-    document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
+    document.body.style.backgroundColor = isDarkMode ? themeColors.dark.background : themeColors.light.background;
+    document.body.style.color = isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary;
     // Re-enable transitions after initial render
     requestAnimationFrame(() => {
       document.body.style.transition = `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`;
@@ -45,8 +46,8 @@ const Landing = () => {
 
   useEffect(() => {
     if (mounted) {
-      document.body.style.backgroundColor = isDarkMode ? '#121212' : '#ffffff';
-      document.body.style.color = isDarkMode ? '#ffffff' : '#121212';
+      document.body.style.backgroundColor = isDarkMode ? themeColors.dark.background : themeColors.light.background;
+      document.body.style.color = isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary;
     }
   }, [isDarkMode, mounted]);
 
@@ -58,7 +59,7 @@ const Landing = () => {
     ...commonTransition,
     background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
     border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-    color: isDarkMode ? '#fff' : '#000',
+    color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
     filter: isThemeChanging ? 'blur(0.3px)' : 'none',
     transform: isThemeChanging ? 'scale(0.995)' : 'scale(1)',
   };
@@ -80,13 +81,16 @@ const Landing = () => {
           flexDirection: 'column',
           minHeight: '100vh',
           width: '100%',
-          backgroundColor: isDarkMode ? '#121212' : '#ffffff',
-          color: isDarkMode ? '#ffffff' : '#121212',
+          background: isDarkMode 
+            ? themeColors.dark.background
+            : themeColors.light.background,
+          color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
           transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
           margin: 0,
           padding: 0,
           boxSizing: 'border-box',
           overflowX: 'hidden',
+          position: 'relative',
         }}
       >
       {/* Background Gradient with Animation */}
@@ -94,8 +98,8 @@ const Landing = () => {
         component={motion.div}
         animate={{
           background: isDarkMode
-            ? 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.15) 0%, rgba(131, 58, 180, 0.08) 50%, transparent 100%)'
-            : 'radial-gradient(circle at 50% 50%, rgba(64, 93, 230, 0.08) 0%, rgba(131, 58, 180, 0.04) 50%, transparent 100%)',
+            ? themeColors.dark.overlay
+            : themeColors.light.overlay,
           opacity: isThemeChanging ? 0.5 : 0.8,
         }}
         transition={{ duration: 0.4 }}

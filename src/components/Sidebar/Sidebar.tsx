@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './Sidebar.css';
+import './SidebarTheme.css';
 import glocapLogo from '../../assets/Glocap.png';
 import { useTheme } from '../../context/ThemeContext';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { applyTheme } from '../../utils/themeColors';
 
 type SidebarLinkProps = {
   to: string;
@@ -13,9 +15,27 @@ type SidebarLinkProps = {
 };
 
 const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+  const isMobile = window.innerWidth <= 768;
+  
   return (
     <li className="sidebar__item">
-      <Link to={to} className="sidebar__link" data-tooltip={tooltip}>
+      <Link 
+        to={to} 
+        className={`sidebar__link ${isActive ? 'active' : ''}`} 
+        data-tooltip={tooltip}
+        onClick={(e) => {
+          // Add a small delay for visual feedback on mobile
+          if (isMobile) {
+            const target = e.currentTarget;
+            target.style.backgroundColor = 'var(--bg--active)';
+            setTimeout(() => {
+              target.style.backgroundColor = '';
+            }, 150);
+          }
+        }}
+      >
         <span className="icon">{icon}</span>
         <span className="text">{text}</span>
       </Link>
@@ -41,88 +61,116 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({ title, links }) => {
   );
 };
 
-const Sidebar: React.FC = () => {
-  // Initialize isExpanded state from localStorage, defaulting to false (closed)
-  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    const savedState = localStorage.getItem('sidebarExpanded');
-    return savedState !== null ? JSON.parse(savedState) : false;
-  });
+interface SidebarProps {
+  isOpen?: boolean;
+  toggleSidebar?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
+  // Initialize with controlled props if available, otherwise use internal state
+  const [isExpanded, setIsExpanded] = useState<boolean>(isOpen || false);
   
   const { isDarkMode, toggleTheme } = useTheme();
   const [showLogoutPopup, setShowLogoutPopup] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+  
+  // Create a ref for the nav element
+  const navRef = useRef<HTMLElement>(null);
   
   // Get Firebase auth and React Router navigate
   const auth = getAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Handle prop changes - use useEffect with proper dependencies
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setIsExpanded(isOpen);
+    }
+  }, [isOpen]);
+
+  // Check for mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []); // Empty dependency array as we only want to set this up once
+
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
       setCurrentUser(user);
-      
-      // Force a re-render on auth state change
-      setIsExpanded(prev => {
-        // Check current checkbox state and adjust if needed
-        const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
-        if (checkbox) {
-          checkbox.checked = prev;
-        }
-        return prev;
-      });
     });
     
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [auth]);
 
-  // Force refresh when route changes to ensure sidebar updates with auth state
-  useEffect(() => {
-    // Update current user on route change
-    setCurrentUser(auth.currentUser);
-  }, [location.pathname, auth.currentUser]);
-
-  // Apply dark theme class to body and ensure it persists
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-theme');
+  // Memoize the toggle handler to prevent recreation on every render
+  const handleToggleSidebar = useCallback(() => {
+    // Use the provided toggle function if available
+    if (toggleSidebar) {
+      toggleSidebar();
     } else {
-      document.body.classList.remove('dark-theme');
+      // Otherwise use internal state with functional updates
+      setIsExpanded(prevState => !prevState);
+      
+      // On mobile, prevent body scrolling when sidebar is open
+      if (isMobile) {
+        if (!isExpanded) {
+          document.body.classList.add('menu-open');
+          document.querySelector('.mobile-hamburger')?.classList.add('active');
+        } else {
+          document.body.classList.remove('menu-open');
+          document.querySelector('.mobile-hamburger')?.classList.remove('active');
+        }
+      }
     }
-  }, [isDarkMode]);
-
-  // Save sidebar state to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('sidebarExpanded', JSON.stringify(isExpanded));
-    
-    // Synchronize the checkbox state with the isExpanded state
-    const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
-    if (checkbox && checkbox.checked !== isExpanded) {
-      checkbox.checked = isExpanded;
-    }
-    
-    // Inform the SidebarContext about the change
-    const event = new CustomEvent('sidebarStateChanged', { 
-      detail: { isExpanded } 
-    });
-    document.dispatchEvent(event);
-  }, [isExpanded]);
+  }, [toggleSidebar, isMobile, isExpanded]);
   
-  // Synchronize the checkbox state with isExpanded on initial render and after navigation
-  useEffect(() => {
-    const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
-    if (checkbox && checkbox.checked !== isExpanded) {
-      checkbox.checked = isExpanded;
+  // Memoize overlay click handler
+  const handleOverlayClick = useCallback(() => {
+    if (isMobile && isExpanded) {
+      if (toggleSidebar) {
+        toggleSidebar();
+      } else {
+        setIsExpanded(false);
+      }
+      document.body.classList.remove('menu-open');
     }
-  }, [isExpanded, location.pathname]);
+  }, [isMobile, isExpanded, toggleSidebar]);
 
-  const toggleSidebar = () => {
-    setIsExpanded(!isExpanded);
-  };
+  // Close sidebar on mobile when navigating to a new page
+  useEffect(() => {
+    if (isMobile && isExpanded) {
+      if (toggleSidebar) {
+        toggleSidebar();
+      } else {
+        setIsExpanded(false);
+      }
+      document.body.classList.remove('menu-open');
+    }
+  }, [location.pathname]); // Only depend on path changes, not the state itself
+
+  // Update hamburger menu active state when isOpen changes
+  useEffect(() => {
+    if (isOpen) {
+      document.querySelector('.mobile-hamburger')?.classList.add('active');
+    } else {
+      document.querySelector('.mobile-hamburger')?.classList.remove('active');
+    }
+  }, [isOpen]);
+
+  // Apply theme colors when the theme changes
+  useEffect(() => {
+    applyTheme(isDarkMode);
+  }, [isDarkMode]);
 
   const handleLogin = () => {
     // Navigate to login page
@@ -135,15 +183,15 @@ const Sidebar: React.FC = () => {
       setShowLogoutPopup(false);
       
       // Show success snackbar
-        setSnackbarMessage('You have been logged out successfully');
-        setSnackbarOpen(true);
+      setSnackbarMessage('You have been logged out successfully');
+      setSnackbarOpen(true);
       
       // Redirect to home page
       navigate('/');
-      } catch (error) {
-        console.error('Error signing out:', error);
-        setSnackbarMessage('Error signing out. Please try again.');
-        setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setSnackbarMessage('Error signing out. Please try again.');
+      setSnackbarOpen(true);
     }
   };
 
@@ -219,7 +267,7 @@ const Sidebar: React.FC = () => {
     }
   ];
           
-          return (
+  return (
     <aside className="vertical-sidebar">
       <input 
         type="checkbox" 
@@ -227,9 +275,11 @@ const Sidebar: React.FC = () => {
         id="checkbox-input" 
         className="checkbox-input" 
         checked={isExpanded}
-        onChange={toggleSidebar}
+        onChange={handleToggleSidebar}
       />
-      <nav>
+      {/* Mobile overlay */}
+      <div className="mobile-overlay" onClick={handleOverlayClick}></div>
+      <nav ref={navRef}>
         <header>
           <div className="sidebar__toggle-container">
             <label 
@@ -260,8 +310,6 @@ const Sidebar: React.FC = () => {
           <SidebarSection title="General" links={generalLinks} />
           <SidebarSection title="Account" links={accountLinks} />
         </section>
-        
-        {/* Footer section with theme toggle and user avatar */}
         <div className="sidebar__footer">
           <div className="theme-toggle-container" data-tooltip="Theme">
             <span className="theme-icon sun-icon">
@@ -285,7 +333,7 @@ const Sidebar: React.FC = () => {
             </span>
           </div>
           
-          {/* Conditional User Profile Section */}
+          {/* User Profile Section */}
           {currentUser ? (
             <div 
               className="user-profile" 

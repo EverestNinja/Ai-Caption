@@ -8,6 +8,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { useTheme } from '../../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '../../components/BackButton';
+import themeColors from '../../utils/themeColors';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
 
   const commonTransition = {
-    transition: `background-color, color, border-color, box-shadow, transform, opacity 0.3s ease`,
+    transition: `${themeColors.transition.properties} ${themeColors.transition.timing}`,
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,11 +89,25 @@ const AuthPage = () => {
       <Box sx={{ 
         display: 'flex', 
         minHeight: '100vh',
-        bgcolor: isDarkMode ? '#1A1A1A' : '#fff',
+        background: isDarkMode ? themeColors.dark.background : themeColors.light.background,
+        color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
         position: 'relative',
         flexDirection: 'column',
         ...commonTransition
       }}>
+        {/* Background Overlay */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkMode ? themeColors.dark.overlay : themeColors.light.overlay,
+            zIndex: 0,
+          }}
+        />
+
         {/* Back Button */}
         <BackButton />
 
@@ -125,13 +140,13 @@ const AuthPage = () => {
               <Typography variant="h4" sx={{ 
                 fontWeight: 600, 
                 mb: 1,
-                color: isDarkMode ? '#ffffff' : '#101828'
+                color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary
               }}>
                 Welcome back!
               </Typography>
               <Typography sx={{ 
                 mb: 4,
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085'
+                color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary
               }}>
                 Enter to get unlimited access to data & information.
               </Typography>
@@ -148,7 +163,7 @@ const AuthPage = () => {
                     mb: 1.5,
                     fontSize: '14px',
                     fontWeight: 500,
-                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054'
+                    color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary
                   }}>
                     Email*
                   </Typography>
@@ -163,22 +178,22 @@ const AuthPage = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
-                        bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                        bgcolor: isDarkMode ? themeColors.dark.inputBackground : themeColors.light.inputBackground,
                         '& fieldset': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#D0D5DD',
+                          borderColor: isDarkMode ? themeColors.dark.inputBorder : themeColors.light.inputBorder,
                         },
                         '&:hover fieldset': {
-                          borderColor: '#7F56D9',
+                          borderColor: themeColors.primary,
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#7F56D9',
+                          borderColor: themeColors.primary,
                         },
                       },
                       '& .MuiInputBase-input': {
-                        color: isDarkMode ? '#ffffff' : '#000000',
+                        color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
                       },
                       '& .MuiInputLabel-root': {
-                        color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#344054',
+                        color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                       },
                     }}
                   />
@@ -189,7 +204,7 @@ const AuthPage = () => {
                     mb: 1.5,
                     fontSize: '14px',
                     fontWeight: 500,
-                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054'
+                    color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary
                   }}>
                     Password*
                   </Typography>
@@ -212,7 +227,7 @@ const AuthPage = () => {
                             background: 'none',
                             cursor: 'pointer',
                             p: 1,
-                            color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#344054'
+                            color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary
                           }}
                         >
                           {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
@@ -222,22 +237,22 @@ const AuthPage = () => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
-                        bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                        bgcolor: isDarkMode ? themeColors.dark.inputBackground : themeColors.light.inputBackground,
                         '& fieldset': {
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#D0D5DD',
+                          borderColor: isDarkMode ? themeColors.dark.inputBorder : themeColors.light.inputBorder,
                         },
                         '&:hover fieldset': {
-                          borderColor: '#7F56D9',
+                          borderColor: themeColors.primary,
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#7F56D9',
+                          borderColor: themeColors.primary,
                         },
                       },
                       '& .MuiInputBase-input': {
-                        color: isDarkMode ? '#ffffff' : '#000000',
+                        color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
                       },
                       '& .MuiInputLabel-root': {
-                        color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#344054',
+                        color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                       },
                     }}
                   />
@@ -255,9 +270,9 @@ const AuthPage = () => {
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                         sx={{
-                          color: isDarkMode ? 'rgba(255,255,255,0.3)' : '#D0D5DD',
+                          color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                           '&.Mui-checked': {
-                            color: '#7F56D9',
+                            color: themeColors.primary,
                           },
                         }}
                       />
@@ -265,7 +280,7 @@ const AuthPage = () => {
                     label={
                       <Typography sx={{ 
                         fontSize: '14px', 
-                        color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054' 
+                        color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary 
                       }}>
                         Remember me
                       </Typography>
@@ -276,7 +291,7 @@ const AuthPage = () => {
                     onClick={() => {/* Handle forgot password */}}
                     sx={{ 
                       fontSize: '14px',
-                      color: isDarkMode ? '#A78BFA' : '#6941C6',
+                      color: themeColors.primary,
                       textDecoration: 'none',
                       '&:hover': {
                         backgroundColor: 'transparent',
@@ -295,18 +310,18 @@ const AuthPage = () => {
                   sx={{
                     py: 2,
                     mb: 3,
-                    bgcolor: '#7F56D9',
+                    bgcolor: themeColors.primary,
                     color: '#fff',
                     borderRadius: '8px',
                     textTransform: 'none',
                     fontSize: '16px',
                     fontWeight: 600,
                     '&:hover': {
-                      bgcolor: '#6941C6',
+                      bgcolor: themeColors.primaryHover,
                     },
                     '&.Mui-disabled': {
-                      bgcolor: isDarkMode ? 'rgba(127, 86, 217, 0.3)' : '#E9D7FE',
-                      color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#fff',
+                      bgcolor: isDarkMode ? themeColors.dark.disabledBackground : themeColors.light.disabledBackground,
+                      color: isDarkMode ? themeColors.dark.disabledText : themeColors.light.disabledText,
                     },
                   }}
                 >
@@ -321,11 +336,11 @@ const AuthPage = () => {
                   <Box sx={{ 
                     flex: 1, 
                     height: '1px', 
-                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#EAECF0' 
+                    bgcolor: isDarkMode ? themeColors.dark.inputBorder : themeColors.light.inputBorder 
                   }} />
                   <Typography sx={{ 
                     px: 2,
-                    color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                    color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                     fontSize: '14px'
                   }}>
                     Or {isLogin ? 'login' : 'sign up'} with
@@ -333,7 +348,7 @@ const AuthPage = () => {
                   <Box sx={{ 
                     flex: 1, 
                     height: '1px', 
-                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#EAECF0' 
+                    bgcolor: isDarkMode ? themeColors.dark.inputBorder : themeColors.light.inputBorder 
                   }} />
                 </Box>
 
@@ -345,16 +360,16 @@ const AuthPage = () => {
                   sx={{
                     py: 2,
                     mb: 3,
-                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
-                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
-                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#D0D5DD'}`,
+                    color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
+                    bgcolor: isDarkMode ? themeColors.dark.inputBackground : themeColors.light.inputBackground,
+                    border: `1px solid ${isDarkMode ? themeColors.dark.inputBorder : themeColors.light.inputBorder}`,
                     borderRadius: '8px',
                     textTransform: 'none',
                     fontSize: '16px',
                     fontWeight: 600,
                     '&:hover': {
-                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F9FAFB',
-                      borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : '#D0D5DD',
+                      bgcolor: isDarkMode ? themeColors.dark.inputBackgroundHover : themeColors.light.inputBackgroundHover,
+                      borderColor: isDarkMode ? themeColors.dark.inputBorderHover : themeColors.light.inputBorderHover,
                     },
                   }}
                 >
@@ -363,14 +378,14 @@ const AuthPage = () => {
 
                 <Box sx={{ 
                   textAlign: 'center',
-                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                  color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                   fontSize: '14px'
                 }}>
                   {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
                   <Button
                     onClick={() => setIsLogin(!isLogin)}
                     sx={{
-                      color: isDarkMode ? '#A78BFA' : '#6941C6',
+                      color: themeColors.primary,
                       textTransform: 'none',
                       fontWeight: 600,
                       '&:hover': {
@@ -390,7 +405,7 @@ const AuthPage = () => {
           <Box 
             sx={{ 
               flex: 1,
-              bgcolor: isDarkMode ? '#1e1e2d' : '#7F56D9',
+              bgcolor: isDarkMode ? themeColors.dark.background : themeColors.light.background,
               display: { xs: 'none', md: 'block' },
               position: 'relative',
               overflow: 'hidden'

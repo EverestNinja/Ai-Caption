@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { applyTheme } from '../utils/themeColors';
 
 interface ThemeContextType {
   isDarkMode: boolean;
@@ -24,26 +25,6 @@ const getInitialTheme = () => {
   } catch (e) {
     console.warn('Error accessing localStorage:', e);
     return false;
-  }
-};
-
-// Apply theme to document
-const applyTheme = (isDark: boolean) => {
-  if (typeof document === 'undefined') return;
-
-  const root = document.documentElement;
-  const body = document.body;
-
-  if (isDark) {
-    root.classList.add('dark-mode');
-    body.classList.add('dark-theme');
-    body.style.backgroundColor = '#121212';
-    body.style.color = '#ffffff';
-  } else {
-    root.classList.remove('dark-mode');
-    body.classList.remove('dark-theme');
-    body.style.backgroundColor = '#ffffff';
-    body.style.color = '#121212';
   }
 };
 

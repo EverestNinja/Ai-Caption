@@ -9,10 +9,11 @@ import { generateFlyer, FlyerFormState, GeneratedFlyer, checkXaiApiHealth } from
 import { checkUsageLimit, incrementUsage, getRemainingUsage, LIMITS } from '../../services/usageLimit';
 import { getAuth } from 'firebase/auth';
 import { clearDailyUsage } from '../../services/usageLimit';
+import themeColors from '../../utils/themeColors';
 
 // Define transition constants
-const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-const TRANSITION_PROPERTIES = 'background, color, border-color, box-shadow, transform, opacity, filter';
+const TRANSITION_TIMING = themeColors.transition.timing;
+const TRANSITION_PROPERTIES = themeColors.transition.properties;
 
 const Flyer = () => {
   const navigate = useNavigate();
@@ -220,12 +221,30 @@ const Flyer = () => {
       <Box sx={{ 
         minHeight: '100vh',
         background: isDarkMode 
-          ? 'linear-gradient(135deg, #121212, #1e1e2d)' 
-          : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
-        transition: `background-color ${TRANSITION_TIMING}`,
+          ? themeColors.dark.background
+          : themeColors.light.background,
+        color: isDarkMode 
+          ? themeColors.dark.textPrimary
+          : themeColors.light.textPrimary,
+        transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
         position: 'relative',
         pt: 1,
       }}>
+        {/* Background Overlay */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkMode 
+              ? themeColors.dark.overlay
+              : themeColors.light.overlay,
+            zIndex: 0,
+          }}
+        />
+
         {/* API Status Alert */}
         {apiStatus === 'loading' && (
           <Box sx={{ 

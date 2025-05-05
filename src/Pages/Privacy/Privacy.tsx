@@ -11,10 +11,11 @@ import { useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
+import themeColors from '../../utils/themeColors';
 
 // Constants for transition
-const TRANSITION_TIMING = '0.3s ease';
-const TRANSITION_PROPERTIES = 'background-color, color, border-color, box-shadow, transform, opacity';
+const TRANSITION_TIMING = themeColors.transition.timing;
+const TRANSITION_PROPERTIES = themeColors.transition.properties;
 
 const Privacy = () => {
   const { isDarkMode } = useTheme();
@@ -34,7 +35,7 @@ const Privacy = () => {
   return (
     <AnimatePresence mode="wait">
       <Layout>
-        {/* Back Button */}
+        {/* Back Button - Hidden on mobile */}
         <IconButton
           onClick={handleGoBack}
           sx={{
@@ -48,6 +49,8 @@ const Privacy = () => {
               background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
             },
             transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
+            // Hide on mobile screens
+            display: { xs: 'none', sm: 'flex' }
           }}
           aria-label="Go back"
         >

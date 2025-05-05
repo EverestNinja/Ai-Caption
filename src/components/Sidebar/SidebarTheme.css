@@ -1,0 +1,79 @@
+/* Custom themeColors-based Sidebar styling */
+
+/* Light mode theme colors from themeColors utility */
+body:not(.dark-theme) nav {
+  background: var(--theme-sidebar-bg);
+  color: var(--theme-sidebar-text);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1), 0 3px 20px rgba(0, 0, 0, 0.05);
+}
+
+body:not(.dark-theme) .sidebar__link:hover {
+  background-color: var(--theme-sidebar-hover);
+}
+
+body:not(.dark-theme) .sidebar__link.active {
+  background-color: var(--theme-sidebar-active);
+  border-left: 3px solid var(--theme-sidebar-active-border);
+}
+
+body:not(.dark-theme) .icon svg {
+  color: var(--theme-sidebar-icon);
+}
+
+body:not(.dark-theme) .text {
+  color: var(--theme-sidebar-text);
+}
+
+body:not(.dark-theme) .sidebar__link.active .text {
+  color: var(--theme-sidebar-active-text);
+}
+
+/* Dark mode theme colors from themeColors utility */
+body.dark-theme nav {
+  background: var(--theme-sidebar-bg-dark);
+  color: var(--theme-sidebar-text-dark);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25), 0 3px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-theme .sidebar__link:hover {
+  background-color: var(--theme-sidebar-hover-dark);
+}
+
+body.dark-theme .sidebar__link.active {
+  background-color: var(--theme-sidebar-active-dark);
+  border-left: 3px solid var(--theme-sidebar-active-border-dark);
+}
+
+body.dark-theme .icon svg {
+  color: var(--theme-sidebar-icon-dark);
+}
+
+body.dark-theme .text {
+  color: var(--theme-sidebar-text-dark);
+}
+
+body.dark-theme .sidebar__link.active .text {
+  color: var(--theme-sidebar-active-text-dark);
+}
+
+/* Mobile menu styling */
+.mobile-hamburger {
+  background-color: var(--theme-sidebar-bg);
+}
+
+body.dark-theme .mobile-hamburger {
+  background-color: var(--theme-sidebar-bg-dark);
+}
+
+.mobile-hamburger .line {
+  background-color: var(--theme-sidebar-text);
+}
+
+body.dark-theme .mobile-hamburger .line {
+  background-color: var(--theme-sidebar-text-dark);
+}
+
+/* Transitions */
+nav, .sidebar__link, .icon svg, .text, .mobile-hamburger, .mobile-hamburger .line {
+  transition: var(--theme-transition);
+} 

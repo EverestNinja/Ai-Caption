@@ -10,6 +10,7 @@ import { useStepContext } from '../../context/StepContext';
 import BackButton from '../../components/BackButton';
 import { generateCaptions } from '../../services/api';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import themeColors from '../../utils/themeColors';
 
 // Component imports
 import SimpleMode from './SimpleMode';
@@ -304,10 +305,14 @@ const Generation = () => {
           display: 'flex',
           flexDirection: 'column',
           background: isDarkMode 
-            ? 'linear-gradient(135deg, #121212 0%, #1e1e2d 100%)' 
-            : 'linear-gradient(135deg, #f5f7fa 0%, #f8f9fa 100%)',
+            ? themeColors.dark.background
+            : themeColors.light.background,
+          color: isDarkMode 
+            ? themeColors.dark.textPrimary
+            : themeColors.light.textPrimary,
           position: 'relative',
           overflow: 'hidden',
+          transition: `${themeColors.transition.properties} ${themeColors.transition.timing}`,
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -316,8 +321,8 @@ const Generation = () => {
             right: 0,
             bottom: 0,
             background: isDarkMode 
-              ? 'radial-gradient(circle at 20% 20%, rgba(64, 93, 230, 0.2), transparent 40%)' 
-              : 'radial-gradient(circle at 20% 20%, rgba(64, 93, 230, 0.1), transparent 40%)',
+              ? themeColors.dark.overlay
+              : themeColors.light.overlay,
             zIndex: 1
           }
         }}
@@ -347,7 +352,7 @@ const Generation = () => {
             }}
           >
             <Box sx={{ 
-              bgcolor: 'primary.main', 
+              bgcolor: themeColors.primary, 
               borderRadius: '50%', 
               p: 1.5,
               mb: 1.5,
@@ -371,7 +376,7 @@ const Generation = () => {
               sx={{ 
                 fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
                 fontWeight: 800,
-                color: isDarkMode ? '#fff' : '#2d3748',
+                color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
                 textShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
                 letterSpacing: '-0.5px'
               }}
@@ -385,7 +390,7 @@ const Generation = () => {
                 maxWidth: 600,
                 mb: 1.5,
                 fontSize: { xs: '0.9rem', sm: '1rem' },
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                color: isDarkMode ? themeColors.dark.textSecondary : themeColors.light.textSecondary,
                 lineHeight: 1.6
               }}
             >
@@ -420,8 +425,8 @@ const Generation = () => {
               mt: 1,
               width: '100%',
               background: isDarkMode 
-                ? 'rgba(30,30,45,0.6)' 
-                : 'rgba(255,255,255,0.8)',
+                ? themeColors.dark.cardBackground
+                : themeColors.light.cardBackground,
               backdropFilter: 'blur(20px)',
               borderRadius: '20px',
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
@@ -430,7 +435,7 @@ const Generation = () => {
                 : '0 15px 30px rgba(0, 0, 0, 0.07)',
               mb: 3,
               overflow: 'hidden',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              transition: `${themeColors.transition.properties} ${themeColors.transition.timing}, transform 0.2s ease`,
               '&:hover': {
                 transform: 'translateY(-2px)',
                 boxShadow: isDarkMode 

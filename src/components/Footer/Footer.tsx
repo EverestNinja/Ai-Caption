@@ -4,6 +4,7 @@ import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-ico
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
+import themeColors from '../../utils/themeColors';
 
 interface NavLink {
   label: string;
@@ -75,18 +76,15 @@ const Footer = () => {
         py: { xs: 2, sm: 2.5 },
         mt: 'auto',
         backgroundColor: isDarkMode 
-          ? '#121212' 
-          : '#e7eafb',
+          ? themeColors.dark.footer.background
+          : themeColors.light.footer.background,
         borderTop: `1px solid ${
           isDarkMode 
-            ? 'rgba(255,255,255,0.1)' 
-            : 'rgba(0,0,0,0.1)'
+            ? themeColors.dark.footer.borderColor
+            : themeColors.light.footer.borderColor
         }`,
-        transition: 'all 0.3s ease',
+        transition: `${themeColors.transition.properties} ${themeColors.transition.timing}`,
         position: 'relative',
-        background: isDarkMode 
-          ? 'linear-gradient(180deg, #121212 0%, #1e1e2d 100%)' 
-          : '#e7eafb',
       }}
     >
       <Container maxWidth="lg">
@@ -172,7 +170,9 @@ const Footer = () => {
               </Box>
               <Typography
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+                  color: isDarkMode 
+                    ? themeColors.dark.footer.textColor 
+                    : themeColors.light.footer.textColor,
                   textAlign: { xs: 'center', md: 'left' },
                   fontSize: { xs: '0.9rem', sm: '0.95rem' },
                   maxWidth: { xs: '280px', md: '100%' },
@@ -199,7 +199,9 @@ const Footer = () => {
                 variant="subtitle1"
                 sx={{
                   fontWeight: 600,
-                  color: isDarkMode ? '#FFFFFF' : '#000000',
+                  color: isDarkMode 
+                    ? themeColors.dark.footer.textColor 
+                    : themeColors.light.footer.textColor,
                   mb: 1.25,
                   textAlign: 'center',
                   fontSize: { xs: '1.05rem', sm: '1.15rem' },
@@ -212,9 +214,7 @@ const Footer = () => {
                     transform: 'translateX(-50%)',
                     width: '30px',
                     height: '2px',
-                    background: isDarkMode
-                      ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
-                      : 'linear-gradient(45deg, #405DE6, #5851DB)',
+                    background: themeColors.gradients.primary,
                     borderRadius: '2px',
                   },
                 }}
@@ -239,19 +239,18 @@ const Footer = () => {
                       onClick={() => navigate(link.path)}
                       sx={{
                         color: isActive 
-                          ? (isDarkMode ? 'rgba(64, 93, 230, 0.9)' : '#405DE6')
-                          : (isDarkMode ? '#FFFFFF' : '#000000'),
+                          ? (isDarkMode ? themeColors.dark.footer.linkColor : themeColors.light.footer.linkColor)
+                          : (isDarkMode ? themeColors.dark.footer.textColor : themeColors.light.footer.textColor),
                         textDecoration: 'none',
-                        transition: 'all 0.3s ease',
+                        transition: `${themeColors.transition.properties} ${themeColors.transition.timing}`,
                         fontSize: { xs: '0.85rem', sm: '0.9rem' },
                         position: 'relative',
                         fontWeight: isActive ? 600 : 400,
                         padding: '3px 5px',
                         cursor: 'pointer',
-                        marginBottom: 0.25,
                         display: 'inline-block',
                         '&:hover': {
-                          color: isDarkMode ? 'rgba(64, 93, 230, 0.9)' : '#405DE6',
+                          color: isDarkMode ? themeColors.dark.footer.linkColor : themeColors.light.footer.linkColor,
                           transform: 'translateX(4px)',
                         },
                         '&::before': {
@@ -264,8 +263,8 @@ const Footer = () => {
                           height: 6,
                           borderRadius: '50%',
                           background: isDarkMode
-                            ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
-                            : 'linear-gradient(45deg, #405DE6, #5851DB)',
+                            ? themeColors.dark.footer.textColor
+                            : themeColors.light.footer.textColor,
                           opacity: isActive ? 1 : 0,
                           transition: 'opacity 0.3s ease',
                         },
@@ -371,8 +370,8 @@ const Footer = () => {
         <Divider 
           sx={{ 
             borderColor: isDarkMode 
-              ? 'rgba(255,255,255,0.1)' 
-              : 'rgba(0,0,0,0.1)',
+              ? themeColors.dark.footer.borderColor
+              : themeColors.light.footer.borderColor,
             my: { xs: 1.5, sm: 2 },
           }} 
         />

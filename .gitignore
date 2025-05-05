@@ -23,6 +23,8 @@
 .env.development.local
 .env.test.local
 .env.production.local
+contex.md
+contexv2.md
 
 # Debug logs
 npm-debug.log*

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import Footer from './Footer/Footer';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from './Sidebar/Sidebar';
@@ -10,11 +10,14 @@ const SIDEBAR_WIDTH_COLLAPSED = 52; // 3.25rem in pixels
 
 interface LayoutProps {
   children: ReactNode;
+  sidebarOpen?: boolean;
+  toggleSidebar?: () => void;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
   const { isDarkMode } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const isMobile = useMediaQuery('(max-width:768px)');
 
   useEffect(() => {
     setMounted(true);
@@ -50,18 +53,18 @@ const Layout = ({ children }: LayoutProps) => {
         overflowX: 'hidden',
       }}
     >
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <Box 
         component="main"
         sx={{ 
           flex: 1,
           width: { 
-            xs: `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)`,
-            sm: `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` 
+            xs: isMobile ? '100%' : `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)`,
+            sm: isMobile ? '100%' : `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` 
           },
           marginLeft: { 
-            xs: `${SIDEBAR_WIDTH_COLLAPSED}px`,
-            sm: `${SIDEBAR_WIDTH_COLLAPSED}px` 
+            xs: isMobile ? '0' : `${SIDEBAR_WIDTH_COLLAPSED}px`,
+            sm: isMobile ? '0' : `${SIDEBAR_WIDTH_COLLAPSED}px` 
           },
           display: 'flex',
           flexDirection: 'column',

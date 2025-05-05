@@ -712,6 +712,249 @@ body.dark-theme .sidebar__link:active {
   background-color: var(--dark-bg--active);
 }
 
+/* Active link styles */
+.sidebar__link.active {
+  background-color: var(--bg--active);
+  border-left: 3px solid var(--accent--primary);
+}
+
+body.dark-theme .sidebar__link.active {
+  background-color: var(--dark-bg--active);
+}
+
+.sidebar__link.active .icon svg {
+  fill: var(--accent--primary);
+}
+
+.sidebar__link.active .text {
+  color: var(--dark--primary);
+  font-weight: 600;
+}
+
+body.dark-theme .sidebar__link.active .text {
+  color: var(--dark-text--primary);
+}
+
+/* Mobile hamburger menu button - standalone version */
+.mobile-hamburger {
+  position: fixed;
+  height: 48px;
+  width: 48px;
+  top: 16px;
+  left: 16px;
+  z-index: 10000; /* Highest z-index */
+  display: none; /* Hidden by default, shown only on mobile */
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  /* Ensure it's always visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  backdrop-filter: blur(10px);
+}
+
+body.dark-theme .mobile-hamburger {
+  background-color: rgba(32, 33, 36, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-hamburger:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern hamburger icon with lines */
+.hamburger-lines {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-lines .line {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 10px;
+  background-color: #0066FF;
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .hamburger-lines .line {
+  background-color: #5271FF;
+}
+
+.hamburger-lines .line1 {
+  width: 60%;
+  align-self: flex-end;
+  transition: width 0.2s ease;
+}
+
+.hamburger-lines .line2 {
+  width: 100%;
+}
+
+.hamburger-lines .line3 {
+  width: 75%;
+  align-self: flex-end;
+  transition: width 0.2s ease;
+}
+
+.mobile-hamburger:hover .hamburger-lines .line1,
+.mobile-hamburger:hover .hamburger-lines .line3 {
+  width: 100%;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .vertical-sidebar {
+    margin-block: 0;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    z-index: 9990;
+    pointer-events: none; /* Allow clicks to pass through when closed */
+  }
+  
+  nav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    border-radius: 0;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    pointer-events: auto; /* Enable interactions with the nav */
+    width: 85%; /* Fixed width for mobile */
+    max-width: 300px;
+    z-index: 9995;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+    overscroll-behavior: contain; /* Prevent scroll chaining */
+  }
+  
+  .checkbox-input:checked ~ nav {
+    transform: translateX(0);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Show mobile hamburger menu button */
+  .mobile-hamburger {
+    display: flex !important;
+  }
+  
+  /* Hide regular sidebar toggle on mobile */
+  .sidebar__toggle-container {
+    display: none;
+  }
+  
+  /* Fix layout on mobile to remove gap */
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+  
+  /* Ensure content doesn't have left padding on mobile */
+  #root {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Overlay when sidebar is open on mobile */
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 9980;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  
+  .checkbox-input:checked ~ .mobile-overlay {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* Make menu items larger for touch targets */
+  .sidebar__item {
+    height: 3rem; /* Larger touch target */
+    margin-bottom: 0.5rem;
+  }
+  
+  .sidebar__link {
+    padding: 0 1rem; /* More horizontal padding */
+  }
+  
+  /* Prevent scrolling background when menu is open */
+  body.menu-open {
+    overflow: hidden !important;
+  }
+  
+  /* Header improvements */
+  header {
+    padding-top: 12px;
+    margin-bottom: 12px;
+    position: sticky;
+    top: 0;
+    background-color: inherit;
+    z-index: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+  }
+  
+  /* Note: Back button/indicator removed intentionally for cleaner interface */
+  
+  /* Pull down indicator */
+  nav::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    z-index: 2;
+  }
+  
+  /* Add bottom padding to sidebar to avoid overlap with OS navigation bars */
+  .sidebar__wrapper {
+    padding-bottom: 70px;
+  }
+}
+
+/* Desktop: disable mobile-specific styles */
+@media (min-width: 769px) {
+  .mobile-overlay {
+    display: none !important;
+  }
+  
+  .sidebar__toggle-container {
+    position: static;
+    background-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}
+
 /* Toggle Icon Visibility */
 .checkbox-input:not(:checked) ~ nav .toggle--open {
   opacity: 1;
@@ -830,13 +1073,64 @@ body.dark-theme [data-tooltip]::before {
   opacity: 1;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .vertical-sidebar {
-    margin-block: 2vmin;
-  }
-  
-  nav {
-    height: calc(100vh - 4vmin);
-  }
+/* Hamburger menu animation */
+.mobile-hamburger .hamburger-lines {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mobile-hamburger .line {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 10px;
+  background-color: #0066FF;
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .mobile-hamburger .line {
+  background-color: #5271FF;
+}
+
+/* Default state lines */
+.mobile-hamburger .line1 {
+  width: 60%;
+  align-self: flex-end;
+  transition: transform 0.3s ease, width 0.2s ease;
+}
+
+.mobile-hamburger .line2 {
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.mobile-hamburger .line3 {
+  width: 75%;
+  align-self: flex-end;
+  transition: transform 0.3s ease, width 0.2s ease;
+}
+
+/* Hover state for lines */
+.mobile-hamburger:hover .line1,
+.mobile-hamburger:hover .line3 {
+  width: 100%;
+}
+
+/* Open state (X shape) */
+.mobile-hamburger.open .line1 {
+  transform: translateY(9px) rotate(45deg);
+  width: 100%;
+}
+
+.mobile-hamburger.open .line2 {
+  opacity: 0;
+}
+
+.mobile-hamburger.open .line3 {
+  transform: translateY(-9px) rotate(-45deg);
+  width: 100%;
 } 
