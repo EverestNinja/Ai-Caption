@@ -28,10 +28,10 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
         sx={{ 
           textAlign: 'center', 
           fontWeight: 700,
-          mb: 4,
+          mb: 3,
           color: isDarkMode ? '#fff' : '#2d3748',
           letterSpacing: '-0.5px',
-          fontSize: { xs: '1.5rem', sm: '1.75rem' }
+          fontSize: { xs: '1.3rem', sm: '1.5rem' }
         }}
       >
         Enter Your Details
@@ -39,28 +39,28 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
 
       <Grid 
         container 
-        spacing={3}
+        spacing={2}
       >
         {/* First Row */}
         <Grid item xs={12} sm={6}>
           {/* Business Type */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 2.5 }}>
             <Typography 
               variant="subtitle1" 
               sx={{ 
-                mb: 1.5, 
+                mb: 1, 
                 fontWeight: 600,
                 color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
                 display: 'flex',
                 alignItems: 'center',
-                fontSize: '0.95rem',
+                fontSize: '0.85rem',
               }}
             >
               Business Type
               <Typography 
                 component="span" 
                 color="error" 
-                sx={{ ml: 0.5, fontSize: '1.2rem' }}
+                sx={{ ml: 0.5, fontSize: '1.1rem' }}
               >
                 *
               </Typography>
@@ -84,7 +84,7 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
                   '& fieldset': { 
                     borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(156, 39, 176, 0.1)',
                     borderWidth: '1px',
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                   },
                   '&:hover fieldset': { 
                     borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(156, 39, 176, 0.3)' 
@@ -93,12 +93,13 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
                     borderColor: '#9C27B0',
                     borderWidth: '2px',
                   },
-                  borderRadius: '12px',
-                  padding: '4px 14px',
+                  borderRadius: '10px',
+                  padding: '2px 12px',
                 },
                 '& .MuiInputBase-input': {
                   color: isDarkMode ? '#fff' : '#000',
-                  py: 1.5,
+                  py: 1.2,
+                  fontSize: '0.9rem',
                 },
               }}
             />
@@ -107,14 +108,14 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
 
         <Grid item xs={12} sm={6}>
           {/* Product/Service */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 2.5 }}>
             <Typography 
               variant="subtitle1" 
               sx={{ 
-                mb: 1.5, 
+                mb: 1, 
                 fontWeight: 600,
                 color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-                fontSize: '0.95rem',
+                fontSize: '0.85rem',
               }}
             >
               Product/Service
@@ -138,7 +139,7 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
                   '& fieldset': { 
                     borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(156, 39, 176, 0.1)',
                     borderWidth: '1px',
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                   },
                   '&:hover fieldset': { 
                     borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(156, 39, 176, 0.3)' 
@@ -147,12 +148,13 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
                     borderColor: '#9C27B0',
                     borderWidth: '2px',
                   },
-                  borderRadius: '12px',
-                  padding: '4px 14px',
+                  borderRadius: '10px',
+                  padding: '2px 12px',
                 },
                 '& .MuiInputBase-input': {
                   color: isDarkMode ? '#fff' : '#000',
-                  py: 1.5,
+                  py: 1.2,
+                  fontSize: '0.9rem',
                 },
               }}
             />
@@ -161,14 +163,14 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
       </Grid>
 
       {/* Additional Details - Full Width */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography 
           variant="subtitle1" 
           sx={{ 
-            mb: 1.5, 
+            mb: 1, 
             fontWeight: 600,
             color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-            fontSize: '0.95rem',
+            fontSize: '0.85rem',
           }}
         >
           Additional Details
@@ -176,13 +178,13 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
         <TextField
           fullWidth
           multiline
-          rows={4}
+          rows={3}
           placeholder="Any other details about your business, promotion, or offering..."
           value={formState.additionalDetails || ''}
           onChange={(e) => handleChange('additionalDetails', e.target.value)}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5, mr: 1 }}>
+              <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.2, mr: 1 }}>
                 <FaInfoCircle color={isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(156, 39, 176, 0.5)'} />
               </InputAdornment>
             ),
@@ -194,7 +196,7 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
               '& fieldset': { 
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(156, 39, 176, 0.1)',
                 borderWidth: '1px',
-                borderRadius: '12px',
+                borderRadius: '10px',
               },
               '&:hover fieldset': { 
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(156, 39, 176, 0.3)' 
@@ -203,11 +205,12 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
                 borderColor: '#9C27B0',
                 borderWidth: '2px',
               },
-              borderRadius: '12px',
-              padding: '12px 14px',
+              borderRadius: '10px',
+              padding: '10px 12px',
             },
             '& .MuiInputBase-input': {
               color: isDarkMode ? '#fff' : '#000',
+              fontSize: '0.9rem',
             },
           }}
         />
@@ -218,7 +221,7 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
         sx={{ 
           display: 'flex', 
           justifyContent: 'center',
-          mt: 2 
+          mt: 1.5 
         }}
       >
         <Button
@@ -227,26 +230,26 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
           sx={{
             bgcolor: isDarkMode ? 'rgba(156, 39, 176, 0.8)' : '#9C27B0',
             color: '#fff',
-            py: 1.5,
-            px: 4,
-            borderRadius: '12px',
-            fontSize: '1rem',
+            py: 1.2,
+            px: 3,
+            borderRadius: '10px',
+            fontSize: '0.9rem',
             fontWeight: 600,
             '&:hover': {
               bgcolor: isDarkMode ? 'rgba(156, 39, 176, 0.9)' : '#7B1FA2',
             },
-            minWidth: '200px',
+            minWidth: '180px',
             boxShadow: isDarkMode 
-              ? '0 8px 16px rgba(0, 0, 0, 0.3)' 
-              : '0 8px 16px rgba(0, 0, 0, 0.1)',
+              ? '0 6px 12px rgba(0, 0, 0, 0.3)' 
+              : '0 6px 12px rgba(0, 0, 0, 0.1)',
             transition: 'background-color 0.2s ease'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {isGenerating ? (
-              <CircularProgress size={24} color="inherit" />
+              <CircularProgress size={20} color="inherit" />
             ) : (
-              <FaMagic size={20} />
+              <FaMagic size={18} />
             )}
             <span>{isGenerating ? 'Generating...' : 'Generate Caption'}</span>
           </Box>

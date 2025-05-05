@@ -6,11 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import { generateFlyer, FlyerFormState, GeneratedFlyer, checkXaiApiHealth } from '../../services/flyerapi';
-import StepNavigation from '../../components/StepNavigation/StepNavigation';
 import { checkUsageLimit, incrementUsage, getRemainingUsage, LIMITS } from '../../services/usageLimit';
 import { getAuth } from 'firebase/auth';
 import { clearDailyUsage } from '../../services/usageLimit';
-import BackButton from '../../components/BackButton';
 
 // Define transition constants
 const TRANSITION_TIMING = '0.4s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -20,7 +18,7 @@ const Flyer = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
   const { isDarkMode } = useTheme();
-  const { currentStep, steps, caption, goToNextStep } = useStepContext();
+  const { caption, goToNextStep } = useStepContext();
   const [mounted, setMounted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -226,32 +224,31 @@ const Flyer = () => {
           : 'linear-gradient(135deg, #f5f7fa, #f8f9fa)',
         transition: `background-color ${TRANSITION_TIMING}`,
         position: 'relative',
-        pt: 10,
+        pt: 1,
       }}>
-        {/* Back Button */}
-        <BackButton />
-
         {/* API Status Alert */}
         {apiStatus === 'loading' && (
           <Box sx={{ 
             position: 'fixed', 
-            top: '80px', 
+            top: '10px',
             left: '50%', 
             transform: 'translateX(-50%)',
             zIndex: 1100,
-            width: { xs: '90%', sm: '80%', md: '50%' },
+            width: { xs: '90%', sm: '60%', md: '40%' },
             textAlign: 'center'
           }}>
             <Alert 
               severity="info" 
-              icon={<CircularProgress size={20} />}
+              icon={<CircularProgress size={14} />}
               sx={{ 
                 bgcolor: isDarkMode ? 'rgba(41, 98, 255, 0.1)' : 'rgba(41, 98, 255, 0.05)', 
                 color: isDarkMode ? '#fff' : 'inherit',
-                '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#2962ff' }
+                '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#2962ff' },
+                py: 0.5,
+                fontSize: '0.75rem'
               }}
             >
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                 Connecting to xAI API...
               </Typography>
             </Alert>
@@ -261,11 +258,11 @@ const Flyer = () => {
         {apiStatus === 'error' && (
           <Box sx={{ 
             position: 'fixed', 
-            top: '80px', 
+            top: '10px',
             left: '50%', 
             transform: 'translateX(-50%)',
             zIndex: 1100,
-            width: { xs: '90%', sm: '80%', md: '50%' },
+            width: { xs: '90%', sm: '60%', md: '40%' },
             textAlign: 'center'
           }}>
             <Alert 
@@ -273,10 +270,12 @@ const Flyer = () => {
               sx={{ 
                 bgcolor: isDarkMode ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', 
                 color: isDarkMode ? '#fff' : 'inherit',
-                '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#d32f2f' }
+                '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#d32f2f' },
+                py: 0.5,
+                fontSize: '0.75rem'
               }}
             >
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                 {error || 'Failed to connect to xAI API. Please try again later.'}
               </Typography>
             </Alert>
@@ -284,16 +283,16 @@ const Flyer = () => {
         )}
 
         {/* Usage Limit Indicator */}
-        <Container maxWidth="md" sx={{ py: 4 }}>
+        <Container maxWidth="md" sx={{ py: 0.5 }}>
           <Paper
-            elevation={3}
+            elevation={2}
             sx={{
               position: 'fixed',
-              top: 80,
-              right: 20,
+              top: 10,
+              right: 10,
               zIndex: 1100,
-              p: 2,
-              borderRadius: 2,
+              p: 1,
+              borderRadius: 1.5,
               background: isDarkMode 
                 ? auth.currentUser 
                   ? 'rgba(0,200,83,0.1)' 
@@ -311,12 +310,12 @@ const Flyer = () => {
                   : 'rgba(64,93,230,0.1)'}`,
               boxShadow: isDarkMode 
                 ? auth.currentUser
-                  ? '0 4px 20px rgba(0,200,83,0.2)'
-                  : '0 4px 20px rgba(64,93,230,0.2)'
-                : '0 4px 20px rgba(0,0,0,0.1)',
+                  ? '0 4px 12px rgba(0,200,83,0.2)'
+                  : '0 4px 12px rgba(64,93,230,0.2)'
+                : '0 4px 10px rgba(0,0,0,0.08)',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <FaInfoCircle 
                 color={isDarkMode 
                   ? auth.currentUser 
@@ -325,30 +324,30 @@ const Flyer = () => {
                   : auth.currentUser
                     ? '#00C853'
                     : '#7F56D9'} 
-                size={20} 
+                size={14}
               />
               <Typography
                 variant="body2"
                 sx={{
                   color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
                   fontWeight: 600,
-                  fontSize: '0.9rem'
+                  fontSize: '0.75rem'
                 }}
               >
-                {auth.currentUser ? 'Premium Access' : 'Daily Usage Limit'}
+                {auth.currentUser ? 'Premium' : 'Daily Limit'}
               </Typography>
             </Box>
             <Typography
               variant="body2"
               sx={{
                 color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
-                mt: 1,
-                fontSize: '0.85rem'
+                mt: 0.25,
+                fontSize: '0.7rem'
               }}
             >
               {auth.currentUser 
-                ? 'Unlimited flyers available' 
-                : `${remainingUsage} / ${LIMITS.flyers.daily} flyers remaining`}
+                ? 'Unlimited flyers' 
+                : `${remainingUsage}/${LIMITS.flyers.daily} remaining`}
             </Typography>
             {!auth.currentUser && (
               <Button
@@ -356,44 +355,38 @@ const Flyer = () => {
                 size="small"
                 onClick={() => navigate('/login')}
                 sx={{
-                  mt: 1,
+                  mt: 0.25,
                   color: isDarkMode ? '#A78BFA' : '#7F56D9',
                   textTransform: 'none',
-                  fontSize: '0.8rem',
+                  fontSize: '0.65rem',
                   fontWeight: 500,
+                  padding: '1px 4px',
+                  minWidth: 'auto',
                   '&:hover': {
                     background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
                   }
                 }}
               >
-                Login for unlimited access
+              Login for unlimited
               </Button>
             )}
           </Paper>
         </Container>
 
         <Container 
-          maxWidth="lg" 
+          maxWidth="md"
           sx={{ 
-            mb: 5, 
-            pt: { xs: 1, sm: 2 },
-            px: { xs: 2, sm: 3 }
+            mb: 2,
+            pt: { xs: 0, sm: 0.5 },
+            px: { xs: 1, sm: 1.5 }
           }}
         >
-          {/* Step Navigation */}
-          <StepNavigation 
-            currentStep={currentStep}
-            steps={steps}
-            nextStepLabel="Skip to Publish"
-            nextStepPath="/publish"
-          />
-          
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              mb: { xs: 1, sm: 4 },
+              mb: { xs: 0.5, sm: 1 },
             }}
           >
             <Box
@@ -402,8 +395,8 @@ const Flyer = () => {
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 100 }}
               sx={{
-                mb: { xs: 1, sm: 1.5 },
-                p: { xs: 1, sm: 1.5 },
+                mb: { xs: 0.5, sm: 0.5 },
+                p: { xs: 0.6, sm: 0.8 },
                 borderRadius: '50%',
                 background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
                 display: 'flex',
@@ -411,58 +404,59 @@ const Flyer = () => {
                 justifyContent: 'center',
               }}
             >
-              <FaImage size={isMobile ? 20 : 28} color="white" />
+              <FaImage size={isMobile ? 14 : 18} color="white" />
             </Box>
             <Typography
               variant="h1"
               sx={{
-                fontSize: { xs: '1.75rem', sm: '2.25rem' },
+                fontSize: { xs: '1.2rem', sm: '1.4rem' },
                 fontWeight: 700,
-                mb: 1,
+                mb: 0.25,
                 textAlign: 'center',
                 color: isDarkMode ? '#fff' : '#000'
               }}
             >
-              Create Your Flyer
+              Create Flyer
             </Typography>
             <Typography
               variant="h2"
               sx={{
-                fontSize: { xs: '0.9rem', sm: '1.1rem' },
+                fontSize: { xs: '0.7rem', sm: '0.8rem' },
                 color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                mb: 2,
+                mb: 0.5,
                 textAlign: 'center'
               }}
             >
-              Transform your caption into a professional business flyer
+              Transform your caption into a professional flyer
             </Typography>
           </Box>
 
           <Paper
-            elevation={3}
+            elevation={2}
             sx={{
-              p: { xs: 2, sm: 3 },
+              p: { xs: 1.25, sm: 1.5 },
               background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(10px)',
-              borderRadius: { xs: '12px', sm: '16px' },
+              borderRadius: { xs: '8px', sm: '10px' },
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
               boxShadow: isDarkMode 
-                ? '0 10px 30px rgba(0, 0, 0, 0.2)' 
-                : '0 10px 30px rgba(0, 0, 0, 0.05)',
+                ? '0 6px 16px rgba(0, 0, 0, 0.2)' 
+                : '0 6px 16px rgba(0, 0, 0, 0.05)',
               transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
           >
             {caption && (
-              <Box sx={{ mb: 3 }}>
+              <Box sx={{ mb: 1.5 }}>
                 <Typography
                   variant="subtitle1"
                   sx={{
                     fontWeight: 600,
-                    mb: 1,
+                    mb: 0.25,
                     color: isDarkMode ? '#fff' : '#000',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1
+                    gap: 0.5,
+                    fontSize: '0.8rem'
                   }}
                 >
                   Your Selected Caption
@@ -470,9 +464,9 @@ const Flyer = () => {
                 <Paper
                   elevation={0}
                   sx={{
-                    p: 2,
+                    p: 1,
                     background: isDarkMode ? 'rgba(64,93,230,0.1)' : 'rgba(64,93,230,0.05)',
-                    borderRadius: 2,
+                    borderRadius: 1,
                     border: `1px solid ${isDarkMode ? 'rgba(64,93,230,0.2)' : 'rgba(64,93,230,0.1)'}`,
                   }}
                 >
@@ -481,8 +475,8 @@ const Flyer = () => {
                     sx={{
                       fontStyle: 'italic',
                       color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
-                      fontSize: '0.95rem',
-                      lineHeight: 1.7,
+                      fontSize: '0.75rem',
+                      lineHeight: 1.5,
                       whiteSpace: 'pre-wrap',
                     }}
                   >
@@ -495,39 +489,45 @@ const Flyer = () => {
             <Typography
               variant="h6"
               sx={{
-                mb: { xs: 2, sm: 3 },
+                mb: { xs: 1, sm: 1.25 },
                 color: isDarkMode ? '#fff' : '#000',
                 textAlign: 'center',
                 fontWeight: 600,
-                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                fontSize: { xs: '0.9rem', sm: '1rem' }
               }}
             >
-              Describe Your Perfect Flyer
+              Describe Your Flyer
             </Typography>
 
             {/* Description Box */}
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 2 }}>
               <Typography 
                 variant="subtitle1" 
                 sx={{ 
-                  mb: 1, 
+                  mb: 0.5,
                   color: isDarkMode ? '#fff' : '#000',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1
+                  gap: 0.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 600
                 }}
               >
-                Describe Your Flyer
+                Description
                 <IconButton 
                   size="small" 
-                  sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}
+                  sx={{ 
+                    color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                    padding: '2px',
+                    ml: 0.25
+                  }}
                 >
-                  <FaInfoCircle size={12} />
+                  <FaInfoCircle size={8} />
                 </IconButton>
               </Typography>
               <TextField
                 multiline
-                rows={4}
+                rows={2}
                 fullWidth
                 placeholder="A flyer in a pot"
                 value={formState.description}
@@ -538,6 +538,7 @@ const Flyer = () => {
                     backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.8)',
                     '& fieldset': {
                       borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                      borderRadius: '6px',
                     },
                     '&:hover fieldset': {
                       borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
@@ -545,9 +546,12 @@ const Flyer = () => {
                     '&.Mui-focused fieldset': {
                       borderColor: isDarkMode ? 'rgba(131, 58, 180, 0.6)' : 'rgba(131, 58, 180, 0.6)',
                     },
+                    borderRadius: '6px',
                   },
                   '& .MuiInputBase-input': {
                     color: isDarkMode ? '#fff' : '#000',
+                    fontSize: '0.8rem',
+                    padding: '8px 10px'
                   },
                 }}
               />
@@ -555,99 +559,192 @@ const Flyer = () => {
                 variant="caption" 
                 sx={{ 
                   display: 'block', 
-                  mt: 1, 
+                  mt: 0.5,
                   color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                  fontSize: '0.75rem'
+                  fontSize: '0.65rem',
+                  lineHeight: 1.2
                 }}
               >
-                Be specific about colors, topics, headline text, and call-to-action. The AI will generate a professional flyer based on your description.
+                Be specific about colors, topics, headline text, and call-to-action.
               </Typography>
             </Box>
 
-            {/* Logo Upload */}
-            <Box sx={{ mb: 3 }}>
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  mb: 1, 
-                  color: isDarkMode ? '#fff' : '#000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <FaImage size={16} />
-                Company Logo (Optional)
-              </Typography>
-              <Box 
-                sx={{ 
-                  border: `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}`,
-                  borderRadius: 2,
-                  p: 2,
+            {/* New Side-by-Side Layout - further optimized */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1.5, sm: 1 }, 
+              mb: 2, 
+              alignItems: { sm: 'stretch' },
+              mx: { xs: 0, sm: 0.5 },
+            }}>
+              {/* Left side: Logo Upload - more compact */}
+              <Box sx={{ 
+                flex: { xs: '1', sm: '0 0 120px' },
+                mb: { xs: 1, sm: 0 },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    mb: 0.5,
+                    color: isDarkMode ? '#fff' : '#000',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    alignSelf: 'flex-start'
+                  }}
+                >
+                  Company Logo
+                </Typography>
+                
+                {/* Logo upload container - fixed square */}
+                <Box sx={{ 
+                  height: 'auto',
+                  width: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '150px',
-                  backgroundColor: isDarkMode ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)',
-                }}
-              >
-                {formState.logoPreview ? (
-                  <Box sx={{ position: 'relative', width: '100%', textAlign: 'center' }}>
-                    <Box
-                      component="img"
-                      src={formState.logoPreview}
-                      alt="Company Logo"
-                      sx={{
-                        maxWidth: '100%',
-                        maxHeight: '150px',
-                        objectFit: 'contain',
-                        borderRadius: 1,
-                      }}
-                    />
-                    <IconButton
-                      onClick={removeLogo}
-                      sx={{
-                        position: 'absolute',
-                        top: -10,
-                        right: -10,
-                        backgroundColor: isDarkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)',
-                        color: isDarkMode ? '#fff' : '#000',
-                        p: '4px',
-                        '&:hover': {
-                          backgroundColor: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)',
-                        },
-                      }}
-                    >
-                      <FaTimesCircle size={16} />
-                    </IconButton>
-                    
-                    {/* Logo Position Dropdown */}
+                  alignItems: 'center'
+                }}>
+                  <Box 
+                    sx={{ 
+                      border: `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}`,
+                      borderRadius: '6px',
+                      p: 0.5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '90px',
+                      width: '90px',
+                      marginX: 'auto',
+                      backgroundColor: isDarkMode ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        borderColor: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                        backgroundColor: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.04)',
+                        cursor: 'pointer'
+                      },
+                    }}
+                    onClick={() => !formState.logoPreview && document.getElementById('logo-upload')?.click()}
+                  >
+                    {formState.logoPreview ? (
+                      <Box sx={{ position: 'relative', width: '100%', height: '100%', textAlign: 'center' }}>
+                        <Box
+                          component="img"
+                          src={formState.logoPreview}
+                          alt="Company Logo"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            borderRadius: '4px',
+                            filter: isDarkMode ? 'brightness(1.1)' : 'none',
+                          }}
+                        />
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeLogo();
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            backgroundColor: isDarkMode ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.9)',
+                            color: isDarkMode ? '#fff' : '#000',
+                            p: '2px',
+                            '&:hover': {
+                              backgroundColor: isDarkMode ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,1)',
+                              transform: 'scale(1.05)'
+                            },
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          <FaTimesCircle size={12} />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      <>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            height: '100%',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <FaUpload
+                            size={16}
+                            color={isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
+                            style={{ marginBottom: '4px' }}
+                          />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                              fontSize: '0.65rem',
+                              fontWeight: 500,
+                              textAlign: 'center'
+                            }}
+                          >
+                            Upload Logo
+                          </Typography>
+                        </Box>
+                        <input
+                          type="file"
+                          id="logo-upload"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleFileChange}
+                        />
+                      </>
+                    )}
+                  </Box>
+                  
+                  {/* Logo Position Dropdown - simplified */}
+                  {formState.logoPreview && (
                     <FormControl 
                       fullWidth 
                       variant="outlined" 
                       size="small"
                       sx={{ 
-                        mt: 2,
+                        mt: 1,
                         '& .MuiInputBase-root': {
                           color: isDarkMode ? '#fff' : '#000',
                           backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                          fontSize: '0.7rem',
+                          borderRadius: '6px',
+                          height: '28px',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
                         },
                         '& .MuiSvgIcon-root': {
                           color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                          fontSize: '1rem',
                         },
+                        '& .MuiInputLabel-root': {
+                          fontSize: '0.7rem',
+                          transform: 'translate(14px, 8px) scale(1)',
+                          '&.MuiInputLabel-shrink': {
+                            transform: 'translate(14px, -6px) scale(0.75)',
+                          }
+                        }
                       }}
                     >
                       <InputLabel 
                         id="logo-position-label"
                         sx={{ 
-                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' 
+                          color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                          fontSize: '0.7rem',
                         }}
                       >
-                        Logo Position
+                        Position
                       </InputLabel>
                       <Select
                         labelId="logo-position-label"
@@ -656,7 +753,21 @@ const Flyer = () => {
                           ...prev,
                           logoPosition: e.target.value as FlyerFormState['logoPosition']
                         }))}
-                        label="Logo Position"
+                        label="Position"
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              borderRadius: '6px',
+                              backgroundColor: isDarkMode ? 'rgba(30, 30, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                              maxHeight: '200px',
+                              '& .MuiMenuItem-root': {
+                                fontSize: '0.7rem',
+                                py: 0.5,
+                                px: 1,
+                              }
+                            }
+                          }
+                        }}
                       >
                         <MenuItem value="top-left">Top Left</MenuItem>
                         <MenuItem value="top">Top Center</MenuItem>
@@ -668,121 +779,147 @@ const Flyer = () => {
                         <MenuItem value="bottom-right">Bottom Right</MenuItem>
                       </Select>
                     </FormControl>
-                  </Box>
-                ) : (
-                  <>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => document.getElementById('logo-upload')?.click()}
-                    >
-                      <FaUpload
-                        size={24}
-                        color={isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                      />
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          mt: 1,
-                          color: isDarkMode ? '#fff' : '#000',
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
-                        }}
-                      >
-                        Upload Logo
-                      </Button>
-                    </Box>
-                    <input
-                      type="file"
-                      id="logo-upload"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleFileChange}
-                    />
-                  </>
-                )}
+                  )}
+                </Box>
               </Box>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'block', 
-                  mt: 1, 
-                  color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                  fontSize: '0.75rem'
-                }}
-              >
-                Your logo will appear at the selected position on the flyer
-              </Typography>
+
+              {/* Right side: Tips Section - improved design with fixed height */}
+              <Box sx={{ 
+                flex: '1',
+                maxWidth: { xs: '100%', sm: 'calc(100% - 125px)' }
+              }}>
+                <Box
+                  sx={{
+                    p: { xs: 1.25, sm: 1.5 },
+                    borderRadius: '6px',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(131, 58, 180, 0.1)' 
+                      : 'rgba(131, 58, 180, 0.05)',
+                    border: `1px solid ${isDarkMode ? 'rgba(131, 58, 180, 0.2)' : 'rgba(131, 58, 180, 0.1)'}`,
+                    height: { xs: 'auto', sm: '120px' },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: isDarkMode 
+                      ? 'inset 0 1px 1px rgba(255,255,255,0.05)' 
+                      : 'inset 0 1px 1px rgba(255,255,255,0.7)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 600,
+                      mb: 0.5,
+                      color: isDarkMode ? '#fff' : '#000',
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    <span style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      width: '14px',
+                      height: '14px',
+                      borderRadius: '50%',
+                      backgroundColor: isDarkMode ? 'rgba(131, 58, 180, 0.3)' : 'rgba(131, 58, 180, 0.2)',
+                    }}>
+                      <FaInfoCircle size={7} color={isDarkMode ? '#fff' : '#833AB4'} />
+                    </span>
+                    Tips for a perfect flyer:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.75)',
+                      mb: 0.5,
+                      fontSize: '0.7rem',
+                      lineHeight: 1.3,
+                      pl: 0.25,
+                    }}
+                  >
+                    Specify colors, layout, headline text, and call-to-action for best results.
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                      p: 1,
+                      borderRadius: '4px',
+                      border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontStyle: 'italic',
+                        color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)',
+                        fontSize: '0.65rem',
+                        lineHeight: 1.3,
+                        position: 'relative',
+                        pl: 1,
+                        '&:before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          width: '2px',
+                          height: '100%',
+                          backgroundColor: isDarkMode ? 'rgba(131, 58, 180, 0.5)' : 'rgba(131, 58, 180, 0.3)',
+                          borderRadius: '2px',
+                        }
+                      }}
+                    >
+                      "Create a blue and white flyer with 'SUMMER SALE' headline and 'SHOP NOW' button"
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
             </Box>
 
-            {/* Tips Section */}
-            <Box
-              sx={{
-                mb: 3,
-                p: 2,
-                borderRadius: 1,
-                backgroundColor: isDarkMode ? 'rgba(131, 58, 180, 0.1)' : 'rgba(131, 58, 180, 0.05)',
-                border: `1px solid ${isDarkMode ? 'rgba(131, 58, 180, 0.2)' : 'rgba(131, 58, 180, 0.1)'}`,
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  color: isDarkMode ? '#fff' : '#000',
-                }}
-              >
-                How to create a perfect flyer:
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-                  mb: 1,
-                }}
-              >
-                Be specific about colors, layout, and text. Include a clear headline, call-to-action, and describe any imagery you want. The AI works best with detailed instructions and will create professional, ready-to-share designs.
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontStyle: 'italic',
-                  color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                }}
-              >
-                Example: "Create a blue and white flyer with 'SUMMER SALE' headline, product image, and 'SHOP NOW' button"
-              </Typography>
-            </Box>
-
-            {/* Generate Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            {/* Generate Button - refined */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              mt: 0.5
+            }}>
               <Button
                 variant="contained"
                 disabled={isGenerating || !formState.description.trim()}
                 onClick={handleGenerate}
                 startIcon={isGenerating ? 
-                  <CircularProgress size={20} color="inherit" /> : 
-                  <FaMagic size={20} />
+                  <CircularProgress size={14} color="inherit" /> : 
+                  <FaMagic size={14} />
                 }
                 sx={{
-                  py: 1.5,
-                  px: 4,
-                  borderRadius: 8,
+                  py: 0.8,
+                  px: 3,
+                  borderRadius: 20,
                   background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
-                  boxShadow: isDarkMode ? '0 4px 15px rgba(193,53,132,0.3)' : '0 4px 15px rgba(0,0,0,0.1)',
+                  boxShadow: isDarkMode 
+                    ? '0 3px 10px rgba(193,53,132,0.3)' 
+                    : '0 3px 10px rgba(0,0,0,0.1)',
                   transition: 'all 0.3s ease',
                   fontWeight: 600,
-                  fontSize: '1rem',
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.2px',
                   textTransform: 'none',
+                  minWidth: '160px',
                   '&:hover': {
                     background: 'linear-gradient(45deg, #E1306C, #C13584, #833AB4)',
                     transform: 'translateY(-2px)',
-                    boxShadow: isDarkMode ? '0 6px 20px rgba(193,53,132,0.4)' : '0 6px 20px rgba(0,0,0,0.2)',
+                    boxShadow: isDarkMode 
+                      ? '0 5px 15px rgba(193,53,132,0.4)' 
+                      : '0 5px 15px rgba(0,0,0,0.15)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(1px)',
+                    boxShadow: isDarkMode 
+                      ? '0 2px 5px rgba(193,53,132,0.4)' 
+                      : '0 2px 5px rgba(0,0,0,0.15)',
+                    transition: 'all 0.1s ease',
                   },
                   '&.Mui-disabled': {
                     background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
@@ -796,34 +933,39 @@ const Flyer = () => {
           </Paper>
         </Container>
 
-        {/* Flyer Popup Dialog */}
+        {/* Flyer Popup Dialog - made more compact and simpler */}
         <Dialog 
           open={isPopupOpen && !!generatedFlyer} 
           onClose={() => setIsPopupOpen(false)}
-          maxWidth="md"
+          maxWidth="sm"
           fullWidth
           PaperProps={{
             sx: {
-              borderRadius: 2,
+              borderRadius: 1,
               background: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 6px 24px rgba(0, 0, 0, 0.3)',
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              margin: '8px'
             }
           }}
         >
           <Box sx={{ 
-            p: 2, 
+            p: 1,
             display: 'flex', 
             justifyContent: 'space-between',
             alignItems: 'center',
             borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: isDarkMode ? '#fff' : '#000' }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 600, 
+              color: isDarkMode ? '#fff' : '#000',
+              fontSize: '0.9rem'
+            }}>
               Your Generated Flyer
             </Typography>
-            <IconButton onClick={() => setIsPopupOpen(false)}>
-              <FaTimes color={isDarkMode ? '#fff' : '#000'} />
+            <IconButton onClick={() => setIsPopupOpen(false)} size="small">
+              <FaTimes size={12} color={isDarkMode ? '#fff' : '#000'} />
             </IconButton>
           </Box>
           
@@ -831,8 +973,8 @@ const Flyer = () => {
             display: 'flex', 
             justifyContent: 'center',
             alignItems: 'center',
-            p: 3,
-            pt: 3,
+            p: 1.5,
+            pt: 1.5,
           }}>
             {generatedFlyer && (
               <Box
@@ -841,54 +983,57 @@ const Flyer = () => {
                 alt="Generated Flyer"
                 sx={{
                   maxWidth: '100%',
-                  maxHeight: '70vh',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  maxHeight: '55vh',
+                  borderRadius: 1,
+                  boxShadow: '0 3px 12px rgba(0,0,0,0.2)',
                 }}
               />
             )}
           </DialogContent>
           
           <DialogActions sx={{ 
-            p: 2,
-            pt: 0,
+            p: 1.5,
+            pt: 0.5,
             display: 'flex',
             justifyContent: 'center',
-            gap: 2,
+            gap: 1,
+            flexWrap: 'wrap',
             borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}>
             <Button
               variant="contained"
               onClick={handleDownloadFlyer}
-              startIcon={<FaDownload />}
+              startIcon={<FaDownload size={12} />}
               sx={{
-                py: 1.2,
-                px: 3,
-                borderRadius: 2,
+                py: 0.6,
+                px: 1.5,
+                borderRadius: 1,
                 background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
                 textTransform: 'none',
                 fontWeight: 600,
+                fontSize: '0.75rem',
                 '&:hover': {
                   background: 'linear-gradient(45deg, #E1306C, #C13584, #833AB4)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(193,53,132,0.4)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(193,53,132,0.4)',
                 },
               }}
             >
-              Download Flyer
+              Download
             </Button>
             <Button
               variant="outlined"
               onClick={handleGenerate}
-              startIcon={<FaMagic />}
+              startIcon={<FaMagic size={12} />}
               sx={{
-                py: 1.2,
-                px: 3,
-                borderRadius: 2,
+                py: 0.6,
+                px: 1.5,
+                borderRadius: 1,
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
                 color: isDarkMode ? '#fff' : '#000',
                 textTransform: 'none',
                 fontWeight: 600,
+                fontSize: '0.75rem',
                 '&:hover': {
                   borderColor: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
                   backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
@@ -900,22 +1045,23 @@ const Flyer = () => {
             <Button
               variant="contained"
               onClick={handlePublishContent}
-              startIcon={<FaShare />}
+              startIcon={<FaShare size={12} />}
               sx={{
-                py: 1.2,
-                px: 3,
-                borderRadius: 2,
+                py: 0.6,
+                px: 1.5,
+                borderRadius: 1,
                 background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                 textTransform: 'none',
                 fontWeight: 600,
+                fontSize: '0.75rem',
                 '&:hover': {
                   background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(64,93,230,0.4)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(64,93,230,0.4)',
                 },
               }}
             >
-              Publish Your Content
+              Publish
             </Button>
           </DialogActions>
         </Dialog>
@@ -933,6 +1079,9 @@ const Flyer = () => {
               width: '100%',
               backgroundColor: isDarkMode ? '#ff5252' : '#ffebee',
               color: isDarkMode ? '#fff' : '#c62828',
+              fontSize: '0.75rem',
+              py: 0.5,
+              px: 1.5
             }}
           >
             {error}
@@ -943,4 +1092,4 @@ const Flyer = () => {
   );
 };
 
-export default Flyer; 
+export default Flyer;

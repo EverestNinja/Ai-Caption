@@ -325,10 +325,10 @@ const Generation = () => {
         <BackButton />
 
         <Container 
-          maxWidth="lg" 
+          maxWidth="md"
           sx={{ 
-            py: { xs: 4, sm: 6 }, 
-            px: { xs: 2, sm: 3 },
+            py: { xs: 3, sm: 4 },
+            px: { xs: 2, sm: 2 },
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
@@ -342,15 +342,15 @@ const Generation = () => {
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center',
-              mb: 2,
+              mb: 1,
               textAlign: 'center'
             }}
           >
             <Box sx={{ 
               bgcolor: 'primary.main', 
               borderRadius: '50%', 
-              p: 1.8, 
-              mb: 2,
+              p: 1.5,
+              mb: 1.5,
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -362,14 +362,14 @@ const Generation = () => {
                 boxShadow: `0 12px 24px ${isDarkMode ? 'rgba(64, 93, 230, 0.4)' : 'rgba(64, 93, 230, 0.3)'}`,
               }
             }}>
-              <AutoFixHighIcon sx={{ fontSize: 38, color: '#fff' }} />
+              <AutoFixHighIcon sx={{ fontSize: 30, color: '#fff' }} />
             </Box>
             
             <Typography 
               variant="h3" 
               gutterBottom 
               sx={{ 
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
                 fontWeight: 800,
                 color: isDarkMode ? '#fff' : '#2d3748',
                 textShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
@@ -383,8 +383,8 @@ const Generation = () => {
               variant="subtitle1" 
               sx={{ 
                 maxWidth: 600,
-                mb: 2,
-                fontSize: { xs: '1rem', sm: '1.1rem' },
+                mb: 1.5,
+                fontSize: { xs: '0.9rem', sm: '1rem' },
                 color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
                 lineHeight: 1.6
               }}
@@ -394,9 +394,9 @@ const Generation = () => {
             
             <Divider 
               sx={{ 
-                width: '90%', 
-                maxWidth: '500px',
-                mb: 2,
+                width: '80%',
+                maxWidth: '400px',
+                mb: 1.5,
                 opacity: 0.1,
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
               }} 
@@ -416,26 +416,26 @@ const Generation = () => {
           <Paper
             elevation={isDarkMode ? 4 : 2}
             sx={{
-              p: { xs: 3, sm: 4 },
+              p: { xs: 2, sm: 3 },
               mt: 1,
               width: '100%',
               background: isDarkMode 
                 ? 'rgba(30,30,45,0.6)' 
                 : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
+              borderRadius: '20px',
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
               boxShadow: isDarkMode 
-                ? '0 20px 40px rgba(0, 0, 0, 0.3)' 
-                : '0 20px 40px rgba(0, 0, 0, 0.07)',
-              mb: 4,
+                ? '0 15px 30px rgba(0, 0, 0, 0.3)'
+                : '0 15px 30px rgba(0, 0, 0, 0.07)',
+              mb: 3,
               overflow: 'hidden',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '&:hover': {
                 transform: 'translateY(-2px)',
                 boxShadow: isDarkMode 
-                  ? '0 25px 50px rgba(0, 0, 0, 0.4)' 
-                  : '0 25px 50px rgba(0, 0, 0, 0.1)',
+                  ? '0 20px 40px rgba(0, 0, 0, 0.4)'
+                  : '0 20px 40px rgba(0, 0, 0, 0.1)',
               }
             }}
           >

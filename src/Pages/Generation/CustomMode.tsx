@@ -62,21 +62,21 @@ const CustomMode: React.FC<CustomModeProps> = ({
 
   return (
     <>
-      <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+      <Box sx={{ mb: { xs: 1.5, sm: 3 } }}>
         <Typography
           variant="h6"
           sx={{
-            mb: { xs: 1, sm: 2 },
+            mb: { xs: 0.75, sm: 1.5 },
             color: isDarkMode ? '#fff' : '#000',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: { xs: '1.1rem', sm: '1.25rem' }
+            fontSize: { xs: '1rem', sm: '1.1rem' }
           }}
         >
           Choose Your Post Type
         </Typography>
           
-        <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
+        <Grid container spacing={isMobile ? 0.75 : 1.5} alignItems="center">
           {POST_TYPES.map((type) => (
             <Grid 
               item 
@@ -96,10 +96,10 @@ const CustomMode: React.FC<CustomModeProps> = ({
                     onChange={(e) => handlePostTypeChange(e.target.value as PostType)}
                     MenuProps={darkModeMenuProps}
                     sx={{
-                      py: 1.5,
-                      px: 2,
-                      height: '56px',
-                      borderRadius: 2,
+                      py: 1.2,
+                      px: 1.5,
+                      height: '48px',
+                      borderRadius: 1.5,
                       background: isDarkMode 
                         ? 'linear-gradient(45deg, rgba(64,93,230,0.2), rgba(88,81,219,0.2), rgba(131,58,180,0.2))'
                         : 'linear-gradient(45deg, rgba(64,93,230,0.1), rgba(88,81,219,0.1), rgba(131,58,180,0.1))',
@@ -122,6 +122,7 @@ const CustomMode: React.FC<CustomModeProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        fontSize: '0.9rem',
                       },
                     }}
                   >
@@ -130,8 +131,8 @@ const CustomMode: React.FC<CustomModeProps> = ({
                         key={option.value} 
                         value={option.value}
                         sx={{
-                          py: 1.5,
-                          px: 2,
+                          py: 1.2,
+                          px: 1.5,
                           '&:hover': {
                             background: isDarkMode 
                               ? 'rgba(64,93,230,0.1)'
@@ -143,6 +144,7 @@ const CustomMode: React.FC<CustomModeProps> = ({
                           variant="subtitle1"
                           sx={{ 
                             fontWeight: 600,
+                            fontSize: '0.9rem',
                           }}
                         >
                           {option.label}
@@ -157,10 +159,10 @@ const CustomMode: React.FC<CustomModeProps> = ({
                   variant="outlined"
                   onClick={() => handlePostTypeChange(type.value as PostType)}
                   sx={{ 
-                    py: 1.5,
-                    px: 1,
-                    height: '56px',
-                    borderRadius: 2,
+                    py: 1.2,
+                    px: 0.75,
+                    height: '48px',
+                    borderRadius: 1.5,
                     border: `1px solid ${
                       isDarkMode
                         ? 'rgba(255,255,255,0.1)'
@@ -181,7 +183,7 @@ const CustomMode: React.FC<CustomModeProps> = ({
                     variant="subtitle2"
                     sx={{ 
                       fontWeight: 600,
-                      fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                      fontSize: { xs: '0.75rem', sm: '0.85rem' }
                     }}
                   >
                     {type.label}
@@ -201,8 +203,8 @@ const CustomMode: React.FC<CustomModeProps> = ({
                   displayEmpty
                   MenuProps={darkModeMenuProps}
                   sx={{
-                    height: '56px',
-                    borderRadius: 2,
+                    height: '48px',
+                    borderRadius: 1.5,
                     background: isDarkMode 
                       ? 'rgba(255,255,255,0.05)'
                       : 'rgba(255,255,255,0.8)',
@@ -217,11 +219,12 @@ const CustomMode: React.FC<CustomModeProps> = ({
                       py: 0,
                       display: 'flex',
                       alignItems: 'center',
+                      fontSize: '0.9rem',
                     },
                   }}
                   renderValue={(selected) => {
                     if (!selected) {
-                      return <Typography sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
+                      return <Typography sx={{ color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', fontSize: '0.9rem' }}>
                         Business Type
                       </Typography>;
                     }
@@ -233,8 +236,9 @@ const CustomMode: React.FC<CustomModeProps> = ({
                       key={type.value} 
                       value={type.value}
                       sx={{
-                        py: 1.5,
-                        px: 2,
+                        py: 1.2,
+                        px: 1.5,
+                        fontSize: '0.9rem',
                       }}
                     >
                       {type.label}
@@ -242,7 +246,7 @@ const CustomMode: React.FC<CustomModeProps> = ({
                   ))}
                 </Select>
                 {formErrors.businessType && (
-                  <Typography color="error" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
+                  <Typography color="error" sx={{ mt: 0.5, fontSize: '0.7rem' }}>
                     {formErrors.businessType}
                   </Typography>
                 )}

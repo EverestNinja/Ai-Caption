@@ -78,12 +78,12 @@ const ResultDialog: React.FC<ResultDialogProps> = ({
               background: isDarkMode 
                 ? 'linear-gradient(135deg, #202124 0%, #1a1a1a 100%)'
                 : 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
-              borderRadius: { xs: '16px', sm: '20px' },
+              borderRadius: { xs: '14px', sm: '16px' },
               boxShadow: isDarkMode
-                ? '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-                : '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-              maxWidth: { xs: '95%', sm: '650px' },
-              margin: { xs: '10px', sm: '20px' },
+                ? '0 15px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+                : '0 15px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+              maxWidth: { xs: '95%', sm: '600px' },
+              margin: { xs: '8px', sm: '16px' },
               overflow: 'hidden',
               backdropFilter: 'blur(10px)',
             }
@@ -96,9 +96,9 @@ const ResultDialog: React.FC<ResultDialogProps> = ({
               justifyContent: 'space-between',
               alignItems: 'center',
               borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
-              pb: { xs: 2, sm: 2.5 },
-              pt: { xs: 2, sm: 2.5 },
-              px: { xs: 2.5, sm: 3 },
+              pb: { xs: 1.5, sm: 2 },
+              pt: { xs: 1.5, sm: 2 },
+              px: { xs: 2, sm: 2.5 },
               background: isDarkMode 
                 ? 'linear-gradient(135deg, rgba(103, 58, 183, 0.15), rgba(156, 39, 176, 0.1))' 
                 : 'linear-gradient(135deg, rgba(103, 58, 183, 0.07), rgba(156, 39, 176, 0.03))',
@@ -107,32 +107,32 @@ const ResultDialog: React.FC<ResultDialogProps> = ({
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1.5,
+              gap: 1.2,
               background: isDarkMode 
                 ? 'linear-gradient(135deg, rgba(103, 58, 183, 0.3), rgba(156, 39, 176, 0.2))'
                 : 'linear-gradient(135deg, rgba(103, 58, 183, 0.15), rgba(156, 39, 176, 0.1))',
-              py: 0.8,
-              px: 1.5,
-              borderRadius: '12px',
+              py: 0.6,
+              px: 1.2,
+              borderRadius: '10px',
             }}>
               <Box sx={{ 
                 bgcolor: 'primary.main',
                 color: '#fff',
                 borderRadius: '50%',
-                width: { xs: 32, sm: 36 },
-                height: { xs: 32, sm: 36 },
+                width: { xs: 28, sm: 32 },
+                height: { xs: 28, sm: 32 },
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <FaMagic size={isMobile ? 14 : 16} />
+                <FaMagic size={isMobile ? 12 : 14} />
               </Box>
               <Typography
                 variant="h5" 
                 sx={{
                   fontWeight: 700,
                   color: isDarkMode ? '#fff' : '#333',
-                  fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
                   letterSpacing: '-0.3px',
                 }}
               >
@@ -155,13 +155,13 @@ const ResultDialog: React.FC<ResultDialogProps> = ({
                 transition: 'all 0.2s ease',
               }}
             >
-              <FaTimes size={isMobile ? 16 : 20} />
+              <FaTimes size={isMobile ? 14 : 18} />
             </IconButton>
           </DialogTitle>
 
           {/* Dialog Content */}
           <DialogContent
-            sx={{ p: { xs: 2, sm: 3 }, pt: { xs: 2.5, sm: 3.5 } }}
+            sx={{ p: { xs: 1.5, sm: 2.5 }, pt: { xs: 2, sm: 3 } }}
           >
             <Box
               component={motion.div}
@@ -172,31 +172,31 @@ const ResultDialog: React.FC<ResultDialogProps> = ({
               <Paper
                 elevation={0}
                 sx={{
-                  p: { xs: 0.5, sm: 1 },
+                  p: { xs: 0.4, sm: 0.8 },
                   background: isDarkMode 
                     ? 'rgba(255, 255, 255, 0.03)'
                     : 'rgba(0, 0, 0, 0.01)',
-                  borderRadius: { xs: '12px', sm: '16px' },
+                  borderRadius: { xs: '10px', sm: '14px' },
                   border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
                   overflow: 'hidden',
                 }}
               >
                 <Box
                   sx={{
-                    maxHeight: { xs: '50vh', sm: '60vh' },
+                    maxHeight: { xs: '45vh', sm: '55vh' },
                     overflowY: 'auto',
-                    px: { xs: 1, sm: 1.5 },
-                    py: { xs: 1, sm: 1.5 },
+                    px: { xs: 0.8, sm: 1.2 },
+                    py: { xs: 0.8, sm: 1.2 },
                     '&::-webkit-scrollbar': {
-                      width: { xs: '6px', sm: '8px' },
+                      width: { xs: '5px', sm: '6px' },
                     },
                     '&::-webkit-scrollbar-track': {
                       background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                      borderRadius: '4px',
+                      borderRadius: '3px',
                     },
                     '&::-webkit-scrollbar-thumb': {
                       background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(103, 58, 183, 0.2)',
-                      borderRadius: '4px',
+                      borderRadius: '3px',
                       '&:hover': {
                         background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(103, 58, 183, 0.3)',
                       },
