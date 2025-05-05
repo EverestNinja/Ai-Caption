@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import { Box, Container, Typography, Link, Grid, Divider } from '@mui/material';
 import { FaGithub, FaLinkedin, FaInstagram, FaHeart, FaTwitter } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
 
@@ -18,6 +18,7 @@ interface SocialLink {
 
 const Footer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDarkMode } = useTheme();
 
   const navigationLinks: NavLink[] = [
@@ -45,22 +46,22 @@ const Footer = () => {
 
   const socialLinks: SocialLink[] = [
     {
-      icon: <FaInstagram size={22} />,
+      icon: <FaInstagram size={20} />,
       href: 'https://instagram.com',
       label: 'Instagram'
     },
     {
-      icon: <FaTwitter size={22} />,
+      icon: <FaTwitter size={20} />,
       href: 'https://twitter.com',
       label: 'Twitter'
     },
     {
-      icon: <FaGithub size={22} />,
+      icon: <FaGithub size={20} />,
       href: 'https://github.com',
       label: 'GitHub'
     },
     {
-      icon: <FaLinkedin size={22} />,
+      icon: <FaLinkedin size={20} />,
       href: 'https://linkedin.com/company',
       label: 'LinkedIn'
     }
@@ -71,11 +72,11 @@ const Footer = () => {
       component="footer"
       sx={{
         width: '100%',
-        py: { xs: 4, sm: 5 },
+        py: { xs: 2, sm: 2.5 },
         mt: 'auto',
         backgroundColor: isDarkMode 
-          ? 'rgba(255,255,255,0.03)' 
-          : 'rgba(0,0,0,0.02)',
+          ? '#121212' 
+          : '#e7eafb',
         borderTop: `1px solid ${
           isDarkMode 
             ? 'rgba(255,255,255,0.1)' 
@@ -83,13 +84,16 @@ const Footer = () => {
         }`,
         transition: 'all 0.3s ease',
         position: 'relative',
+        background: isDarkMode 
+          ? 'linear-gradient(180deg, #121212 0%, #1e1e2d 100%)' 
+          : '#e7eafb',
       }}
     >
       <Container maxWidth="lg">
         <Grid 
           container 
-          spacing={{ xs: 4, md: 6 }}
-          sx={{ mb: { xs: 4, sm: 5 } }}
+          spacing={{ xs: 2, md: 3 }}
+          sx={{ mb: { xs: 1.5, sm: 2 } }}
         >
           {/* Left Column - Brand & Description */}
           <Grid item xs={12} md={4}>
@@ -98,14 +102,14 @@ const Footer = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: { xs: 'center', md: 'flex-start' },
-                gap: 2,
+                gap: 1.5,
               }}
             >
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 1.5,
                 }}
               >
                 <Box
@@ -113,7 +117,7 @@ const Footer = () => {
                   src={GlocapLogo}
                   alt="GloCap Logo"
                   sx={{
-                    width: { xs: 45, sm: 50, md: 55 },
+                    width: { xs: 45, sm: 50, md: 52 },
                     height: 'auto',
                     objectFit: 'contain',
                     filter: isDarkMode 
@@ -128,14 +132,16 @@ const Footer = () => {
                     }
                   }}
                 />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                   <Typography
                     variant="h6"
                     sx={{
-                      fontSize: { xs: '1.4rem', md: '1.5rem' },
+                      fontSize: { xs: '1.3rem', md: '1.4rem' },
                       fontWeight: 700,
                       letterSpacing: '-0.01em',
-                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                      background: isDarkMode
+                        ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
+                        : 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       color: 'transparent',
@@ -147,11 +153,13 @@ const Footer = () => {
                   <Typography
                     variant="subtitle2"
                     sx={{
-                      fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                      fontSize: { xs: '0.85rem', sm: '0.9rem' },
                       fontWeight: 500,
                       fontStyle: 'italic',
                       letterSpacing: '0.02em',
-                      background: 'linear-gradient(45deg, #405DE6 30%, #833AB4 90%)',
+                      background: isDarkMode
+                        ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9) 30%, rgba(103, 58, 183, 0.8) 90%)'
+                        : 'linear-gradient(45deg, #405DE6 30%, #833AB4 90%)',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       color: 'transparent',
@@ -164,14 +172,14 @@ const Footer = () => {
               </Box>
               <Typography
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
                   textAlign: { xs: 'center', md: 'left' },
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  fontSize: { xs: '0.9rem', sm: '0.95rem' },
                   maxWidth: { xs: '280px', md: '100%' },
-                  lineHeight: 1.6,
+                  lineHeight: 1.5,
                 }}
               >
-                Transform your social media presence with AI-powered captions that captivate your audience.
+                Transform your social media presence with AI-powered captions.
               </Typography>
             </Box>
           </Grid>
@@ -191,20 +199,22 @@ const Footer = () => {
                 variant="subtitle1"
                 sx={{
                   fontWeight: 600,
-                  color: isDarkMode ? '#fff' : '#000',
-                  mb: 2.5,
+                  color: isDarkMode ? '#FFFFFF' : '#000000',
+                  mb: 1.25,
                   textAlign: 'center',
-                  fontSize: { xs: '1.1rem', sm: '1.15rem' },
+                  fontSize: { xs: '1.05rem', sm: '1.15rem' },
                   position: 'relative',
                   '&::after': {
                     content: '""',
                     position: 'absolute',
-                    bottom: -8,
+                    bottom: -4,
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: '40px',
+                    width: '30px',
                     height: '2px',
-                    background: 'linear-gradient(45deg, #405DE6, #5851DB)',
+                    background: isDarkMode
+                      ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
+                      : 'linear-gradient(45deg, #405DE6, #5851DB)',
                     borderRadius: '2px',
                   },
                 }}
@@ -217,49 +227,61 @@ const Footer = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 0.75,
                 }}
               >
-                {navigationLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    component="button"
-                    onClick={() => navigate(link.path)}
-                    sx={{
-                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      fontSize: { xs: '0.95rem', sm: '1rem' },
-                      position: 'relative',
-                      '&:hover': {
-                        color: '#405DE6',
-                        transform: 'translateX(4px)',
-                      },
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        left: -16,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(45deg, #405DE6, #5851DB)',
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                      },
-                      '&:hover::before': {
-                        opacity: 1,
-                      },
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navigationLinks.map((link) => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Typography
+                      key={link.path}
+                      component="div"
+                      onClick={() => navigate(link.path)}
+                      sx={{
+                        color: isActive 
+                          ? (isDarkMode ? 'rgba(64, 93, 230, 0.9)' : '#405DE6')
+                          : (isDarkMode ? '#FFFFFF' : '#000000'),
+                        textDecoration: 'none',
+                        transition: 'all 0.3s ease',
+                        fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                        position: 'relative',
+                        fontWeight: isActive ? 600 : 400,
+                        padding: '3px 5px',
+                        cursor: 'pointer',
+                        marginBottom: 0.25,
+                        display: 'inline-block',
+                        '&:hover': {
+                          color: isDarkMode ? 'rgba(64, 93, 230, 0.9)' : '#405DE6',
+                          transform: 'translateX(4px)',
+                        },
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: -14,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: isDarkMode
+                            ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
+                            : 'linear-gradient(45deg, #405DE6, #5851DB)',
+                          opacity: isActive ? 1 : 0,
+                          transition: 'opacity 0.3s ease',
+                        },
+                        '&:hover::before': {
+                          opacity: 1,
+                        },
+                      }}
+                    >
+                      {link.label}
+                    </Typography>
+                  );
+                })}
               </Box>
             </Box>
           </Grid>
-
+          
           {/* Right Column - Social Links */}
           <Grid item xs={12} md={4}>
             <Box
@@ -275,20 +297,22 @@ const Footer = () => {
                 variant="subtitle1"
                 sx={{
                   fontWeight: 600,
-                  color: isDarkMode ? '#fff' : '#000',
-                  mb: 2.5,
+                  color: isDarkMode ? '#FFFFFF' : '#000000',
+                  mb: 1.25,
                   textAlign: 'center',
-                  fontSize: { xs: '1.1rem', sm: '1.15rem' },
+                  fontSize: { xs: '1.05rem', sm: '1.15rem' },
                   position: 'relative',
                   '&::after': {
                     content: '""',
                     position: 'absolute',
-                    bottom: -8,
+                    bottom: -4,
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: '40px',
+                    width: '30px',
                     height: '2px',
-                    background: 'linear-gradient(45deg, #405DE6, #5851DB)',
+                    background: isDarkMode
+                      ? 'linear-gradient(45deg, rgba(64, 93, 230, 0.9), rgba(103, 58, 183, 0.8))'
+                      : 'linear-gradient(45deg, #405DE6, #5851DB)',
                     borderRadius: '2px',
                   },
                 }}
@@ -299,9 +323,10 @@ const Footer = () => {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: { xs: 3, sm: 4 },
+                  gap: { xs: 2, sm: 2.5 },
                   justifyContent: 'center',
                   flexWrap: 'wrap',
+                  mt: 0.75,
                 }}
               >
                 {socialLinks.map((link) => (
@@ -312,23 +337,26 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     aria-label={link.label}
                     sx={{
-                      color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                      color: isDarkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
                       transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '40px',
-                      height: '40px',
+                      width: '38px',
+                      height: '38px',
                       borderRadius: '50%',
                       background: isDarkMode 
-                        ? 'rgba(255,255,255,0.05)' 
+                        ? 'rgba(30, 30, 45, 0.4)' 
                         : 'rgba(0,0,0,0.05)',
                       '&:hover': {
-                        color: '#405DE6',
-                        transform: 'translateY(-4px)',
+                        color: isDarkMode ? 'rgba(64, 93, 230, 0.9)' : '#405DE6',
+                        transform: 'translateY(-3px)',
                         background: isDarkMode 
-                          ? 'rgba(255,255,255,0.1)' 
+                          ? 'rgba(30, 30, 45, 0.6)' 
                           : 'rgba(0,0,0,0.08)',
+                        boxShadow: isDarkMode
+                          ? '0 3px 8px rgba(64, 93, 230, 0.3)'
+                          : '0 3px 8px rgba(0,0,0,0.15)'
                       },
                     }}
                   >
@@ -345,7 +373,7 @@ const Footer = () => {
             borderColor: isDarkMode 
               ? 'rgba(255,255,255,0.1)' 
               : 'rgba(0,0,0,0.1)',
-            my: { xs: 3, sm: 4 },
+            my: { xs: 1.5, sm: 2 },
           }} 
         />
 
@@ -356,13 +384,13 @@ const Footer = () => {
             flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: { xs: 2, sm: 0 },
+            gap: { xs: 0.75, sm: 0 },
           }}
         >
           <Typography
             variant="body2"
             sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
               textAlign: { xs: 'center', sm: 'left' },
               fontSize: { xs: '0.85rem', sm: '0.9rem' },
               display: 'flex',
@@ -370,12 +398,12 @@ const Footer = () => {
               gap: 0.5,
             }}
           >
-            © {new Date().getFullYear()} GloCap. Made with <FaHeart style={{ color: '#ff4081' }} /> by Deltabyte
+            © {new Date().getFullYear()} GloCap. Made with <FaHeart style={{ color: isDarkMode ? '#ff4081' : '#ff4081' }} /> by Deltabyte
           </Typography>
           <Typography
             variant="body2"
             sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              color: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
               textAlign: { xs: 'center', sm: 'right' },
               fontSize: { xs: '0.85rem', sm: '0.9rem' },
             }}

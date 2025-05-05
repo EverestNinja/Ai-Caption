@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { 
   Container, Box, Paper, useMediaQuery, 
-  Snackbar, Alert, Typography, Fade, Grow,
-  Divider} from "@mui/material";
-import { AnimatePresence, motion } from 'framer-motion';
+  Snackbar, Alert, Typography, Fade, Divider
+} from "@mui/material";
+import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
@@ -87,27 +87,6 @@ const Generation = () => {
           }
         }
       }
-    }
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
     }
   };
 
@@ -320,10 +299,6 @@ const Generation = () => {
   return (
     <AnimatePresence mode="wait">
       <Box 
-        component={motion.div}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         sx={{ 
           minHeight: '100vh',
           display: 'flex',
@@ -351,10 +326,6 @@ const Generation = () => {
 
         <Container 
           maxWidth="lg" 
-          component={motion.div}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
           sx={{ 
             py: { xs: 4, sm: 6 }, 
             px: { xs: 2, sm: 3 },
@@ -367,41 +338,35 @@ const Generation = () => {
         >
           {/* Header Section */}
           <Box 
-            component={motion.div}
-            variants={itemVariants}
             sx={{ 
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center',
-              mb: 5,
+              mb: 2,
               textAlign: 'center'
             }}
           >
-            <Grow in timeout={800}>
-              <Box sx={{ 
-                bgcolor: 'primary.main', 
-                borderRadius: '50%', 
-                p: 1.8, 
-                mb: 3,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                boxShadow: `0 8px 20px ${isDarkMode ? 'rgba(64, 93, 230, 0.3)' : 'rgba(64, 93, 230, 0.2)'}`,
-                transform: 'translateY(0)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: `0 12px 24px ${isDarkMode ? 'rgba(64, 93, 230, 0.4)' : 'rgba(64, 93, 230, 0.3)'}`,
-                }
-              }}>
-                <AutoFixHighIcon sx={{ fontSize: 38, color: '#fff' }} />
-              </Box>
-            </Grow>
+            <Box sx={{ 
+              bgcolor: 'primary.main', 
+              borderRadius: '50%', 
+              p: 1.8, 
+              mb: 2,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              boxShadow: `0 8px 20px ${isDarkMode ? 'rgba(64, 93, 230, 0.3)' : 'rgba(64, 93, 230, 0.2)'}`,
+              transform: 'translateY(0)',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '&:hover': {
+                transform: 'translateY(-3px)',
+                boxShadow: `0 12px 24px ${isDarkMode ? 'rgba(64, 93, 230, 0.4)' : 'rgba(64, 93, 230, 0.3)'}`,
+              }
+            }}>
+              <AutoFixHighIcon sx={{ fontSize: 38, color: '#fff' }} />
+            </Box>
             
             <Typography 
               variant="h3" 
-              component={motion.h1}
-              variants={itemVariants}
               gutterBottom 
               sx={{ 
                 fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
@@ -416,11 +381,9 @@ const Generation = () => {
             
             <Typography 
               variant="subtitle1" 
-              component={motion.p}
-              variants={itemVariants}
               sx={{ 
                 maxWidth: 600,
-                mb: 5,
+                mb: 2,
                 fontSize: { xs: '1rem', sm: '1.1rem' },
                 color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
                 lineHeight: 1.6
@@ -430,12 +393,10 @@ const Generation = () => {
             </Typography>
             
             <Divider 
-              component={motion.div}
-              variants={itemVariants}
               sx={{ 
                 width: '90%', 
                 maxWidth: '500px',
-                mb: 5,
+                mb: 2,
                 opacity: 0.1,
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
               }} 
@@ -443,7 +404,7 @@ const Generation = () => {
           </Box>
 
           {/* Mode toggle component */}
-          <Box component={motion.div} variants={itemVariants} mb={3}>
+          <Box mb={0}>
             <ModeToggle 
               captionMode={captionMode}
               handleModeChange={handleModeChange}
@@ -453,11 +414,10 @@ const Generation = () => {
 
           {/* Main content based on mode */}
           <Paper
-            component={motion.div}
-            variants={itemVariants}
             elevation={isDarkMode ? 4 : 2}
             sx={{
               p: { xs: 3, sm: 4 },
+              mt: 1,
               width: '100%',
               background: isDarkMode 
                 ? 'rgba(30,30,45,0.6)' 
@@ -470,9 +430,9 @@ const Generation = () => {
                 : '0 20px 40px rgba(0, 0, 0, 0.07)',
               mb: 4,
               overflow: 'hidden',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '&:hover': {
-                transform: 'translateY(-4px)',
+                transform: 'translateY(-2px)',
                 boxShadow: isDarkMode 
                   ? '0 25px 50px rgba(0, 0, 0, 0.4)' 
                   : '0 25px 50px rgba(0, 0, 0, 0.1)',

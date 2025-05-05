@@ -1,6 +1,5 @@
 import React from 'react';
 import { Paper, Button, Typography, Box, useMediaQuery } from '@mui/material';
-import { motion } from 'framer-motion';
 import { AutoFixHigh, Settings } from '@mui/icons-material';
 
 interface ModeToggleProps {
@@ -18,11 +17,13 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
 
   return (
     <Box 
-      component={motion.div}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      sx={{ width: '100%', mb: 4 }}
+      sx={{ 
+        width: '100%', 
+        mb: 3,
+        mt: 1,
+        display: 'flex',
+        justifyContent: 'center'
+      }}
     >
       <Paper 
         elevation={0}
@@ -37,19 +38,19 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
             : '0 8px 20px rgba(0, 0, 0, 0.05)',
           border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'}`,
           position: 'relative',
-          padding: '6px',
-          maxWidth: '500px',
+          padding: '8px',
+          width: '100%',
+          maxWidth: '550px',
           margin: '0 auto',
         }}
       >
         <Button
-          component={motion.button}
-          whileHover={{ scale: captionMode === 'simple' ? 1.02 : 1.05 }}
-          whileTap={{ scale: 0.98 }}
           onClick={() => handleModeChange('simple')}
           sx={{
             flex: 1,
-            py: 2,
+            py: { xs: 1.5, sm: 2 },
+            px: { xs: 1, sm: 2 },
+            mr: 1,
             borderRadius: '12px',
             background: captionMode === 'simple' 
               ? isDarkMode 
@@ -66,8 +67,9 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
                   ? 'linear-gradient(135deg, rgba(103, 58, 183, 0.9), rgba(156, 39, 176, 0.8))' 
                   : 'linear-gradient(135deg, #9c27b0, #673ab7)'
                 : isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              transform: captionMode === 'simple' ? 'none' : 'scale(1.02)',
             },
-            transition: 'all 0.3s ease',
+            transition: 'background 0.15s ease, transform 0.15s ease',
             boxShadow: captionMode === 'simple' 
               ? '0 8px 16px rgba(0, 0, 0, 0.15)' 
               : 'none',
@@ -78,7 +80,7 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
             display: 'flex', 
             alignItems: 'center',
             flexDirection: isMobile ? 'column' : 'row',
-            gap: 1
+            gap: isMobile ? 1 : 1.5
           }}>
             <AutoFixHigh sx={{ fontSize: isMobile ? 18 : 20 }} />
             <Typography 
@@ -95,13 +97,12 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
         </Button>
         
         <Button
-          component={motion.button}
-          whileHover={{ scale: captionMode === 'custom' ? 1.02 : 1.05 }}
-          whileTap={{ scale: 0.98 }}
           onClick={() => handleModeChange('custom')}
           sx={{
             flex: 1,
-            py: 2,
+            py: { xs: 1.5, sm: 2 },
+            px: { xs: 1, sm: 2 },
+            ml: 1,
             borderRadius: '12px',
             background: captionMode === 'custom' 
               ? isDarkMode 
@@ -118,8 +119,9 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
                   ? 'linear-gradient(135deg, rgba(103, 58, 183, 0.9), rgba(156, 39, 176, 0.8))' 
                   : 'linear-gradient(135deg, #9c27b0, #673ab7)'
                 : isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              transform: captionMode === 'custom' ? 'none' : 'scale(1.02)',
             },
-            transition: 'all 0.3s ease',
+            transition: 'background 0.15s ease, transform 0.15s ease',
             boxShadow: captionMode === 'custom' 
               ? '0 8px 16px rgba(0, 0, 0, 0.15)' 
               : 'none',
@@ -130,7 +132,7 @@ const ModeToggle: React.FC<ModeToggleProps> = ({
             display: 'flex', 
             alignItems: 'center',
             flexDirection: isMobile ? 'column' : 'row',
-            gap: 1
+            gap: isMobile ? 1 : 1.5
           }}>
             <Settings sx={{ fontSize: isMobile ? 18 : 20 }} />
             <Typography 

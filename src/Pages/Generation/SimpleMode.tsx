@@ -3,9 +3,7 @@ import {
   Box, Typography, TextField, Button, Grid, 
   InputAdornment, CircularProgress
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import { FaArrowLeft, FaMagic, FaBuilding, FaCoffee, FaInfoCircle } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { FaMagic, FaBuilding, FaCoffee, FaInfoCircle } from 'react-icons/fa';
 
 interface SimpleModeProps {
   formState: any;
@@ -22,39 +20,10 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
   isDarkMode, 
   isGenerating 
 }) => {
-  const navigate = useNavigate();
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        when: "beforeChildren"
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
-    }
-  };
   
   return (
-    <Box 
-      component={motion.div}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <Box>
       <Typography 
-        component={motion.h2}
-        variants={itemVariants}
         variant="h5" 
         sx={{ 
           textAlign: 'center', 
@@ -71,8 +40,6 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
       <Grid 
         container 
         spacing={3}
-        component={motion.div}
-        variants={itemVariants}
       >
         {/* First Row */}
         <Grid item xs={12} sm={6}>
@@ -194,11 +161,7 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
       </Grid>
 
       {/* Additional Details - Full Width */}
-      <Box 
-        component={motion.div}
-        variants={itemVariants}
-        sx={{ mb: 4 }}
-      >
+      <Box sx={{ mb: 4 }}>
         <Typography 
           variant="subtitle1" 
           sx={{ 
@@ -250,88 +213,58 @@ const SimpleMode: React.FC<SimpleModeProps> = ({
         />
       </Box>
 
-      {/* Action Buttons */}
+      {/* Actions */}
       <Box 
-        component={motion.div}
-        variants={itemVariants}
         sx={{ 
           display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2, 
-          mt: 3
+          justifyContent: 'center',
+          mt: 2 
         }}
       >
         <Button
-          component={motion.button}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          variant="outlined"
-          startIcon={<FaArrowLeft />}
-          onClick={() => navigate('/flyer')}
-          sx={{
-            flex: 1,
-            py: 1.8,
-            background: 'transparent',
-            color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#673ab7',
-            border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(103, 58, 183, 0.5)'}`,
-            borderRadius: '12px',
-            fontWeight: 600,
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(103, 58, 183, 0.05)',
-              borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(103, 58, 183, 0.7)',
-            },
-          }}
-        >
-          Skip to Flyer
-        </Button>
-        <Button
-          component={motion.button}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          variant="contained"
-          startIcon={isGenerating ? null : <FaMagic />}
           onClick={handleGenerate}
           disabled={isGenerating}
           sx={{
-            flex: 1,
-            py: 1.8,
-            background: isDarkMode 
-              ? 'linear-gradient(135deg, rgba(103, 58, 183, 0.9), rgba(156, 39, 176, 0.8))' 
-              : 'linear-gradient(135deg, #9c27b0, #673ab7)',
-            color: 'white',
+            bgcolor: isDarkMode ? 'rgba(156, 39, 176, 0.8)' : '#9C27B0',
+            color: '#fff',
+            py: 1.5,
+            px: 4,
             borderRadius: '12px',
+            fontSize: '1rem',
             fontWeight: 600,
-            transition: 'all 0.3s ease',
-            boxShadow: isDarkMode 
-              ? '0 8px 20px rgba(0, 0, 0, 0.3)' 
-              : '0 8px 20px rgba(156, 39, 176, 0.3)',
             '&:hover': {
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(123, 78, 203, 0.9), rgba(176, 59, 196, 0.8))'
-                : 'linear-gradient(135deg, #ba27d0, #7a3abf)',
-              boxShadow: isDarkMode 
-                ? '0 10px 25px rgba(0, 0, 0, 0.4)' 
-                : '0 10px 25px rgba(156, 39, 176, 0.4)',
+              bgcolor: isDarkMode ? 'rgba(156, 39, 176, 0.9)' : '#7B1FA2',
             },
-            '&.Mui-disabled': {
-              background: isDarkMode 
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(156, 39, 176, 0.3)',
-              color: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.7)',
-            },
+            minWidth: '200px',
+            boxShadow: isDarkMode 
+              ? '0 8px 16px rgba(0, 0, 0, 0.3)' 
+              : '0 8px 16px rgba(0, 0, 0, 0.1)',
+            transition: 'background-color 0.2s ease'
           }}
         >
-          {isGenerating ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <CircularProgress size={20} color="inherit" thickness={5} />
-              <span>Generating...</span>
-            </Box>
-          ) : (
-            'Generate Caption'
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {isGenerating ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              <FaMagic size={20} />
+            )}
+            <span>{isGenerating ? 'Generating...' : 'Generate Caption'}</span>
+          </Box>
         </Button>
       </Box>
+
+      {/* Helper Text */}
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          textAlign: 'center', 
+          mt: 3, 
+          color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+          fontSize: '0.85rem'
+        }}
+      >
+        Tip: Add specific details about your business for better results
+      </Typography>
     </Box>
   );
 };
