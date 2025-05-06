@@ -6,6 +6,11 @@
   padding: 0;
 }
 
+:root {
+  /* Add this to ensure consistent viewport height on mobile */
+  --vh: 1vh;
+}
+
 body {
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(32deg, hsl(193, 6%, 76%), hsl(196, 9%, 69%) 50%);
@@ -16,6 +21,8 @@ body {
   overflow-x: hidden;
   position: relative;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 /* Main App container styles */
@@ -37,6 +44,8 @@ body {
   .app-container {
     overflow-x: hidden;
     max-width: 100vw;
+    width: 100vw;
+    position: relative;
   }
   
   .main-content {
@@ -45,6 +54,7 @@ body {
     width: 100%;
     padding-left: 0;
     padding-right: 0;
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Fix for iOS overscroll issues */
@@ -53,9 +63,29 @@ body {
     overflow-x: hidden;
     width: 100%;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    touch-action: manipulation;
+    overscroll-behavior: none;
+    touch-action: pan-y;
+    height: 100%;
+    height: -webkit-fill-available;
   }
+  
+  /* Fix for iOS Safari 100vh issue */
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Fix for sidebar overlay issues */
+body.menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* Add these fixes for mobile compatibility */

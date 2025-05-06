@@ -18,28 +18,46 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
   const { isDarkMode } = useTheme();
   const [mounted, setMounted] = useState(false);
   const isMobile = useMediaQuery('(max-width:768px)');
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   useEffect(() => {
     setMounted(true);
     
-    // Fix iOS height issue
+    // Fix iOS/mobile height issue
     const handleResize = () => {
       // Set a CSS variable with the viewport height
-      document.documentElement.style.setProperty(
-        '--vh', 
-        `${window.innerHeight * 0.01}px`
-      );
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
     
     handleResize(); // Call once on mount
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
     
+    // Special handling for iOS devices
+    if (isIOS) {
+      // Force redraw on scroll to fix stuck elements in iOS
+      const handleScroll = () => {
+        document.body.style.display = 'none';
+        document.body.offsetHeight; // Trigger reflow
+        document.body.style.display = '';
+      };
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('orientationchange', handleResize);
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, []);
+  }, [isIOS]);
 
   if (!mounted) {
     return (
@@ -105,6 +123,10 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
+          maxWidth: '100vw',
+          // Add iOS-specific padding for safe areas
+          paddingTop: isIOS ? 'env(safe-area-inset-top, 0px)' : 0,
+          paddingBottom: isIOS ? 'env(safe-area-inset-bottom, 0px)' : 0,
         }}
       >
         <Box sx={{ 
@@ -116,6 +138,8 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           overflowX: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          WebkitOverflowScrolling: 'touch',
+          maxWidth: '100vw',
         }}>
           {children}
         </Box>
