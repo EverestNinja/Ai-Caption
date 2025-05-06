@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useRef } from 'react';
 import { Box, useMediaQuery } from '@mui/material';
 import Footer from './Footer/Footer';
 import { useTheme } from '../context/ThemeContext';
@@ -20,6 +20,17 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
   const isMobile = useMediaQuery('(max-width:768px)');
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const mainRef = useRef<HTMLDivElement>(null);
+  
+  // Fix for iOS elastic scrolling
+  const handleTouchMove = (e: TouchEvent) => {
+    if (sidebarOpen && isMobile) {
+      if (!(e.target as Element).closest('nav') && !(e.target as Element).closest('.mobile-hamburger')) {
+        e.preventDefault();
+      }
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -35,21 +46,38 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
     
-    // Special handling for iOS devices
-    if (isIOS) {
-      // Force redraw on scroll to fix stuck elements in iOS
-      const handleScroll = () => {
-        document.body.style.display = 'none';
-        document.body.offsetHeight; // Trigger reflow
-        document.body.style.display = '';
+    // Enhanced scrolling fix for iOS
+    if (isIOS || isAndroid) {
+      // Handle iOS overscroll behavior
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      
+      // Fix for main content scrolling
+      if (mainRef.current) {
+        // Use setProperty instead of direct assignment to fix TypeScript error
+        mainRef.current.style.setProperty('-webkit-overflow-scrolling', 'touch');
+        mainRef.current.style.setProperty('overscroll-behavior', 'none');
+      }
+      
+      // Force redraw on orientation change to fix layout issues
+      const handleOrientationChange = () => {
+        setTimeout(() => {
+          // Fix for iOS rendering issues after orientation change
+          if (mainRef.current) {
+            mainRef.current.style.display = 'none';
+            // Force reflow
+            mainRef.current.offsetHeight;
+            mainRef.current.style.display = '';
+          }
+        }, 200);
       };
       
-      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('orientationchange', handleOrientationChange);
       
       return () => {
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('orientationchange', handleResize);
-        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('orientationchange', handleOrientationChange);
+        document.removeEventListener('touchmove', handleTouchMove);
       };
     }
     
@@ -57,7 +85,22 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [isIOS]);
+  }, [isIOS, isAndroid, isMobile, sidebarOpen]);
+
+  // Prevent body scrolling when sidebar is open on mobile
+  useEffect(() => {
+    if (isMobile) {
+      if (sidebarOpen) {
+        document.body.classList.add('menu-open');
+      } else {
+        document.body.classList.remove('menu-open');
+      }
+    }
+    
+    return () => {
+      document.body.classList.remove('menu-open');
+    };
+  }, [sidebarOpen, isMobile]);
 
   if (!mounted) {
     return (
@@ -96,6 +139,7 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
     >
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <Box 
+        ref={mainRef}
         component="main"
         sx={{ 
           flex: 1,
@@ -127,6 +171,10 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           // Add iOS-specific padding for safe areas
           paddingTop: isIOS ? 'env(safe-area-inset-top, 0px)' : 0,
           paddingBottom: isIOS ? 'env(safe-area-inset-bottom, 0px)' : 0,
+          // Prevent momentum scrolling when sidebar is open
+          overscrollBehavior: sidebarOpen && isMobile ? 'none' : 'auto',
+          // Disable pointer events on main content when sidebar is open on mobile
+          pointerEvents: (sidebarOpen && isMobile) ? 'none' : 'auto'
         }}
       >
         <Box sx={{ 

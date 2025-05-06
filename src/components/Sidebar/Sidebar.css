@@ -1,3 +1,28 @@
+/* iOS and Android specific fixes - moved to top for priority */
+@supports (-webkit-touch-callout: none) {
+  /* iOS devices */
+  .vertical-sidebar {
+    height: -webkit-fill-available !important;
+  }
+  
+  nav {
+    height: -webkit-fill-available !important;
+    -webkit-transform: translateZ(0); /* Prevent iOS rendering issues */
+    transform: translateZ(0); /* Standard property for compatibility */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .sidebar__wrapper {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mobile-overlay {
+    height: -webkit-fill-available !important;
+  }
+}
+
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 :root {
@@ -69,7 +94,7 @@ input[type="checkbox"] {
   display: none;
 }
 
-/* Sidebar Layout */
+/* Sidebar Layout - Base styling for all screens */
 .vertical-sidebar {
   position: fixed;
   left: 0;
@@ -96,6 +121,13 @@ input[type="checkbox"] {
   transition: opacity 0.3s ease, visibility 0.3s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  /* Improved user-select properties to prevent accidental selection */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Ensure no double-tap zoom on iOS */
+  -webkit-touch-callout: none;
 }
 
 /* Apply theme to nav */
@@ -106,9 +138,10 @@ nav {
   min-width: var(--collapsed);
   border-radius: 0;
   flex: 0 0 auto;
-  transition: flex-basis var(--transition-speed) var(--transition-timing), 
-              background-color var(--transition-speed) var(--transition-timing);
-  will-change: flex-basis;
+  transition: transform var(--transition-speed) var(--transition-timing),
+              background-color var(--transition-speed) var(--transition-timing),
+              box-shadow var(--transition-speed) var(--transition-timing);
+  will-change: transform;
   padding: var(--frame-space);
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 17px rgba(0, 0, 0, 0.2);
   height: 100%;
@@ -122,12 +155,15 @@ body.dark-theme nav {
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4), 0 5px 17px rgba(0, 0, 0, 0.4);
 }
 
-.checkbox-input:checked ~ nav {
-  flex-basis: var(--expanded);
-}
-
-.checkbox-input:not(:checked) ~ nav {
-  flex-basis: var(--collapsed);
+/* Desktop sidebar expansion */
+@media (min-width: 769px) {
+  .checkbox-input:checked ~ nav {
+    flex-basis: var(--expanded);
+  }
+  
+  .checkbox-input:not(:checked) ~ nav {
+    flex-basis: var(--collapsed);
+  }
 }
 
 /* Header Styles */
@@ -802,55 +838,54 @@ body.dark-theme .sidebar__link.active[data-tooltip="Home"] .text {
   }
 }
 
-/* Mobile-specific active states */
+/* Mobile specific adjustments - UPDATED FOR BETTER SIDEBAR BEHAVIOR */
 @media (max-width: 768px) {
+  /* Fixed sidebar positioning with transform for off-canvas */
   .vertical-sidebar {
-    width: 260px;
-    max-width: 85vw;
-    pointer-events: none;
-    transform: translateX(-110%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform;
-    height: 100%;
-    height: -webkit-fill-available;
     position: fixed;
     top: 0;
     left: 0;
-    margin: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    height: -webkit-fill-available;
+    /* Remove pointer events when hidden */
+    pointer-events: none;
     z-index: 1000;
+    transform: translateX(-100%);
+    /* Ensure no tap highlight */
+    -webkit-tap-highlight-color: transparent;
+    /* Smoother transitions */
+    will-change: transform;
   }
   
-  /* Ensure sidebar stays visible when open on mobile */
-  .checkbox-input:checked ~ nav {
-    pointer-events: auto;
-    flex-basis: 100%;
-    width: 260px;
-    max-width: 85vw;
-    transform: translateX(0);
-    padding-top: env(safe-area-inset-top);
-    height: 100%;
-    height: -webkit-fill-available;
-  }
-  
+  /* Base nav styling */
   nav {
-    width: 260px;
-    max-width: 85vw;
-    position: fixed;
-    top: 0;
-    left: 0;
+    width: 100%;
     height: 100%;
     height: -webkit-fill-available;
-    transform: translateX(-110%);
+    /* Initially off-screen */
+    transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
-    pointer-events: none;
-    /* Add iOS momentum scrolling */
+    box-shadow: none;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: env(safe-area-inset-bottom, 0.5rem);
     padding-top: env(safe-area-inset-top, 0.5rem);
+    /* Ensure smoother rendering */
+    will-change: transform;
+    pointer-events: auto;
   }
   
+  /* Only when checked, show the sidebar */
+  .checkbox-input:checked ~ nav {
+    /* Bring sidebar on-screen */
+    transform: translateX(0);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+  }
+  
+  /* Toggle overlay visibility when sidebar is open */
   .checkbox-input:checked ~ .mobile-overlay {
     display: block;
     opacity: 1;
@@ -858,15 +893,31 @@ body.dark-theme .sidebar__link.active[data-tooltip="Home"] .text {
     pointer-events: auto;
   }
   
-  /* Fix body scroll behavior */
-  body.menu-open {
-    overflow: hidden;
+  /* Show hamburger menu always on mobile */
+  .mobile-hamburger {
+    display: flex !important;
+    z-index: 1002;
     position: fixed;
-    width: 100%;
-    height: 100%;
+    top: env(safe-area-inset-top, 16px);
+    left: 16px;
   }
   
-  /* Fix sidebar wrapper to enable proper scrolling */
+  /* Only lock body scroll when sidebar is open */
+  body.menu-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+  
+  /* Enable scrolling when menu is closed */
+  body:not(.menu-open) {
+    overflow-y: auto !important;
+    position: relative !important;
+  }
+  
+  /* Improved sidebar scrolling */
   .sidebar__wrapper {
     flex: 1 1 auto;
     overflow-y: auto;
@@ -874,20 +925,23 @@ body.dark-theme .sidebar__link.active[data-tooltip="Home"] .text {
     overscroll-behavior: contain;
     max-height: calc(100vh - 180px);
     max-height: calc((var(--vh, 1vh) * 100) - 180px);
+    padding-bottom: 20px;
+  }
+  
+  /* Hide desktop toggle on mobile */
+  .sidebar__toggle-container {
+    display: none;
   }
 }
 
-/* Desktop: disable mobile-specific styles */
+/* Desktop: hide mobile components */
 @media (min-width: 769px) {
   .mobile-overlay {
     display: none !important;
   }
   
-  .sidebar__toggle-container {
-    position: static;
-    background-color: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
+  .mobile-hamburger {
+    display: none !important;
   }
 }
 
@@ -1071,41 +1125,6 @@ body.dark-theme .mobile-hamburger .line {
   width: 100%;
 }
 
-/* Add these important iOS/Android-specific fixes at the top of the file */
-@supports (-webkit-touch-callout: none) {
-  /* iOS devices */
-  .vertical-sidebar {
-    height: -webkit-fill-available !important;
-  }
-  
-  nav {
-    height: -webkit-fill-available !important;
-    -webkit-transform: translateZ(0); /* Prevent iOS rendering issues */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .sidebar__wrapper {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .mobile-overlay {
-    height: -webkit-fill-available !important;
-  }
-}
-
-/* Mobile-specific active states */
-@media (max-width: 768px) {
-  .sidebar__link.active {
-    background-color: rgba(64, 93, 230, 0.2);
-  }
-  
-  body.dark-theme .sidebar__link.active {
-    background-color: rgba(75, 137, 255, 0.25);
-  }
-}
-
 /* Mobile hamburger menu button - standalone version */
 .mobile-hamburger {
   position: fixed;
@@ -1128,6 +1147,17 @@ body.dark-theme .mobile-hamburger .line {
   pointer-events: auto !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  /* Prevent accidental selection */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Remove default button styles */
+  border: none;
+  outline: none;
+  /* Ensure no double-tap zoom on mobile */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  /* Ensure taps register correctly */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body.dark-theme .mobile-hamburger {
@@ -1212,6 +1242,7 @@ body.dark-theme .hamburger-lines .line {
     .sidebar__wrapper {
       max-height: calc(100% - 250px);
       -webkit-transform: translateZ(0); /* Fix iOS rendering issues */
+      transform: translateZ(0); /* Standard property for compatibility */
     }
     
     /* Fix header spacing for iOS */

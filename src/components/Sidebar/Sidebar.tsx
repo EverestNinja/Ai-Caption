@@ -77,10 +77,8 @@ interface SidebarProps {
   toggleSidebar?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
-  // Initialize with controlled props if available, otherwise use internal state
-  const [isExpanded, setIsExpanded] = useState<boolean>(isOpen || false);
-  
+const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
+  // Use isOpen directly from props for better control
   const { isDarkMode, toggleTheme } = useTheme();
   const [showLogoutPopup, setShowLogoutPopup] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
@@ -90,28 +88,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   
   // Create a ref for the nav element
   const navRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   
   // Get Firebase auth and React Router navigate
   const auth = getAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle prop changes - use useEffect with proper dependencies
-  useEffect(() => {
-    if (isOpen !== undefined) {
-      setIsExpanded(isOpen);
-    }
-  }, [isOpen]);
-
   // Check for mobile screen size
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      
+      // On desktop, ensure body can scroll
+      if (!mobile && document.body.classList.contains('menu-open')) {
+        document.body.classList.remove('menu-open');
+      }
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []); // Empty dependency array as we only want to set this up once
+  }, []);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -123,58 +121,35 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
     return () => unsubscribe();
   }, [auth]);
 
-  // Memoize the toggle handler to prevent recreation on every render
-  const handleToggleSidebar = useCallback(() => {
-    // Use the provided toggle function if available
-    if (toggleSidebar) {
-      toggleSidebar();
-    } else {
-      // Otherwise use internal state with functional updates
-      setIsExpanded(prevState => !prevState);
-      
-      // On mobile, prevent body scrolling when sidebar is open
-      if (isMobile) {
-        if (!isExpanded) {
-          document.body.classList.add('menu-open');
-          document.querySelector('.mobile-hamburger')?.classList.add('active');
-        } else {
-          document.body.classList.remove('menu-open');
-          document.querySelector('.mobile-hamburger')?.classList.remove('active');
-        }
-      }
-    }
-  }, [toggleSidebar, isMobile, isExpanded]);
-  
-  // Memoize overlay click handler
-  const handleOverlayClick = useCallback(() => {
-    if (isMobile && isExpanded) {
-      if (toggleSidebar) {
+  // Memoize overlay click handler to close sidebar
+  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Make sure the click is directly on the overlay and not on child elements
+    if (e.target !== e.currentTarget) return;
+    
+    // Make sure we're on mobile and the sidebar is open
+    if (isMobile && isOpen && toggleSidebar) {
+      // Prevent any event bubbling that might interfere
+      e.stopPropagation();
+      // Add a small delay to ensure proper event handling
+      setTimeout(() => {
         toggleSidebar();
-      } else {
-        setIsExpanded(false);
-      }
-      document.body.classList.remove('menu-open');
+      }, 50);
     }
-  }, [isMobile, isExpanded, toggleSidebar]);
+  }, [isMobile, isOpen, toggleSidebar]);
 
   // Close sidebar on mobile when navigating to a new page
   useEffect(() => {
-    if (isMobile && isExpanded) {
-      if (toggleSidebar) {
-        toggleSidebar();
-      } else {
-        setIsExpanded(false);
-      }
-      document.body.classList.remove('menu-open');
+    if (isMobile && isOpen && toggleSidebar) {
+      toggleSidebar();
     }
-  }, [location.pathname]); // Only depend on path changes, not the state itself
+  }, [location.pathname, isMobile, isOpen, toggleSidebar]);
 
   // Update hamburger menu active state when isOpen changes
   useEffect(() => {
     if (isOpen) {
-      document.querySelector('.mobile-hamburger')?.classList.add('active');
+      document.querySelector('.mobile-hamburger')?.classList.add('open');
     } else {
-      document.querySelector('.mobile-hamburger')?.classList.remove('active');
+      document.querySelector('.mobile-hamburger')?.classList.remove('open');
     }
   }, [isOpen]);
 
@@ -186,6 +161,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const handleLogin = () => {
     // Navigate to login page
     navigate('/login');
+    // Close sidebar if on mobile
+    if (isMobile && isOpen && toggleSidebar) {
+      toggleSidebar();
+    }
   };
 
   const handleLogout = async () => {
@@ -196,6 +175,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       // Show success snackbar
       setSnackbarMessage('You have been logged out successfully');
       setSnackbarOpen(true);
+      
+      // Close sidebar if on mobile
+      if (isMobile && isOpen && toggleSidebar) {
+        toggleSidebar();
+      }
       
       // Redirect to home page
       navigate('/');
@@ -213,6 +197,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   // Close snackbar
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  // Handle toggle button click on desktop
+  const handleDesktopToggle = () => {
+    if (toggleSidebar) {
+      toggleSidebar();
+    }
   };
 
   // Updated General section links with React Router
@@ -279,17 +270,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   ];
           
   return (
-    <aside className="vertical-sidebar">
+    <aside className="vertical-sidebar" ref={sidebarRef}>
       <input 
         type="checkbox" 
         role="switch" 
         id="checkbox-input" 
         className="checkbox-input" 
-        checked={isExpanded}
-        onChange={handleToggleSidebar}
+        checked={isOpen}
+        onChange={() => {
+          // Prevent the checkbox from directly toggling the sidebar
+          // This allows the toggleSidebar function to handle it properly
+          if (toggleSidebar) toggleSidebar();
+        }}
       />
-      {/* Mobile overlay */}
-      <div className="mobile-overlay" onClick={handleOverlayClick}></div>
+      {/* Mobile overlay with improved event handling */}
+      <div 
+        className="mobile-overlay" 
+        onClick={handleOverlayClick}
+        role="button"
+        tabIndex={-1}
+        aria-label="Close sidebar"
+        onTouchStart={(e) => {
+          // Ensure touch events on overlay don't affect the sidebar toggle
+          if (e.target === e.currentTarget && isMobile && isOpen) {
+            e.stopPropagation();
+          }
+        }}
+      ></div>
       <nav ref={navRef}>
         <header>
           <div className="sidebar__toggle-container">
@@ -298,6 +305,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
               htmlFor="checkbox-input" 
               id="label-for-checkbox-input" 
               className="nav__toggle"
+              onClick={handleDesktopToggle}
             >
               <span className="toggle--icons" aria-hidden="true">
                 <svg width="24" height="24" viewBox="0 0 24 24" className="toggle-svg-icon toggle--open">
@@ -349,7 +357,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             <div 
               className="user-profile" 
               onClick={toggleLogoutPopup}
-              data-tooltip={isExpanded ? "" : "User Profile"}
+              data-tooltip={isOpen ? "" : "User Profile"}
             >
               <div className="user-avatar-container">
                 <img 
@@ -379,7 +387,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           ) : (
             <div 
               className="login-button-container" 
-              data-tooltip={isExpanded ? "" : "Login"}
+              data-tooltip={isOpen ? "" : "Login"}
               onClick={handleLogin}
             >
               <div className="login-icon">
@@ -388,7 +396,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                   <path fillRule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
                 </svg>
               </div>
-              {isExpanded && (
+              {isOpen && (
                 <span className="login-text">Login</span>
               )}
             </div>

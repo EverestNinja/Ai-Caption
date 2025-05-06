@@ -19,6 +19,8 @@ html, body {
 :root {
   color-scheme: light dark;
   touch-action: manipulation;
+  /* Mobile-safe viewport height */
+  --vh: 1vh;
 }
 
 body {
@@ -49,13 +51,14 @@ body.dark-mode {
   color: #ffffff !important;
 }
 
-/* Prevent scrolling when menu is open - with iOS fixes */
+/* Prevent scrolling when menu is open - enhanced version */
 body.menu-open {
   overflow: hidden !important;
-  position: fixed;
+  position: fixed !important;
   width: 100%;
   height: 100%;
   touch-action: none;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -170,12 +173,19 @@ button:focus-visible {
     
     body.menu-open {
       height: -webkit-fill-available;
-      position: fixed;
+      position: fixed !important;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      overflow: hidden;
+      overflow: hidden !important;
+    }
+    
+    /* Enable scrolling when menu is closed */
+    body:not(.menu-open) {
+      overflow-y: visible !important;
+      overflow-x: hidden !important;
+      position: relative !important;
     }
   }
   
@@ -189,7 +199,7 @@ button:focus-visible {
     }
   }
   
-  /* REMOVED fixed positioning from body that was causing the issue */
+  /* Ensure scrolling body for normal state */
   body {
     position: relative;
     width: 100%;
@@ -208,6 +218,12 @@ button:focus-visible {
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+  }
+  
+  /* Ensure main content scrolls with momentum */
+  main, [role="main"] {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: visible;
   }
 }
 
