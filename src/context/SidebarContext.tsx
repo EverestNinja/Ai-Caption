@@ -5,13 +5,17 @@ interface SidebarContextProps {
   sidebarWidth: number;
   collapsedWidth: number;
   expandedWidth: number;
+  toggleSidebar: () => void;
+  setSidebarExpanded: (expanded: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextProps>({
   isExpanded: false,
   sidebarWidth: 52,
   collapsedWidth: 52,
-  expandedWidth: 270
+  expandedWidth: 270,
+  toggleSidebar: () => {}, // Default empty function
+  setSidebarExpanded: () => {} // Default empty function
 });
 
 export const useSidebar = () => useContext(SidebarContext);
@@ -23,8 +27,13 @@ interface SidebarProviderProps {
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
   // Initialize isExpanded state from localStorage, defaulting to false (closed)
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    const savedState = localStorage.getItem('sidebarExpanded');
-    return savedState !== null ? JSON.parse(savedState) : false;
+    try {
+      const savedState = localStorage.getItem('sidebarExpanded');
+      return savedState !== null ? JSON.parse(savedState) : false;
+    } catch (error) {
+      console.error('Error parsing sidebar state from localStorage:', error);
+      return false; // Default to collapsed if there's an error
+    }
   });
   
   // Sidebar width constants from CSS
@@ -33,63 +42,79 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   
   // Current width based on expansion state
   const sidebarWidth = isExpanded ? expandedWidth : collapsedWidth;
+  
+  // Function to directly set sidebar state
+  const setSidebarExpanded = (expanded: boolean) => {
+    setIsExpanded(expanded);
+    saveStateToLocalStorage(expanded);
+    updateDOMElements(expanded);
+  };
+  
+  // Function to toggle sidebar expansion
+  const toggleSidebar = () => {
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    saveStateToLocalStorage(newState);
+    updateDOMElements(newState);
+  };
+  
+  // Helper function to save state to localStorage
+  const saveStateToLocalStorage = (state: boolean) => {
+    try {
+      localStorage.setItem('sidebarExpanded', JSON.stringify(state));
+    } catch (error) {
+      console.error('Error saving sidebar state to localStorage:', error);
+    }
+  };
+  
+  // Helper function to update DOM elements
+  const updateDOMElements = (expanded: boolean) => {
+    // Update checkbox if it exists
+    const checkbox = document.getElementById('checkbox-input') as HTMLInputElement;
+    if (checkbox && checkbox.checked !== expanded) {
+      checkbox.checked = expanded;
+    }
+    
+    // Dispatch custom event for other components to listen to
+    const event = new CustomEvent('sidebarStateChanged', { 
+      detail: { isExpanded: expanded }
+    });
+    document.dispatchEvent(event);
+  };
 
-  // Monitor checkbox changes
+  // Effect to initialize and sync with DOM on mount
   useEffect(() => {
-    const checkSidebarState = () => {
-      // Get the checkbox that controls sidebar expansion
-      const sidebarCheckbox = document.getElementById('checkbox-input') as HTMLInputElement;
-      if (sidebarCheckbox) {
-        const isChecked = sidebarCheckbox.checked;
-        if (isChecked !== isExpanded) {
-          setIsExpanded(isChecked);
-          localStorage.setItem('sidebarExpanded', JSON.stringify(isChecked));
+    // Initialize DOM on mount
+    updateDOMElements(isExpanded);
+    
+    // Listen for storage events (for multi-tab consistency)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'sidebarExpanded' && e.newValue !== null) {
+        try {
+          const newState = JSON.parse(e.newValue);
+          if (newState !== isExpanded) {
+            setIsExpanded(newState);
+            updateDOMElements(newState);
+          }
+        } catch (error) {
+          console.error('Error parsing sidebar state from storage event:', error);
         }
       }
     };
-
-    // Initial sync with checkbox
-    setTimeout(() => {
-      const sidebarCheckbox = document.getElementById('checkbox-input') as HTMLInputElement;
-      if (sidebarCheckbox) {
-        sidebarCheckbox.checked = isExpanded;
-      }
-    }, 100);
-
-    // Set up a mutation observer to watch for checkbox changes
-    const observer = new MutationObserver(checkSidebarState);
-    const sidebarElement = document.querySelector('.vertical-sidebar');
     
-    if (sidebarElement) {
-      observer.observe(sidebarElement, { 
-        attributes: true, 
-        attributeFilter: ['class'],
-        childList: true,
-        subtree: true
-      });
-    }
-
-    // Listen for custom events from Sidebar component
-    const handleSidebarStateChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.isExpanded !== undefined) {
-        setIsExpanded(customEvent.detail.isExpanded);
-      }
-    };
-
-    // Additional event listener for direct checkbox changes
-    document.addEventListener('change', checkSidebarState);
-    document.addEventListener('sidebarStateChanged', handleSidebarStateChange);
-
-    return () => {
-      observer.disconnect();
-      document.removeEventListener('change', checkSidebarState);
-      document.removeEventListener('sidebarStateChanged', handleSidebarStateChange);
-    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [isExpanded]);
 
   return (
-    <SidebarContext.Provider value={{ isExpanded, sidebarWidth, collapsedWidth, expandedWidth }}>
+    <SidebarContext.Provider value={{ 
+      isExpanded, 
+      sidebarWidth, 
+      collapsedWidth, 
+      expandedWidth,
+      toggleSidebar,
+      setSidebarExpanded
+    }}>
       {children}
     </SidebarContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Sidebar.css';
 import './SidebarTheme.css';
 import glocapLogo from '../../assets/Glocap.png';
@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { applyTheme } from '../../utils/themeColors';
+import { useSidebar } from '../../context/SidebarContext';
 
 type SidebarLinkProps = {
   to: string;
@@ -17,7 +18,6 @@ type SidebarLinkProps = {
 const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
-  const isMobile = window.innerWidth <= 768;
   const linkRef = useRef<HTMLAnchorElement>(null);
   
   return (
@@ -27,21 +27,6 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, tooltip, icon, text }) =>
         to={to} 
         className={`sidebar__link ${isActive ? 'active' : ''}`} 
         data-tooltip={tooltip}
-        onClick={(e) => {
-          // Add a small delay for visual feedback on mobile
-          if (isMobile) {
-            const target = e.currentTarget;
-            target.style.backgroundColor = 'var(--bg--active)';
-            setTimeout(() => {
-              target.style.backgroundColor = '';
-              // Remove focus
-              target.blur();
-            }, 150);
-          } else {
-            // Remove focus on desktop too
-            e.currentTarget.blur();
-          }
-        }}
         onMouseDown={(e) => {
           // Prevent default focus behavior on mousedown
           e.preventDefault();
@@ -72,44 +57,100 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({ title, links }) => {
   );
 };
 
-interface SidebarProps {
-  isOpen?: boolean;
-  toggleSidebar?: () => void;
-}
+interface SidebarProps {}
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
-  // Use isOpen directly from props for better control
+const Sidebar: React.FC<SidebarProps> = () => {
+  // State
   const { isDarkMode, toggleTheme } = useTheme();
+  const { isExpanded, toggleSidebar } = useSidebar();
   const [showLogoutPopup, setShowLogoutPopup] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
   
-  // Create a ref for the nav element
+  // Refs
   const navRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
+  const checkboxRef = useRef<HTMLInputElement>(null);
   
-  // Get Firebase auth and React Router navigate
+  // Navigation
   const auth = getAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // Check for mobile screen size
+  // Define sidebar navigation links
+  const generalLinks: SidebarLinkProps[] = [
+    {
+      to: '/',
+      tooltip: 'Home',
+      icon: (
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
+          <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293l6-6Z"/>
+        </svg>
+      ),
+      text: 'Home'
+    },
+    {
+      to: '/generate',
+      tooltip: 'Generate Caption',
+      icon: (
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+          <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+        </svg>
+      ),
+      text: 'Generate Caption'
+    },
+    {
+      to: '/flyer',
+      tooltip: 'Generate Flyer',
+      icon: (
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"/>
+          <path d="M3 8.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m0-5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+      ),
+      text: 'Generate Flyer'
+    },
+    {
+      to: '/publish',
+      tooltip: 'Publish',
+      icon: (
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M12.5 5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm-2.5.5a.5.5 0 0 0-1 0v5a.5.5 0 0 0 1 0v-5zm-3 0a.5.5 0 0 0-1 0v5a.5.5 0 0 0 1 0v-5z"/>
+          <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178z"/>
+        </svg>
+      ),
+      text: 'Publish'
+    },
+    {
+      to: '/favorites',
+      tooltip: 'Favorites',
+      icon: (
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
+        </svg>
+      ),
+      text: 'Favorites'
+    }
+  ];
+
+  // Ensure checkbox is synchronized with isExpanded state
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-      
-      // On desktop, ensure body can scroll
-      if (!mobile && document.body.classList.contains('menu-open')) {
-        document.body.classList.remove('menu-open');
-      }
-    };
+    if (checkboxRef.current) {
+      checkboxRef.current.checked = isExpanded;
+    }
     
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    // Add a class to the body based on sidebar state for CSS targeting
+    if (isExpanded) {
+      document.body.classList.add('sidebar-expanded');
+    } else {
+      document.body.classList.remove('sidebar-expanded');
+    }
+
+    // Log state for debugging
+    console.log('Sidebar state:', { isExpanded, checkboxValue: checkboxRef.current?.checked });
+  }, [isExpanded]);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -121,38 +162,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
     return () => unsubscribe();
   }, [auth]);
 
-  // Memoize overlay click handler to close sidebar
-  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Make sure the click is directly on the overlay and not on child elements
-    if (e.target !== e.currentTarget) return;
-    
-    // Make sure we're on mobile and the sidebar is open
-    if (isMobile && isOpen && toggleSidebar) {
-      // Prevent any event bubbling that might interfere
-      e.stopPropagation();
-      // Add a small delay to ensure proper event handling
-      setTimeout(() => {
-        toggleSidebar();
-      }, 50);
-    }
-  }, [isMobile, isOpen, toggleSidebar]);
-
-  // Close sidebar on mobile when navigating to a new page
-  useEffect(() => {
-    if (isMobile && isOpen && toggleSidebar) {
-      toggleSidebar();
-    }
-  }, [location.pathname, isMobile, isOpen, toggleSidebar]);
-
-  // Update hamburger menu active state when isOpen changes
-  useEffect(() => {
-    if (isOpen) {
-      document.querySelector('.mobile-hamburger')?.classList.add('open');
-    } else {
-      document.querySelector('.mobile-hamburger')?.classList.remove('open');
-    }
-  }, [isOpen]);
-
   // Apply theme colors when the theme changes
   useEffect(() => {
     applyTheme(isDarkMode);
@@ -161,10 +170,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
   const handleLogin = () => {
     // Navigate to login page
     navigate('/login');
-    // Close sidebar if on mobile
-    if (isMobile && isOpen && toggleSidebar) {
-      toggleSidebar();
-    }
   };
 
   const handleLogout = async () => {
@@ -175,11 +180,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
       // Show success snackbar
       setSnackbarMessage('You have been logged out successfully');
       setSnackbarOpen(true);
-      
-      // Close sidebar if on mobile
-      if (isMobile && isOpen && toggleSidebar) {
-        toggleSidebar();
-      }
       
       // Redirect to home page
       navigate('/');
@@ -199,104 +199,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
     setSnackbarOpen(false);
   };
 
-  // Handle toggle button click on desktop
-  const handleDesktopToggle = () => {
-    if (toggleSidebar) {
-      toggleSidebar();
-    }
+  // Handler for toggling sidebar (direct click)
+  const handleToggleSidebar = (e: React.MouseEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleSidebar();
   };
-
-  // Updated General section links with React Router
-  const generalLinks: SidebarLinkProps[] = [
-    {
-      to: "/",
-      tooltip: "Home",
-      text: "Home",
-      icon: (
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
-          <path d="M2.5 9v5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V9.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V14a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5V9" />
-        </svg>
-      )
-    },
-    {
-      to: "/generate",
-      tooltip: "Caption Generator",
-      text: "Caption Generator",
-      icon: (
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-          <path d="M6.854 4.646a.5.5 0 0 1 0 .708L4.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0zm2.292 0a.5.5 0 0 0 0 .708L11.793 8l-2.647 2.646a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708 0z"/>
-        </svg>
-      )
-    },
-    {
-      to: "/flyer",
-      tooltip: "Flyer Generator",
-      text: "Flyer Generator",
-      icon: (
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
-          <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
-        </svg>
-      )
-    },
-    {
-      to: "/publish",
-      tooltip: "Publish",
-      text: "Publish",
-      icon: (
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-          <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-        </svg>
-      )
-    }
-  ];
-
-  // Account section links
-  const accountLinks: SidebarLinkProps[] = [
-    {
-      to: "/settings",
-      tooltip: "Settings",
-      text: "Settings",
-      icon: (
-        <svg width="16" height="16" fill="currentColor" className="bi bi-gear" viewBox="0 0 16 16">
-          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492a3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-        </svg>
-      )
-    }
-  ];
           
   return (
-    <aside className="vertical-sidebar" ref={sidebarRef}>
+    <aside className={`vertical-sidebar ${isExpanded ? 'expanded' : 'collapsed'}`} ref={sidebarRef}>
       <input 
         type="checkbox" 
         role="switch" 
         id="checkbox-input" 
         className="checkbox-input" 
-        checked={isOpen}
-        onChange={() => {
-          // Prevent the checkbox from directly toggling the sidebar
-          // This allows the toggleSidebar function to handle it properly
-          if (toggleSidebar) toggleSidebar();
-        }}
+        ref={checkboxRef}
+        checked={isExpanded}
+        onChange={() => toggleSidebar()}
       />
-      {/* Mobile overlay with improved event handling */}
-      <div 
-        className="mobile-overlay" 
-        onClick={handleOverlayClick}
-        role="button"
-        tabIndex={-1}
-        aria-label="Close sidebar"
-        onTouchStart={(e) => {
-          // Ensure touch events on overlay don't affect the sidebar toggle
-          if (e.target === e.currentTarget && isMobile && isOpen) {
-            e.stopPropagation();
-          }
-        }}
-      ></div>
       <nav ref={navRef}>
         <header>
           <div className="sidebar__toggle-container">
@@ -305,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
               htmlFor="checkbox-input" 
               id="label-for-checkbox-input" 
               className="nav__toggle"
-              onClick={handleDesktopToggle}
+              onClick={handleToggleSidebar}
             >
               <span className="toggle--icons" aria-hidden="true">
                 <svg width="24" height="24" viewBox="0 0 24 24" className="toggle-svg-icon toggle--open">
@@ -327,7 +247,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
         </header>
         <section className="sidebar__wrapper">
           <SidebarSection title="General" links={generalLinks} />
-          <SidebarSection title="Account" links={accountLinks} />
         </section>
         <div className="sidebar__footer">
           <div className="theme-toggle-container" data-tooltip="Theme">
@@ -357,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
             <div 
               className="user-profile" 
               onClick={toggleLogoutPopup}
-              data-tooltip={isOpen ? "" : "User Profile"}
+              data-tooltip="User Profile"
             >
               <div className="user-avatar-container">
                 <img 
@@ -387,7 +306,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
           ) : (
             <div 
               className="login-button-container" 
-              data-tooltip={isOpen ? "" : "Login"}
+              data-tooltip="Login"
               onClick={handleLogin}
             >
               <div className="login-icon">
@@ -396,9 +315,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, toggleSidebar }) => {
                   <path fillRule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
                 </svg>
               </div>
-              {isOpen && (
                 <span className="login-text">Login</span>
-              )}
             </div>
           )}
         </div>

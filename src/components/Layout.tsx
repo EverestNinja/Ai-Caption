@@ -1,41 +1,30 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
-import { Box, useMediaQuery } from '@mui/material';
+import { ReactNode, useEffect, useState } from 'react';
+import { Box } from '@mui/material';
 import Footer from './Footer/Footer';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from './Sidebar/Sidebar';
+import MobileNav from './MobileNav/MobileNav';
+import { useSidebar } from '../context/SidebarContext';
 
 const TRANSITION_TIMING = '0.3s ease';
-const TRANSITION_PROPERTIES = 'background-color, color, border-color, margin, padding';
-const SIDEBAR_WIDTH_COLLAPSED = 52; // 3.25rem in pixels
+const TRANSITION_PROPERTIES = 'background-color, color, border-color, margin, padding, width, left';
 
 interface LayoutProps {
   children: ReactNode;
-  sidebarOpen?: boolean;
-  toggleSidebar?: () => void;
 }
 
-const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
+const Layout = ({ children }: LayoutProps) => {
   const { isDarkMode } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const isMobile = useMediaQuery('(max-width:768px)');
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const mainRef = useRef<HTMLDivElement>(null);
+  const { isExpanded, sidebarWidth, collapsedWidth } = useSidebar();
   
-  // Fix for iOS elastic scrolling
-  const handleTouchMove = (e: TouchEvent) => {
-    if (sidebarOpen && isMobile) {
-      if (!(e.target as Element).closest('nav') && !(e.target as Element).closest('.mobile-hamburger')) {
-        e.preventDefault();
-      }
-    }
-  };
-
+  // Calculate the actual width to use
+  const actualWidth = isExpanded ? sidebarWidth : collapsedWidth;
+  
   useEffect(() => {
     setMounted(true);
     
-    // Fix iOS/mobile height issue
+    // Fix height issue
     const handleResize = () => {
       // Set a CSS variable with the viewport height
       const vh = window.innerHeight * 0.01;
@@ -46,61 +35,25 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
     
-    // Enhanced scrolling fix for iOS
-    if (isIOS || isAndroid) {
-      // Handle iOS overscroll behavior
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      
-      // Fix for main content scrolling
-      if (mainRef.current) {
-        // Use setProperty instead of direct assignment to fix TypeScript error
-        mainRef.current.style.setProperty('-webkit-overflow-scrolling', 'touch');
-        mainRef.current.style.setProperty('overscroll-behavior', 'none');
-      }
-      
-      // Force redraw on orientation change to fix layout issues
-      const handleOrientationChange = () => {
-        setTimeout(() => {
-          // Fix for iOS rendering issues after orientation change
-          if (mainRef.current) {
-            mainRef.current.style.display = 'none';
-            // Force reflow
-            mainRef.current.offsetHeight;
-            mainRef.current.style.display = '';
-          }
-        }, 200);
-      };
-      
-      window.addEventListener('orientationchange', handleOrientationChange);
-      
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('orientationchange', handleResize);
-        window.removeEventListener('orientationchange', handleOrientationChange);
-        document.removeEventListener('touchmove', handleTouchMove);
-      };
-    }
+    // Add custom CSS variable for sidebar width
+    document.documentElement.style.setProperty('--sidebar-width', `${actualWidth}px`);
     
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [isIOS, isAndroid, isMobile, sidebarOpen]);
+  }, [actualWidth]);
 
-  // Prevent body scrolling when sidebar is open on mobile
+  // Update sidebar width CSS variable when it changes
   useEffect(() => {
-    if (isMobile) {
-      if (sidebarOpen) {
-        document.body.classList.add('menu-open');
-      } else {
-        document.body.classList.remove('menu-open');
-      }
-    }
+    document.documentElement.style.setProperty('--sidebar-width', `${actualWidth}px`);
     
-    return () => {
-      document.body.classList.remove('menu-open');
-    };
-  }, [sidebarOpen, isMobile]);
+    // Explicitly set a data attribute on body for CSS targeting
+    document.body.setAttribute('data-sidebar-expanded', isExpanded ? 'true' : 'false');
+    
+    // Debug
+    console.log('Layout sidebar width:', actualWidth, 'Expanded:', isExpanded);
+  }, [actualWidth, isExpanded]);
 
   if (!mounted) {
     return (
@@ -136,25 +89,29 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
         position: 'relative',
         maxWidth: '100vw',
       }}
+      data-sidebar-expanded={isExpanded ? 'true' : 'false'}
     >
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar />
+      <MobileNav />
       <Box 
-        ref={mainRef}
         component="main"
         sx={{ 
           flex: 1,
           width: { 
             xs: '100%',
-            sm: isMobile ? '100%' : `calc(100% - ${SIDEBAR_WIDTH_COLLAPSED}px)` 
+            md: `calc(100% - ${actualWidth}px)`
           },
           marginLeft: { 
-            xs: '0',
-            sm: isMobile ? '0' : `${SIDEBAR_WIDTH_COLLAPSED}px` 
+            xs: 0,
+            md: `${actualWidth}px`
           },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
-          padding: 0,
+          padding: {
+            xs: 0,
+            md: 0
+          },
           position: 'relative',
           boxSizing: 'border-box',
           overflowX: 'hidden',
@@ -168,13 +125,6 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           maxWidth: '100vw',
-          // Add iOS-specific padding for safe areas
-          paddingTop: isIOS ? 'env(safe-area-inset-top, 0px)' : 0,
-          paddingBottom: isIOS ? 'env(safe-area-inset-bottom, 0px)' : 0,
-          // Prevent momentum scrolling when sidebar is open
-          overscrollBehavior: sidebarOpen && isMobile ? 'none' : 'auto',
-          // Disable pointer events on main content when sidebar is open on mobile
-          pointerEvents: (sidebarOpen && isMobile) ? 'none' : 'auto'
         }}
       >
         <Box sx={{ 
@@ -188,6 +138,10 @@ const Layout = ({ children, sidebarOpen, toggleSidebar }: LayoutProps) => {
           flexDirection: 'column',
           WebkitOverflowScrolling: 'touch',
           maxWidth: '100vw',
+          padding: {
+            xs: 0,
+            md: 0
+          }
         }}>
           {children}
         </Box>
