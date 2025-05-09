@@ -9,6 +9,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import BackButton from '../../components/BackButton';
 import { generateCaptions } from '../../services/api';
+import { generateSimpleCaptions } from '../../services/simplemodeapi';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import themeColors from '../../utils/themeColors';
 
@@ -152,7 +153,7 @@ const Generation = () => {
 
   // Caption generation
   const handleGenerate = async () => {
-    // For simple mode, validate only the required fields
+    // For simple mode, use the new simplemodeapi.ts
     if (captionMode === 'simple') {
       if (!formState.businessType?.trim()) {
         setError('Please enter your business type');
@@ -161,27 +162,50 @@ const Generation = () => {
       
       // Prepare data for simple mode
       const simpleFormData = {
-        businessType: 'custom',
-        customBusinessType: formState.businessType,
+        businessType: formState.businessType.trim(),
         product: formState.product || '',
-        description: formState.additionalDetails || '',
-        numberOfGenerations: 1,
-        includeHashtags: true,
-        includeEmojis: true,
-        captionLength: 2
+        additionalDetails: formState.additionalDetails || ''
       };
       
-      await generateWithFormData(simpleFormData);
+      await generateWithSimpleMode(simpleFormData);
       return;
     }
     
-    // For custom mode, use full validation
+    // For custom mode, use full validation and the original API
     if (!validateForm()) {
       setError('Please fill in all required fields');
       return;
     }
 
     await generateWithFormData(formState);
+  };
+  
+  // New function for generating captions with simple mode
+  const generateWithSimpleMode = async (data: any) => {
+    setIsGenerating(true);
+    setError('');
+    setGeneratedCaptions([]);
+    setSelectedCaptionIndex(0);
+
+    try {
+      const captions = await generateSimpleCaptions(data);
+      
+      if (captions && captions.length > 0) {
+        setGeneratedCaptions(captions);
+        setShowResultDialog(true);
+        setCanRegenerate(true);
+      } else {
+        setError('No captions were generated. Please try again.');
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(`Failed to generate caption: ${err.message}`);
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
   
   const generateWithFormData = async (data: any) => {
