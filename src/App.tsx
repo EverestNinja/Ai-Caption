@@ -9,10 +9,12 @@ import './config/firebase'; // Initialize Firebase
 import Layout from './components/Layout';
 import { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
+import { useAuthStore } from './store/auth';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
-
+  const session = useAuthStore((state) => state.session);
+  console.log(session);
   // Handle resize and viewport height
   useEffect(() => {
     // Set the viewport height variable
@@ -20,10 +22,10 @@ const App = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
-    
+
     // Set initial height
     setViewportHeight();
-    
+
     // Add a small delay to ensure smooth loading
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -34,7 +36,7 @@ const App = () => {
       // Add delay for orientation change to ensure accurate measurements
       setTimeout(setViewportHeight, 250);
     });
-    
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', setViewportHeight);
@@ -48,7 +50,7 @@ const App = () => {
     try {
       const sidebarState = localStorage.getItem('sidebarExpanded');
       console.log('Initial sidebar state from localStorage:', sidebarState);
-      
+
       // Set default if not found
       if (sidebarState === null) {
         localStorage.setItem('sidebarExpanded', 'true');
@@ -90,7 +92,7 @@ const App = () => {
           <SidebarProvider>
             <GoogleAnalytics />
             <Layout>
-              <Routes />
+              <Routes session={session} />
             </Layout>
             <Analytics />
           </SidebarProvider>
