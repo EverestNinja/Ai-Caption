@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { 
-  Container, Box, Paper, useMediaQuery, 
+import {
+  Container, Box, Paper, useMediaQuery,
   Snackbar, Alert, Typography, Fade, Divider
 } from "@mui/material";
 import { AnimatePresence } from 'framer-motion';
@@ -44,6 +44,10 @@ interface GeneratedCaption {
 
 // Form field definitions
 import { POST_TYPES, BUSINESS_TYPES, FORM_FIELDS } from './formConfig';
+import { useAuthStore } from '../../store/auth';
+import { FaInfoCircle } from 'react-icons/fa';
+import { getSubscriptionById } from '../../services/subscriptions';
+import { checkUsageLimit, clearDailyUsage, getRemainingUsage, incrementUsage, LIMITS } from '../../services/usageLimit';
 
 /**
  * Main Generation component that coordinates the caption generation UI
@@ -53,7 +57,7 @@ const Generation = () => {
   const { isDarkMode } = useTheme();
   const isMobile = useMediaQuery('(max-width:600px)');
   const { steps, setCaption, setHashtags } = useStepContext();
-  
+
   // State management
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -76,6 +80,33 @@ const Generation = () => {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage] = useState<string>('');
 
+  const session = useAuthStore((state) => state.session);
+  const [remainingUsage, setRemainingUsage] = useState<number>(3);
+
+
+  const [subscription, setSubscription] = useState(null);
+  console.log('Subscription:', subscription);
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+          setRemainingUsage(getRemainingUsage('captions'));
+
+          // Clear old usage data
+          clearDailyUsage();
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
+
   // Menu props for consistent dropdown styling
   const darkModeMenuProps = {
     PaperProps: {
@@ -95,7 +126,7 @@ const Generation = () => {
   // Validate form fields
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
-    
+
     if (captionMode === 'custom') {
       if (!formState.postType) errors.postType = 'Please select a post type';
       if (!formState.businessType) errors.businessType = 'Please select a business type';
@@ -110,13 +141,13 @@ const Generation = () => {
 
   // Handle UI interactions
   const handlePostTypeChange = (type: PostType) => {
-    setFormState(prev => ({ 
-      ...prev, 
+    setFormState(prev => ({
+      ...prev,
       postType: type,
       // Reset fields when post type changes
       ...Object.fromEntries(
-        Object.keys(prev).filter(key => 
-          key !== 'postType' && 
+        Object.keys(prev).filter(key =>
+          key !== 'postType' &&
           key !== 'businessType'
         ).map(key => [key, ''])
       )
@@ -132,15 +163,15 @@ const Generation = () => {
   };
 
   const handleChange = (field: string, value: any) => {
-    setFormState(prev => ({ 
-      ...prev, 
+    setFormState(prev => ({
+      ...prev,
       [field]: value
     }));
-    
+
     // Clear related form errors
     if (formErrors[field]) {
       setFormErrors(prev => {
-        const newErrors = {...prev};
+        const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
       });
@@ -154,32 +185,69 @@ const Generation = () => {
   // Caption generation
   const handleGenerate = async () => {
     // For simple mode, use the new simplemodeapi.ts
-    if (captionMode === 'simple') {
-      if (!formState.businessType?.trim()) {
-        setError('Please enter your business type');
+    if (subscription?.status === 'active') {
+      if (captionMode === 'simple') {
+        if (!formState.businessType?.trim()) {
+          setError('Please enter your business type');
+          return;
+        }
+
+        // Prepare data for simple mode
+        const simpleFormData = {
+          businessType: formState.businessType.trim(),
+          product: formState.product || '',
+          additionalDetails: formState.additionalDetails || ''
+        };
+
+        await generateWithSimpleMode(simpleFormData);
         return;
       }
-      
-      // Prepare data for simple mode
-      const simpleFormData = {
-        businessType: formState.businessType.trim(),
-        product: formState.product || '',
-        additionalDetails: formState.additionalDetails || ''
-      };
-      
-      await generateWithSimpleMode(simpleFormData);
-      return;
-    }
-    
-    // For custom mode, use full validation and the original API
-    if (!validateForm()) {
-      setError('Please fill in all required fields');
-      return;
+
+      // For custom mode, use full validation and the original API
+      if (!validateForm()) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      await generateWithFormData(formState);
+    } else {
+      if (!checkUsageLimit('captions')) {
+        setError('You have reached your daily limit for free flyers. Please upgrade your plan to generate unlimited captions.');
+        return;
+      }
+
+
+      setIsGenerating(true);
+      setError('');
+      if (captionMode === 'simple') {
+        if (!formState.businessType?.trim()) {
+          setError('Please enter your business type');
+          return;
+        }
+
+        // Prepare data for simple mode
+        const simpleFormData = {
+          businessType: formState.businessType.trim(),
+          product: formState.product || '',
+          additionalDetails: formState.additionalDetails || ''
+        };
+
+        await generateWithSimpleMode(simpleFormData);
+        return;
+      }
+
+      // For custom mode, use full validation and the original API
+      if (!validateForm()) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      await generateWithFormData(formState);
     }
 
-    await generateWithFormData(formState);
+
   };
-  
+
   // New function for generating captions with simple mode
   const generateWithSimpleMode = async (data: any) => {
     setIsGenerating(true);
@@ -189,11 +257,14 @@ const Generation = () => {
 
     try {
       const captions = await generateSimpleCaptions(data);
-      
+
       if (captions && captions.length > 0) {
         setGeneratedCaptions(captions);
         setShowResultDialog(true);
         setCanRegenerate(true);
+        // Increment usage after successful generation
+        incrementUsage('captions');
+        setRemainingUsage(getRemainingUsage('captions'));
       } else {
         setError('No captions were generated. Please try again.');
       }
@@ -207,7 +278,7 @@ const Generation = () => {
       setIsGenerating(false);
     }
   };
-  
+
   const generateWithFormData = async (data: any) => {
     setIsGenerating(true);
     setError('');
@@ -215,12 +286,14 @@ const Generation = () => {
     setSelectedCaptionIndex(0);
 
     try {
-      const captions = await generateCaptions(data);
-      
+      const captions = await generateCaptions({ ...data, numberOfGenerations: 1 });
+
       if (captions && captions.length > 0) {
         setGeneratedCaptions(captions);
         setShowResultDialog(true);
         setCanRegenerate(true);
+        incrementUsage('captions');
+        setRemainingUsage(getRemainingUsage('captions'));
       } else {
         setError('No captions were generated. Please try again.');
       }
@@ -248,20 +321,20 @@ const Generation = () => {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (generatedCaptions.length > 0) {
       const selectedCaption = generatedCaptions[index !== undefined ? index : selectedCaptionIndex].text;
       navigator.clipboard.writeText(selectedCaption);
       setCopiedToClipboard(true);
-      
+
       // Save caption to context
       setCaption(selectedCaption);
-      
+
       // Extract hashtags
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
-      
+
       setTimeout(() => setCopiedToClipboard(false), 2000);
     }
   };
@@ -271,41 +344,41 @@ const Generation = () => {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (generatedCaptions.length > 0) {
       const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
       setCaption(selectedCaption);
-      
+
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
-      
+
       localStorage.removeItem('generatedFlyerUrl');
       setShowResultDialog(false);
-      
+
       const flyerStep = steps.find(step => step.id === 2);
       if (flyerStep) {
         navigate(flyerStep.path);
       }
     }
   };
-  
+
   const handlePublishContent = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (generatedCaptions.length > 0) {
       const selectedCaption = generatedCaptions[selectedCaptionIndex].text;
       setCaption(selectedCaption);
-      
+
       const hashtagRegex = /#[^\s#]+/g;
       const extractedHashtags = selectedCaption.match(hashtagRegex) || [];
       setHashtags(extractedHashtags);
-      
+
       localStorage.removeItem('generatedFlyerUrl');
-      
+
       const publishStep = steps.find(step => step.id === 3);
       if (publishStep) {
         navigate(publishStep.path);
@@ -323,15 +396,15 @@ const Generation = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          background: isDarkMode 
+          background: isDarkMode
             ? themeColors.dark.background
             : themeColors.light.background,
-          color: isDarkMode 
+          color: isDarkMode
             ? themeColors.dark.textPrimary
             : themeColors.light.textPrimary,
           position: 'relative',
@@ -344,7 +417,7 @@ const Generation = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: isDarkMode 
+            background: isDarkMode
               ? themeColors.dark.overlay
               : themeColors.light.overlay,
             zIndex: 1
@@ -353,9 +426,100 @@ const Generation = () => {
       >
         <BackButton />
 
-        <Container 
+        <Container maxWidth="md" sx={{ py: 0.5 }}>
+          <Paper
+            elevation={2}
+            sx={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              zIndex: 1100,
+              p: 1,
+              borderRadius: 1.5,
+              background: isDarkMode
+                ? subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.1)'
+                  : 'rgba(64,93,230,0.1)'
+                : subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.05)'
+                  : 'rgba(64,93,230,0.05)',
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${isDarkMode
+                ? subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.2)'
+                  : 'rgba(64,93,230,0.2)'
+                : subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.1)'
+                  : 'rgba(64,93,230,0.1)'}`,
+              boxShadow: isDarkMode
+                ? subscription?.status === 'active'
+                  ? '0 4px 12px rgba(0,200,83,0.2)'
+                  : '0 4px 12px rgba(64,93,230,0.2)'
+                : '0 4px 10px rgba(0,0,0,0.08)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <FaInfoCircle
+                color={isDarkMode
+                  ? subscription?.status === 'active'
+                    ? '#00C853'
+                    : '#A78BFA'
+                  : subscription?.status === 'active'
+                    ? '#00C853'
+                    : '#7F56D9'}
+                size={14}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
+                  fontWeight: 600,
+                  fontSize: '0.75rem'
+                }}
+              >
+                {/* update it as subscription data */}
+                {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
+              </Typography>
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{
+                color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                mt: 0.25,
+                fontSize: '0.7rem'
+              }}
+            >
+              {subscription?.status === 'active'
+                ? 'Unlimited flyers'
+                : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
+            </Typography>
+            {!subscription?.status === 'active' && (
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => navigate('/login')}
+                sx={{
+                  mt: 0.25,
+                  color: isDarkMode ? '#A78BFA' : '#7F56D9',
+                  textTransform: 'none',
+                  fontSize: '0.65rem',
+                  fontWeight: 500,
+                  padding: '1px 4px',
+                  minWidth: 'auto',
+                  '&:hover': {
+                    background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
+                  }
+                }}
+              >
+                Subscribe for unlimited
+              </Button>
+            )}
+          </Paper>
+        </Container>
+
+        <Container
           maxWidth="md"
-          sx={{ 
+          sx={{
             py: { xs: 3, sm: 4 },
             px: { xs: 2, sm: 2 },
             flex: 1,
@@ -366,18 +530,18 @@ const Generation = () => {
           }}
         >
           {/* Header Section */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               mb: 1,
               textAlign: 'center'
             }}
           >
-            <Box sx={{ 
-              bgcolor: themeColors.primary, 
-              borderRadius: '50%', 
+            <Box sx={{
+              bgcolor: themeColors.primary,
+              borderRadius: '50%',
               p: 1.5,
               mb: 1.5,
               display: 'flex',
@@ -393,11 +557,11 @@ const Generation = () => {
             }}>
               <AutoFixHighIcon sx={{ fontSize: 30, color: '#fff' }} />
             </Box>
-            
-            <Typography 
-              variant="h3" 
-              gutterBottom 
-              sx={{ 
+
+            <Typography
+              variant="h3"
+              gutterBottom
+              sx={{
                 fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
                 fontWeight: 800,
                 color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
@@ -407,10 +571,10 @@ const Generation = () => {
             >
               Generate Your Content
             </Typography>
-            
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
+
+            <Typography
+              variant="subtitle1"
+              sx={{
                 maxWidth: 600,
                 mb: 1.5,
                 fontSize: { xs: '0.9rem', sm: '1rem' },
@@ -420,21 +584,21 @@ const Generation = () => {
             >
               Create engaging content that captures attention and drives engagement
             </Typography>
-            
-            <Divider 
-              sx={{ 
+
+            <Divider
+              sx={{
                 width: '80%',
                 maxWidth: '400px',
                 mb: 1.5,
                 opacity: 0.1,
                 borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'
-              }} 
+              }}
             />
           </Box>
 
           {/* Mode toggle component */}
           <Box mb={0}>
-            <ModeToggle 
+            <ModeToggle
               captionMode={captionMode}
               handleModeChange={handleModeChange}
               isDarkMode={isDarkMode}
@@ -448,13 +612,13 @@ const Generation = () => {
               p: { xs: 2, sm: 3 },
               mt: 1,
               width: '100%',
-              background: isDarkMode 
+              background: isDarkMode
                 ? themeColors.dark.cardBackground
                 : themeColors.light.cardBackground,
               backdropFilter: 'blur(20px)',
               borderRadius: '20px',
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-              boxShadow: isDarkMode 
+              boxShadow: isDarkMode
                 ? '0 15px 30px rgba(0, 0, 0, 0.3)'
                 : '0 15px 30px rgba(0, 0, 0, 0.07)',
               mb: 3,
@@ -462,7 +626,7 @@ const Generation = () => {
               transition: `${themeColors.transition.properties} ${themeColors.transition.timing}, transform 0.2s ease`,
               '&:hover': {
                 transform: 'translateY(-2px)',
-                boxShadow: isDarkMode 
+                boxShadow: isDarkMode
                   ? '0 20px 40px rgba(0, 0, 0, 0.4)'
                   : '0 20px 40px rgba(0, 0, 0, 0.1)',
               }
@@ -514,18 +678,18 @@ const Generation = () => {
         />
 
         {/* Error messages */}
-        <Snackbar 
-          open={!!error} 
-          autoHideDuration={6000} 
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
           onClose={() => setError('')}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           TransitionComponent={Fade}
         >
-          <Alert 
-            onClose={() => setError('')} 
-            severity="error" 
+          <Alert
+            onClose={() => setError('')}
+            severity="error"
             elevation={6}
-            sx={{ 
+            sx={{
               width: '100%',
               borderRadius: '12px',
               bgcolor: isDarkMode ? 'rgba(40, 40, 50, 0.9)' : undefined,
@@ -538,7 +702,7 @@ const Generation = () => {
             {error}
           </Alert>
         </Snackbar>
-        
+
         {/* General messages */}
         <Snackbar
           open={snackbarOpen}
@@ -547,11 +711,11 @@ const Generation = () => {
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           TransitionComponent={Fade}
         >
-          <Alert 
-            onClose={handleSnackbarClose} 
+          <Alert
+            onClose={handleSnackbarClose}
             severity="success"
             elevation={6}
-            sx={{ 
+            sx={{
               width: '100%',
               borderRadius: '12px',
               bgcolor: isDarkMode ? 'rgba(40, 40, 50, 0.9)' : undefined,

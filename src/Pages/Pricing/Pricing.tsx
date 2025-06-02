@@ -171,99 +171,99 @@ const PricingSection: React.FC = () => {
 
     return (
         <ThemeProvider theme={dynamicTheme}>
-            <Layout>
-                {/* Dark Mode Toggler */}
-                <Paper
-                    elevation={3}
+            {/* <Layout> */}
+            {/* Dark Mode Toggler */}
+            <Paper
+                elevation={3}
+                sx={{
+                    position: 'absolute',
+                    top: { xs: 12, sm: 20 },
+                    right: { xs: 12, sm: 20 },
+                    borderRadius: '50px',
+                    p: { xs: '2px', sm: '4px' },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: { xs: 0.5, sm: 1 },
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    backdropFilter: 'blur(10px)',
+                    zIndex: 1000,
+                    '&:hover': {
+                        background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+                    }
+                }}
+            >
+                <IconButton
+                    size="small"
+                    onClick={toggleTheme}
                     sx={{
-                        position: 'absolute',
-                        top: { xs: 12, sm: 20 },
-                        right: { xs: 12, sm: 20 },
-                        borderRadius: '50px',
-                        p: { xs: '2px', sm: '4px' },
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: { xs: 0.5, sm: 1 },
-                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                        backdropFilter: 'blur(10px)',
-                        zIndex: 1000,
-                        '&:hover': {
-                            background: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
-                        }
+                        color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
+                        transform: `scale(${!isDarkMode ? 1.2 : 1})`,
+                        transition: 'all 0.3s ease',
                     }}
                 >
-                    <IconButton
-                        size="small"
-                        onClick={toggleTheme}
-                        sx={{
-                            color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#FDB813',
-                            transform: `scale(${!isDarkMode ? 1.2 : 1})`,
-                            transition: 'all 0.3s ease',
-                        }}
-                    >
-                        <BsSunFill />
-                    </IconButton>
-                    <Switch
-                        checked={isDarkMode}
-                        onChange={toggleTheme}
-                        sx={{
-                            '& .MuiSwitch-switchBase': {
-                                color: isDarkMode ? '#405DE6' : '#757575',
-                                '&.Mui-checked': {
-                                    color: '#405DE6',
-                                },
-                                '&.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: '#405DE6 !important',
-                                },
+                    <BsSunFill />
+                </IconButton>
+                <Switch
+                    checked={isDarkMode}
+                    onChange={toggleTheme}
+                    sx={{
+                        '& .MuiSwitch-switchBase': {
+                            color: isDarkMode ? '#405DE6' : '#757575',
+                            '&.Mui-checked': {
+                                color: '#405DE6',
                             },
-                            '& .MuiSwitch-track': {
-                                backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
-                                opacity: '1 !important',
+                            '&.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#405DE6 !important',
                             },
-                        }}
-                    />
-                    <IconButton
-                        size="small"
-                        onClick={toggleTheme}
-                        sx={{
-                            color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
-                            transform: `scale(${isDarkMode ? 1.2 : 1})`,
-                            transition: 'all 0.3s ease',
-                        }}
-                    >
-                        <BsMoonFill />
-                    </IconButton>
-                </Paper>
-                {/* Logo and Header */}
-                <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <Box
-                        component="img"
-                        src={GlocapLogo}
-                        alt="GloCap Logo"
-                        sx={{
-                            width: isMobile ? 100 : 150,
-                            height: 'auto',
-                            mb: 2,
-                            filter: isDarkMode
-                                ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5))'
-                                : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
-                        }}
-                    />
-                    <Typography variant="h4" component="h2" gutterBottom>
-                        Affordable Plans for Unlimited Captions
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Start free, go unlimited—simple pricing for everyone.
-                    </Typography>
-                </Box>
-                <Grid container sx={{ p: '70px' }} spacing={4}>
-                    {pricingPlans.map((plan) => (
-                        <Grid item key={plan.title} xs={12} sm={6} md={6}>
-                            <PricingCard plan={plan} />
-                        </Grid>
-                    ))}
-                </Grid>
-            </Layout>
+                        },
+                        '& .MuiSwitch-track': {
+                            backgroundColor: isDarkMode ? '#ffffff40 !important' : '#00000040 !important',
+                            opacity: '1 !important',
+                        },
+                    }}
+                />
+                <IconButton
+                    size="small"
+                    onClick={toggleTheme}
+                    sx={{
+                        color: isDarkMode ? '#ffffff' : 'rgba(0,0,0,0.3)',
+                        transform: `scale(${isDarkMode ? 1.2 : 1})`,
+                        transition: 'all 0.3s ease',
+                    }}
+                >
+                    <BsMoonFill />
+                </IconButton>
+            </Paper>
+            {/* Logo and Header */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <Box
+                    component="img"
+                    src={GlocapLogo}
+                    alt="GloCap Logo"
+                    sx={{
+                        width: isMobile ? 100 : 150,
+                        height: 'auto',
+                        mb: 2,
+                        filter: isDarkMode
+                            ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5))'
+                            : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
+                    }}
+                />
+                <Typography variant="h4" component="h2" gutterBottom>
+                    Affordable Plans for Unlimited Captions
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                    Start free, go unlimited—simple pricing for everyone.
+                </Typography>
+            </Box>
+            <Grid container sx={{ p: '70px' }} spacing={4}>
+                {pricingPlans.map((plan) => (
+                    <Grid item key={plan.title} xs={12} sm={6} md={6}>
+                        <PricingCard plan={plan} />
+                    </Grid>
+                ))}
+            </Grid>
+            {/* </Layout> */}
         </ThemeProvider>
     );
 };

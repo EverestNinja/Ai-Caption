@@ -28,22 +28,16 @@ const getStorageKey = (type: 'captions' | 'flyers') => {
 };
 
 export const checkUsageLimit = (type: 'captions' | 'flyers'): boolean => {
-  const auth = getAuth();
-  
-  // If user is authenticated, no limits
-  if (auth.currentUser) {
-    return true;
-  }
 
   const storageKey = getStorageKey(type);
   const currentUsage = parseInt(localStorage.getItem(storageKey) || '0');
-  
+
   return currentUsage < LIMITS[type].daily;
 };
 
 export const incrementUsage = (type: 'captions' | 'flyers'): void => {
   const auth = getAuth();
-  
+
   // If user is authenticated, don't track usage
   if (auth.currentUser) {
     return;
@@ -56,7 +50,7 @@ export const incrementUsage = (type: 'captions' | 'flyers'): void => {
 
 export const getRemainingUsage = (type: 'captions' | 'flyers'): number => {
   const auth = getAuth();
-  
+
   // If user is authenticated, return infinite usage
   if (auth.currentUser) {
     return Infinity;
@@ -70,7 +64,7 @@ export const getRemainingUsage = (type: 'captions' | 'flyers'): number => {
 export const clearDailyUsage = (): void => {
   // Clear all usage data older than today
   const today = new Date().toISOString().split('T')[0];
-  
+
   Object.keys(localStorage).forEach(key => {
     if (key.startsWith('usage_') && !key.includes(today)) {
       localStorage.removeItem(key);

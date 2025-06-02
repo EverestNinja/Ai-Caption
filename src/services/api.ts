@@ -113,31 +113,31 @@ const imageToBase64 = async (file: File): Promise<string> => {
 const generatePrompt = (formState: FormState): string => {
   const { postType, businessType, customBusinessType, includeHashtags, includeEmojis, image, captionLength, ...fields } = formState;
   const businessTypeText = businessType === 'custom' ? customBusinessType : businessType;
-  
+
   // Define caption length instructions with more specific word count guidance
   const lengthMap = {
     1: 'very short and concise (around 1-2 sentences, maximum 30 words total)',
     2: 'moderate length (around 2-3 sentences, between 30-60 words total)',
     3: 'detailed and comprehensive (around 4-5 sentences, between 60-100 words total)'
   };
-  
+
   const lengthDescription = lengthMap[captionLength as keyof typeof lengthMap] || 'moderate length (around 2-3 sentences, between 30-60 words total)';
-  
+
   // Start with image instruction if image is provided
   let prompt = '';
   if (image) {
     prompt = `PRIORITY INSTRUCTION: The uploaded image is the most important element to focus on. Generate a caption that directly describes and relates to the visual elements in this specific image. `;
   }
-  
+
   // Add length and post type instructions
   prompt += `Create a ${lengthDescription} ${postType} social media caption for a ${businessTypeText} business. `;
-  
+
   if (image) {
     prompt += `Make sure the caption explicitly mentions key elements visible in the image. `;
   }
-  
+
   prompt += `IMPORTANT: The length constraint is a high priority requirement. `;
-  
+
   // Add specific instructions based on post type
   switch (postType) {
     case 'promotional':
@@ -197,15 +197,15 @@ const generatePrompt = (formState: FormState): string => {
   } else {
     prompt += 'DO NOT use any emojis in the caption. Make sure the caption is completely free of emojis. ';
   }
-  
+
   // Reiterate length constraint at the end
   prompt += `Remember to keep the caption ${lengthDescription}.`;
-  
+
   // Final reminder about image priority if image is present
   if (image) {
     prompt += ` The caption MUST directly reference what's visible in the uploaded image.`;
   }
-  
+
   return prompt;
 };
 
@@ -215,19 +215,19 @@ const makeApiRequest = async (requestBody: ApiRequest): Promise<ApiResponse> => 
   }
 
   let lastError: Error | null = null;
-  
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${API_KEY}`,
         },
         body: JSON.stringify(requestBody),
-    });
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new ApiError(
           errorData.error?.message || `API request failed with status ${response.status}`,
@@ -268,6 +268,7 @@ const validateFormState = (formState: FormState): void => {
   }
 
   if (formState.numberOfGenerations < 1 || formState.numberOfGenerations > 5) {
+    console.log('form state', formState)
     throw new Error('Number of generations must be between 1 and 5');
   }
 };
@@ -303,9 +304,9 @@ const generateHashtags = (businessType: string, postType: string): string[] => {
 
 export const generateCaptions = async (formState: FormState): Promise<GeneratedCaption[]> => {
   validateFormState(formState);
-  
+
   const captions: GeneratedCaption[] = [];
-  
+
   // Different temperature settings for each generation
   const temperatureSettings = {
     1: 0.7,  // Balanced and professional
@@ -338,16 +339,16 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
     const temperature = temperatureSettings[generationNumber as keyof typeof temperatureSettings];
     const promptStyle = promptStyles[generationNumber as keyof typeof promptStyles];
     const toneModifier = toneModifiers[generationNumber as keyof typeof toneModifiers];
-    
+
     // Modify the prompt with generation-specific style
     const modifiedPrompt = `${generatePrompt(formState)}\n\n${promptStyle}\nTone should be ${toneModifier}.`;
-    
+
     // Inside generateCaptions function, update the system message to prioritize image
     // Create base messages array for the API request
-    const systemMessage = formState.image 
+    const systemMessage = formState.image
       ? "You are a visual-focused social media caption generator that prioritizes describing the uploaded image content. Focus primarily on what's visible in the image while following length requirements. Generate engaging, image-specific captions."
       : "You are a creative social media caption generator that strictly follows length requirements. Generate engaging, unique captions that match the exact length specifications provided by the user. Be concise and precise with your word count.";
-    
+
     const messages: ChatMessage[] = [
       {
         role: "system",
@@ -362,26 +363,26 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
     try {
       // Select the appropriate model based on whether an image is included
       const modelToUse = formState.image ? VISION_MODEL : DEFAULT_MODEL;
-      
+
       // If an image is provided, process it and include in the API request
       if (formState.image) {
         try {
           const imageBase64 = await imageToBase64(formState.image);
-          
+
           // Add image content to the messages
           messages.push({
             role: "user",
             content: [
               { type: "text", text: "Here is the image to reference for the caption:" },
               {
-                type: "image_url", 
+                type: "image_url",
                 image_url: {
                   url: `data:image/jpeg;base64,${imageBase64}`
                 }
               }
             ]
           });
-  } catch (error) {
+        } catch (error) {
           console.error("Error processing image:", error);
           throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -398,27 +399,27 @@ export const generateCaptions = async (formState: FormState): Promise<GeneratedC
       };
 
       const response = await makeApiRequest(requestBody);
-      
+
       if (response.choices && response.choices.length > 0) {
         let caption = response.choices[0].message.content.trim();
-        
+
         // Only add emojis if explicitly enabled
         if (formState.includeEmojis) {
           const emojiSet = getEmojiSet(formState.businessType);
           const randomEmojis = [...emojiSet]
             .sort(() => 0.5 - Math.random())
             .slice(0, Math.floor(Math.random() * 2) + 2);
-          
+
           // Add emojis at the beginning and end
           caption = `${randomEmojis.join(' ')} ${caption} ${randomEmojis.sort(() => 0.5 - Math.random()).join(' ')}`;
         }
-        
+
         // Only add hashtags if explicitly enabled
         if (formState.includeHashtags) {
           const hashtags = generateHashtags(formState.businessType, formState.postType);
           caption = `${caption}\n\n${hashtags.join(' ')}`;
         }
-        
+
         captions.push({
           id: generationNumber,
           text: caption

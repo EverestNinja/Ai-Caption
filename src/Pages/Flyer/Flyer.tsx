@@ -7,9 +7,10 @@ import { useTheme } from '../../context/ThemeContext';
 import { useStepContext } from '../../context/StepContext';
 import { generateFlyer, FlyerFormState, GeneratedFlyer, checkXaiApiHealth } from '../../services/flyerapi';
 import { checkUsageLimit, incrementUsage, getRemainingUsage, LIMITS } from '../../services/usageLimit';
-import { getAuth } from 'firebase/auth';
 import { clearDailyUsage } from '../../services/usageLimit';
 import themeColors from '../../utils/themeColors';
+import { useAuthStore } from '../../store/auth';
+import { getSubscriptionById } from '../../services/subscriptions';
 
 // Define transition constants
 const TRANSITION_TIMING = themeColors.transition.timing;
@@ -27,7 +28,26 @@ const Flyer = () => {
   const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState<number>(3);
-  const auth = getAuth();
+  const session = useAuthStore((state) => state.session);
+
+  const [subscription, setSubscription] = useState(null);
+  console.log('Subscription:', subscription);
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
 
   const [formState, setFormState] = useState<FlyerFormState>({
     description: '',
@@ -38,13 +58,13 @@ const Flyer = () => {
 
   useEffect(() => {
     setMounted(true);
-    
+
     // Check API health on component mount
     const checkApiHealth = async () => {
       try {
         console.log('Checking xAI API health...');
         const isHealthy = await checkXaiApiHealth();
-        
+
         if (isHealthy) {
           console.log('xAI API is healthy and connected');
           setApiStatus('success');
@@ -64,10 +84,10 @@ const Flyer = () => {
         setMounted(true);
       }
     };
-    
+
     // Don't wait for API check to complete before setting mounted
     setMounted(true);
-    
+
     // If we have a caption from the previous step, use it in the description
     if (caption) {
       setFormState(prev => ({
@@ -75,16 +95,16 @@ const Flyer = () => {
         description: caption
       }));
     }
-    
+
     // Run the API health check in the background
     checkApiHealth();
 
     // Update remaining usage count
     setRemainingUsage(getRemainingUsage('flyers'));
-    
+
     // Clear old usage data
     clearDailyUsage();
-  }, [caption, auth.currentUser]);
+  }, [caption, subscription?.status === 'active']);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormState(prev => ({
@@ -96,19 +116,19 @@ const Flyer = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const selectedFile = event.target.files[0];
-      
+
       // Check file size (limit to 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
         setError('Logo file size should not exceed 5MB');
         return;
       }
-      
+
       // Check file type
       if (!selectedFile.type.match('image.*')) {
         setError('Please select an image file');
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setFormState(prev => ({
@@ -134,10 +154,10 @@ const Flyer = () => {
     if (generatedFlyer) {
       localStorage.setItem('generatedFlyerUrl', generatedFlyer.imageUrl);
     }
-    
+
     // Navigate to the publish step first
     goToNextStep();
-    
+
     // Close the dialog after a longer delay to ensure navigation completes first
     setTimeout(() => {
       setIsPopupOpen(false);
@@ -145,45 +165,75 @@ const Flyer = () => {
   };
 
   const handleGenerate = async () => {
-    if (!checkUsageLimit('flyers')) {
-      setError('You have reached your daily limit for free flyers. Please login to generate unlimited flyers.');
-      return;
-    }
+    if (subscription?.status === 'active') {
 
-    if (!formState.description.trim()) {
-      setError('Please provide a description for your flyer');
-      return;
-    }
+      setIsGenerating(true);
+      setError('');
 
-    setIsGenerating(true);
-    setError('');
+      try {
+        console.log('Calling generateFlyer with:', formState);
+        const flyer = await generateFlyer(formState);
+        console.log('Generated flyer:', flyer);
+        setGeneratedFlyer(flyer);
+        setIsPopupOpen(true);
 
-    try {
-      console.log('Calling generateFlyer with:', formState);
-      const flyer = await generateFlyer(formState);
-      console.log('Generated flyer:', flyer);
-      setGeneratedFlyer(flyer);
-      setIsPopupOpen(true);
-      
-      // Increment usage after successful generation
-      incrementUsage('flyers');
-      setRemainingUsage(getRemainingUsage('flyers'));
-    } catch (err) {
-      console.error('Error in handleGenerate:', err);
-      if (err instanceof Error) {
-        setError(`Failed to generate flyer: ${err.message}`);
-      } else {
-        setError('An unexpected error occurred. Please try again.');
+        // Increment usage after successful generation
+        incrementUsage('flyers');
+        setRemainingUsage(getRemainingUsage('flyers'));
+      } catch (err) {
+        console.error('Error in handleGenerate:', err);
+        if (err instanceof Error) {
+          setError(`Failed to generate flyer: ${err.message}`);
+        } else {
+          setError('An unexpected error occurred. Please try again.');
+        }
+      } finally {
+        setIsGenerating(false);
       }
-    } finally {
-      setIsGenerating(false);
+
+    } else {
+      if (!checkUsageLimit('flyers')) {
+        setError('You have reached your daily limit for free flyers. Please upgrade your plan to generate unlimited flyers.');
+        return;
+      }
+
+      if (!formState.description.trim()) {
+        setError('Please provide a description for your flyer');
+        return;
+      }
+      setIsGenerating(true);
+      setError('');
+
+      try {
+        console.log('Calling generateFlyer with:', formState);
+        const flyer = await generateFlyer(formState);
+        console.log('Generated flyer:', flyer);
+        setGeneratedFlyer(flyer);
+        setIsPopupOpen(true);
+
+        // Increment usage after successful generation
+        incrementUsage('flyers');
+        setRemainingUsage(getRemainingUsage('flyers'));
+      } catch (err) {
+        console.error('Error in handleGenerate:', err);
+        if (err instanceof Error) {
+          setError(`Failed to generate flyer: ${err.message}`);
+        } else {
+          setError('An unexpected error occurred. Please try again.');
+        }
+      } finally {
+        setIsGenerating(false);
+      }
     }
+
+
+
   };
 
   // Function to download the generated flyer
   const handleDownloadFlyer = () => {
     if (!generatedFlyer) return;
-    
+
     // For base64 data URLs
     if (generatedFlyer.imageUrl.startsWith('data:')) {
       // Create a temporary link element
@@ -218,12 +268,12 @@ const Flyer = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <Box sx={{ 
+      <Box sx={{
         minHeight: '100vh',
-        background: isDarkMode 
+        background: isDarkMode
           ? themeColors.dark.background
           : themeColors.light.background,
-        color: isDarkMode 
+        color: isDarkMode
           ? themeColors.dark.textPrimary
           : themeColors.light.textPrimary,
         transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
@@ -238,7 +288,7 @@ const Flyer = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: isDarkMode 
+            background: isDarkMode
               ? themeColors.dark.overlay
               : themeColors.light.overlay,
             zIndex: 0,
@@ -247,20 +297,20 @@ const Flyer = () => {
 
         {/* API Status Alert */}
         {apiStatus === 'loading' && (
-          <Box sx={{ 
-            position: 'fixed', 
+          <Box sx={{
+            position: 'fixed',
             top: '10px',
-            left: '50%', 
+            left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1100,
             width: { xs: '90%', sm: '60%', md: '40%' },
             textAlign: 'center'
           }}>
-            <Alert 
-              severity="info" 
+            <Alert
+              severity="info"
               icon={<CircularProgress size={14} />}
-              sx={{ 
-                bgcolor: isDarkMode ? 'rgba(41, 98, 255, 0.1)' : 'rgba(41, 98, 255, 0.05)', 
+              sx={{
+                bgcolor: isDarkMode ? 'rgba(41, 98, 255, 0.1)' : 'rgba(41, 98, 255, 0.05)',
                 color: isDarkMode ? '#fff' : 'inherit',
                 '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#2962ff' },
                 py: 0.5,
@@ -275,19 +325,19 @@ const Flyer = () => {
         )}
 
         {apiStatus === 'error' && (
-          <Box sx={{ 
-            position: 'fixed', 
+          <Box sx={{
+            position: 'fixed',
             top: '10px',
-            left: '50%', 
+            left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1100,
             width: { xs: '90%', sm: '60%', md: '40%' },
             textAlign: 'center'
           }}>
-            <Alert 
+            <Alert
               severity="error"
-              sx={{ 
-                bgcolor: isDarkMode ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', 
+              sx={{
+                bgcolor: isDarkMode ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)',
                 color: isDarkMode ? '#fff' : 'inherit',
                 '& .MuiAlert-icon': { color: isDarkMode ? '#fff' : '#d32f2f' },
                 py: 0.5,
@@ -312,37 +362,37 @@ const Flyer = () => {
               zIndex: 1100,
               p: 1,
               borderRadius: 1.5,
-              background: isDarkMode 
-                ? auth.currentUser 
-                  ? 'rgba(0,200,83,0.1)' 
-                  : 'rgba(64,93,230,0.1)' 
-                : auth.currentUser
+              background: isDarkMode
+                ? subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.1)'
+                  : 'rgba(64,93,230,0.1)'
+                : subscription?.status === 'active'
                   ? 'rgba(0,200,83,0.05)'
                   : 'rgba(64,93,230,0.05)',
               backdropFilter: 'blur(10px)',
-              border: `1px solid ${isDarkMode 
-                ? auth.currentUser 
-                  ? 'rgba(0,200,83,0.2)' 
-                  : 'rgba(64,93,230,0.2)' 
-                : auth.currentUser
+              border: `1px solid ${isDarkMode
+                ? subscription?.status === 'active'
+                  ? 'rgba(0,200,83,0.2)'
+                  : 'rgba(64,93,230,0.2)'
+                : subscription?.status === 'active'
                   ? 'rgba(0,200,83,0.1)'
                   : 'rgba(64,93,230,0.1)'}`,
-              boxShadow: isDarkMode 
-                ? auth.currentUser
+              boxShadow: isDarkMode
+                ? subscription?.status === 'active'
                   ? '0 4px 12px rgba(0,200,83,0.2)'
                   : '0 4px 12px rgba(64,93,230,0.2)'
                 : '0 4px 10px rgba(0,0,0,0.08)',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <FaInfoCircle 
-                color={isDarkMode 
-                  ? auth.currentUser 
-                    ? '#00C853' 
-                    : '#A78BFA' 
-                  : auth.currentUser
+              <FaInfoCircle
+                color={isDarkMode
+                  ? subscription?.status === 'active'
                     ? '#00C853'
-                    : '#7F56D9'} 
+                    : '#A78BFA'
+                  : subscription?.status === 'active'
+                    ? '#00C853'
+                    : '#7F56D9'}
                 size={14}
               />
               <Typography
@@ -353,7 +403,8 @@ const Flyer = () => {
                   fontSize: '0.75rem'
                 }}
               >
-                {auth.currentUser ? 'Premium' : 'Daily Limit'}
+                {/* update it as subscription data */}
+                {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
               </Typography>
             </Box>
             <Typography
@@ -364,11 +415,11 @@ const Flyer = () => {
                 fontSize: '0.7rem'
               }}
             >
-              {auth.currentUser 
-                ? 'Unlimited flyers' 
+              {subscription?.status === 'active'
+                ? 'Unlimited flyers'
                 : `${remainingUsage}/${LIMITS.flyers.daily} remaining`}
             </Typography>
-            {!auth.currentUser && (
+            {!subscription?.status === 'active' && (
               <Button
                 variant="text"
                 size="small"
@@ -386,15 +437,15 @@ const Flyer = () => {
                   }
                 }}
               >
-              Login for unlimited
+                Subscribe for unlimited
               </Button>
             )}
           </Paper>
         </Container>
 
-        <Container 
+        <Container
           maxWidth="md"
-          sx={{ 
+          sx={{
             mb: 2,
             pt: { xs: 0, sm: 0.5 },
             px: { xs: 1, sm: 1.5 }
@@ -458,8 +509,8 @@ const Flyer = () => {
               backdropFilter: 'blur(10px)',
               borderRadius: { xs: '8px', sm: '10px' },
               border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-              boxShadow: isDarkMode 
-                ? '0 6px 16px rgba(0, 0, 0, 0.2)' 
+              boxShadow: isDarkMode
+                ? '0 6px 16px rgba(0, 0, 0, 0.2)'
                 : '0 6px 16px rgba(0, 0, 0, 0.05)',
               transition: `${TRANSITION_PROPERTIES} ${TRANSITION_TIMING}`,
             }}
@@ -504,7 +555,7 @@ const Flyer = () => {
                 </Paper>
               </Box>
             )}
-            
+
             <Typography
               variant="h6"
               sx={{
@@ -520,9 +571,9 @@ const Flyer = () => {
 
             {/* Description Box */}
             <Box sx={{ mb: 2 }}>
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
+              <Typography
+                variant="subtitle1"
+                sx={{
                   mb: 0.5,
                   color: isDarkMode ? '#fff' : '#000',
                   display: 'flex',
@@ -533,9 +584,9 @@ const Flyer = () => {
                 }}
               >
                 Description
-                <IconButton 
-                  size="small" 
-                  sx={{ 
+                <IconButton
+                  size="small"
+                  sx={{
                     color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
                     padding: '2px',
                     ml: 0.25
@@ -574,10 +625,10 @@ const Flyer = () => {
                   },
                 }}
               />
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'block', 
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
                   mt: 0.5,
                   color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
                   fontSize: '0.65rem',
@@ -589,25 +640,25 @@ const Flyer = () => {
             </Box>
 
             {/* New Side-by-Side Layout - further optimized */}
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
-              gap: { xs: 1.5, sm: 1 }, 
-              mb: 2, 
+              gap: { xs: 1.5, sm: 1 },
+              mb: 2,
               alignItems: { sm: 'stretch' },
               mx: { xs: 0, sm: 0.5 },
             }}>
               {/* Left side: Logo Upload - more compact */}
-              <Box sx={{ 
+              <Box sx={{
                 flex: { xs: '1', sm: '0 0 120px' },
                 mb: { xs: 1, sm: 0 },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center'
               }}>
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
+                <Typography
+                  variant="subtitle1"
+                  sx={{
                     mb: 0.5,
                     color: isDarkMode ? '#fff' : '#000',
                     fontSize: '0.75rem',
@@ -617,17 +668,17 @@ const Flyer = () => {
                 >
                   Company Logo
                 </Typography>
-                
+
                 {/* Logo upload container - fixed square */}
-                <Box sx={{ 
+                <Box sx={{
                   height: 'auto',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center'
                 }}>
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       border: `1px dashed ${isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}`,
                       borderRadius: '6px',
                       p: 0.5,
@@ -724,14 +775,14 @@ const Flyer = () => {
                       </>
                     )}
                   </Box>
-                  
+
                   {/* Logo Position Dropdown - simplified */}
                   {formState.logoPreview && (
-                    <FormControl 
-                      fullWidth 
-                      variant="outlined" 
+                    <FormControl
+                      fullWidth
+                      variant="outlined"
                       size="small"
-                      sx={{ 
+                      sx={{
                         mt: 1,
                         '& .MuiInputBase-root': {
                           color: isDarkMode ? '#fff' : '#000',
@@ -756,9 +807,9 @@ const Flyer = () => {
                         }
                       }}
                     >
-                      <InputLabel 
+                      <InputLabel
                         id="logo-position-label"
-                        sx={{ 
+                        sx={{
                           color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                           fontSize: '0.7rem',
                         }}
@@ -803,7 +854,7 @@ const Flyer = () => {
               </Box>
 
               {/* Right side: Tips Section - improved design with fixed height */}
-              <Box sx={{ 
+              <Box sx={{
                 flex: '1',
                 maxWidth: { xs: '100%', sm: 'calc(100% - 125px)' }
               }}>
@@ -811,16 +862,16 @@ const Flyer = () => {
                   sx={{
                     p: { xs: 1.25, sm: 1.5 },
                     borderRadius: '6px',
-                    backgroundColor: isDarkMode 
-                      ? 'rgba(131, 58, 180, 0.1)' 
+                    backgroundColor: isDarkMode
+                      ? 'rgba(131, 58, 180, 0.1)'
                       : 'rgba(131, 58, 180, 0.05)',
                     border: `1px solid ${isDarkMode ? 'rgba(131, 58, 180, 0.2)' : 'rgba(131, 58, 180, 0.1)'}`,
                     height: { xs: 'auto', sm: '120px' },
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    boxShadow: isDarkMode 
-                      ? 'inset 0 1px 1px rgba(255,255,255,0.05)' 
+                    boxShadow: isDarkMode
+                      ? 'inset 0 1px 1px rgba(255,255,255,0.05)'
                       : 'inset 0 1px 1px rgba(255,255,255,0.7)',
                     overflow: 'hidden',
                   }}
@@ -837,9 +888,9 @@ const Flyer = () => {
                       gap: 0.5
                     }}
                   >
-                    <span style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
                       justifyContent: 'center',
                       width: '14px',
                       height: '14px',
@@ -899,8 +950,8 @@ const Flyer = () => {
             </Box>
 
             {/* Generate Button - refined */}
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               justifyContent: 'center',
               mt: 0.5
             }}>
@@ -908,8 +959,8 @@ const Flyer = () => {
                 variant="contained"
                 disabled={isGenerating || !formState.description.trim()}
                 onClick={handleGenerate}
-                startIcon={isGenerating ? 
-                  <CircularProgress size={14} color="inherit" /> : 
+                startIcon={isGenerating ?
+                  <CircularProgress size={14} color="inherit" /> :
                   <FaMagic size={14} />
                 }
                 sx={{
@@ -917,8 +968,8 @@ const Flyer = () => {
                   px: 3,
                   borderRadius: 20,
                   background: 'linear-gradient(45deg, #833AB4, #C13584, #E1306C)',
-                  boxShadow: isDarkMode 
-                    ? '0 3px 10px rgba(193,53,132,0.3)' 
+                  boxShadow: isDarkMode
+                    ? '0 3px 10px rgba(193,53,132,0.3)'
                     : '0 3px 10px rgba(0,0,0,0.1)',
                   transition: 'all 0.3s ease',
                   fontWeight: 600,
@@ -929,14 +980,14 @@ const Flyer = () => {
                   '&:hover': {
                     background: 'linear-gradient(45deg, #E1306C, #C13584, #833AB4)',
                     transform: 'translateY(-2px)',
-                    boxShadow: isDarkMode 
-                      ? '0 5px 15px rgba(193,53,132,0.4)' 
+                    boxShadow: isDarkMode
+                      ? '0 5px 15px rgba(193,53,132,0.4)'
                       : '0 5px 15px rgba(0,0,0,0.15)',
                   },
                   '&:active': {
                     transform: 'translateY(1px)',
-                    boxShadow: isDarkMode 
-                      ? '0 2px 5px rgba(193,53,132,0.4)' 
+                    boxShadow: isDarkMode
+                      ? '0 2px 5px rgba(193,53,132,0.4)'
                       : '0 2px 5px rgba(0,0,0,0.15)',
                     transition: 'all 0.1s ease',
                   },
@@ -953,8 +1004,8 @@ const Flyer = () => {
         </Container>
 
         {/* Flyer Popup Dialog - made more compact and simpler */}
-        <Dialog 
-          open={isPopupOpen && !!generatedFlyer} 
+        <Dialog
+          open={isPopupOpen && !!generatedFlyer}
           onClose={() => setIsPopupOpen(false)}
           maxWidth="sm"
           fullWidth
@@ -969,15 +1020,15 @@ const Flyer = () => {
             }
           }}
         >
-          <Box sx={{ 
+          <Box sx={{
             p: 1,
-            display: 'flex', 
+            display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
           }}>
-            <Typography variant="h6" sx={{ 
-              fontWeight: 600, 
+            <Typography variant="h6" sx={{
+              fontWeight: 600,
               color: isDarkMode ? '#fff' : '#000',
               fontSize: '0.9rem'
             }}>
@@ -987,9 +1038,9 @@ const Flyer = () => {
               <FaTimes size={12} color={isDarkMode ? '#fff' : '#000'} />
             </IconButton>
           </Box>
-          
-          <DialogContent sx={{ 
-            display: 'flex', 
+
+          <DialogContent sx={{
+            display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             p: 1.5,
@@ -1009,8 +1060,8 @@ const Flyer = () => {
               />
             )}
           </DialogContent>
-          
-          <DialogActions sx={{ 
+
+          <DialogActions sx={{
             p: 1.5,
             pt: 0.5,
             display: 'flex',
