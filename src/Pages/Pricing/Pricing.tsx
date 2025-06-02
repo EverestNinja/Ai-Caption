@@ -51,7 +51,7 @@ const pricingPlans: PricingPlan[] = [
     {
         title: 'One-Time',
         subheader: 'No Commitment',
-        price: '$10',
+        price: '$12',
         description: 'Unlimited access for 30 days',
         features: [
             'Unlimited for 30 days',
