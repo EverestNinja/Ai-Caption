@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, TextField, Button, IconButton, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Container, Typography, Paper, TextField, Button, IconButton, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaImage, FaMagic, FaUpload, FaTimesCircle, FaInfoCircle, FaDownload, FaTimes, FaShare } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,8 +34,10 @@ const Flyer = () => {
   const session = useAuthStore((state) => state.session);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
   console.log('Subscription:', subscription);
   useEffect(() => {
+    setLoadingData(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -44,8 +46,10 @@ const Flyer = () => {
           // Assuming you have a function to fetch subscription data
           const sub = await getSubscriptionById(session.user.id);
           setSubscription(sub);
+          setLoadingData(false);
         } catch (err) {
           console.error('Error fetching subscription:', err);
+          setLoadingData(false)
         }
       };
       fetchSubscription();
@@ -375,94 +379,117 @@ const Flyer = () => {
 
         {/* Usage Limit Indicator */}
         <Container maxWidth="md" sx={{ py: 0.5 }}>
-          <Paper
-            elevation={2}
-            sx={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 1100,
-              p: 1,
-              borderRadius: 1.5,
-              background: isDarkMode
-                ? subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.1)'
-                  : 'rgba(64,93,230,0.1)'
-                : subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.05)'
-                  : 'rgba(64,93,230,0.05)',
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${isDarkMode
-                ? subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.2)'
-                  : 'rgba(64,93,230,0.2)'
-                : subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.1)'
-                  : 'rgba(64,93,230,0.1)'}`,
-              boxShadow: isDarkMode
-                ? subscription?.status === 'active'
-                  ? '0 4px 12px rgba(0,200,83,0.2)'
-                  : '0 4px 12px rgba(64,93,230,0.2)'
-                : '0 4px 10px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <FaInfoCircle
-                color={isDarkMode
+          {loadingData ? (
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 1100,
+                p: 1.25,
+                width: 200,
+
+                borderRadius: 2,
+              }}
+            >
+              <Skeleton variant="rounded" height={50} />
+            </Box>
+          ) : (
+            <Paper
+              elevation={2}
+              sx={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 1100,
+                p: 1.25,
+                borderRadius: 2,
+                backgroundColor: isDarkMode
                   ? subscription?.status === 'active'
-                    ? '#00C853'
-                    : '#A78BFA'
+                    ? 'rgba(0,200,83,0.1)'
+                    : 'rgba(64,93,230,0.1)'
                   : subscription?.status === 'active'
-                    ? '#00C853'
-                    : '#7F56D9'}
-                size={14}
-              />
+                    ? 'rgba(0,200,83,0.05)'
+                    : 'rgba(64,93,230,0.05)',
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${isDarkMode
+                  ? subscription?.status === 'active'
+                    ? 'rgba(0,200,83,0.2)'
+                    : 'rgba(64,93,230,0.2)'
+                  : subscription?.status === 'active'
+                    ? 'rgba(0,200,83,0.1)'
+                    : 'rgba(64,93,230,0.1)'
+                  }`,
+                boxShadow: isDarkMode
+                  ? subscription?.status === 'active'
+                    ? '0 4px 12px rgba(0,200,83,0.2)'
+                    : '0 4px 12px rgba(64,93,230,0.2)'
+                  : '0 4px 10px rgba(0,0,0,0.08)',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <FaInfoCircle
+                  color={
+                    isDarkMode
+                      ? subscription?.status === 'active'
+                        ? '#00C853'
+                        : '#A78BFA'
+                      : subscription?.status === 'active'
+                        ? '#00C853'
+                        : '#7F56D9'
+                  }
+                  size={16}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
+                </Typography>
+              </Box>
+
               <Typography
                 variant="body2"
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
-                  fontWeight: 600,
-                  fontSize: '0.75rem'
+                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                  mt: 0.5,
+                  fontSize: '0.7rem',
                 }}
               >
-                {/* update it as subscription data */}
-                {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
+                {subscription?.status === 'active'
+                  ? 'Unlimited flyers'
+                  : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
               </Typography>
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
-                mt: 0.25,
-                fontSize: '0.7rem'
-              }}
-            >
-              {subscription?.status === 'active'
-                ? 'Unlimited flyers'
-                : `${remainingUsage}/${LIMITS.flyers.daily} remaining`}
-            </Typography>
-            {!subscription?.status === 'active' && (
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => navigate('/login')}
-                sx={{
-                  mt: 0.25,
-                  color: isDarkMode ? '#A78BFA' : '#7F56D9',
-                  textTransform: 'none',
-                  fontSize: '0.65rem',
-                  fontWeight: 500,
-                  padding: '1px 4px',
-                  minWidth: 'auto',
-                  '&:hover': {
-                    background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
-                  }
-                }}
-              >
-                Subscribe for unlimited
-              </Button>
-            )}
-          </Paper>
+
+              {subscription?.status !== 'active' && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    mt: 0.75,
+                    color: isDarkMode ? '#A78BFA' : '#7F56D9',
+                    textTransform: 'none',
+                    fontSize: '0.65rem',
+                    fontWeight: 500,
+                    px: 0.5,
+                    minWidth: 'auto',
+                    '&:hover': {
+                      backgroundColor: isDarkMode
+                        ? 'rgba(167,139,250,0.1)'
+                        : 'rgba(127,86,217,0.1)',
+                    },
+                  }}
+                >
+                  Subscribe for unlimited
+                </Button>
+              )}
+            </Paper>
+          )}
         </Container>
 
         {/* modal */}

@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import {
   Container, Box, Paper, useMediaQuery,
-  Snackbar, Alert, Typography, Fade, Divider
+  Snackbar, Alert, Typography, Fade, Divider,
+  Button,
+  Skeleton,
 } from "@mui/material";
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -88,10 +90,11 @@ const Generation = () => {
   const [remainingUsage, setRemainingUsage] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-
+  const [loadingData, setLoadingData] = useState(false);
   const [subscription, setSubscription] = useState(null);
   console.log('Subscription:', subscription);
   useEffect(() => {
+    setLoadingData(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -104,8 +107,10 @@ const Generation = () => {
 
           // Clear old usage data
           clearDailyUsage();
+          setLoadingData(false);
         } catch (err) {
           console.error('Error fetching subscription:', err);
+          setLoadingData(false);
         }
       };
       fetchSubscription();
@@ -435,96 +440,121 @@ const Generation = () => {
       >
         <BackButton />
 
+        {/* Usage limit indicator */}
         <Container maxWidth="md" sx={{ py: 0.5 }}>
-          <Paper
-            elevation={2}
-            sx={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 1100,
-              p: 1,
-              borderRadius: 1.5,
-              background: isDarkMode
-                ? subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.1)'
-                  : 'rgba(64,93,230,0.1)'
-                : subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.05)'
-                  : 'rgba(64,93,230,0.05)',
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${isDarkMode
-                ? subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.2)'
-                  : 'rgba(64,93,230,0.2)'
-                : subscription?.status === 'active'
-                  ? 'rgba(0,200,83,0.1)'
-                  : 'rgba(64,93,230,0.1)'}`,
-              boxShadow: isDarkMode
-                ? subscription?.status === 'active'
-                  ? '0 4px 12px rgba(0,200,83,0.2)'
-                  : '0 4px 12px rgba(64,93,230,0.2)'
-                : '0 4px 10px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <FaInfoCircle
-                color={isDarkMode
+          {loadingData ? (
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 1100,
+                p: 1.25,
+                width: 200,
+
+                borderRadius: 2,
+              }}
+            >
+              <Skeleton variant="rounded" height={50} />
+            </Box>
+          ) : (
+            <Paper
+              elevation={2}
+              sx={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 1100,
+                p: 1.25,
+                borderRadius: 2,
+                backgroundColor: isDarkMode
                   ? subscription?.status === 'active'
-                    ? '#00C853'
-                    : '#A78BFA'
+                    ? 'rgba(0,200,83,0.1)'
+                    : 'rgba(64,93,230,0.1)'
                   : subscription?.status === 'active'
-                    ? '#00C853'
-                    : '#7F56D9'}
-                size={14}
-              />
+                    ? 'rgba(0,200,83,0.05)'
+                    : 'rgba(64,93,230,0.05)',
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${isDarkMode
+                  ? subscription?.status === 'active'
+                    ? 'rgba(0,200,83,0.2)'
+                    : 'rgba(64,93,230,0.2)'
+                  : subscription?.status === 'active'
+                    ? 'rgba(0,200,83,0.1)'
+                    : 'rgba(64,93,230,0.1)'
+                  }`,
+                boxShadow: isDarkMode
+                  ? subscription?.status === 'active'
+                    ? '0 4px 12px rgba(0,200,83,0.2)'
+                    : '0 4px 12px rgba(64,93,230,0.2)'
+                  : '0 4px 10px rgba(0,0,0,0.08)',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <FaInfoCircle
+                  color={
+                    isDarkMode
+                      ? subscription?.status === 'active'
+                        ? '#00C853'
+                        : '#A78BFA'
+                      : subscription?.status === 'active'
+                        ? '#00C853'
+                        : '#7F56D9'
+                  }
+                  size={16}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
+                </Typography>
+              </Box>
+
               <Typography
                 variant="body2"
                 sx={{
-                  color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#344054',
-                  fontWeight: 600,
-                  fontSize: '0.75rem'
+                  color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
+                  mt: 0.5,
+                  fontSize: '0.7rem',
                 }}
               >
-                {/* update it as subscription data */}
-                {subscription?.status === 'active' ? 'Premium' : 'Daily Limit'}
+                {subscription?.status === 'active'
+                  ? 'Unlimited flyers'
+                  : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
               </Typography>
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#667085',
-                mt: 0.25,
-                fontSize: '0.7rem'
-              }}
-            >
-              {subscription?.status === 'active'
-                ? 'Unlimited flyers'
-                : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
-            </Typography>
-            {!subscription?.status === 'active' && (
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => navigate('/login')}
-                sx={{
-                  mt: 0.25,
-                  color: isDarkMode ? '#A78BFA' : '#7F56D9',
-                  textTransform: 'none',
-                  fontSize: '0.65rem',
-                  fontWeight: 500,
-                  padding: '1px 4px',
-                  minWidth: 'auto',
-                  '&:hover': {
-                    background: isDarkMode ? 'rgba(167,139,250,0.1)' : 'rgba(127,86,217,0.1)',
-                  }
-                }}
-              >
-                Subscribe for unlimited
-              </Button>
-            )}
-          </Paper>
+
+              {subscription?.status !== 'active' && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    mt: 0.75,
+                    color: isDarkMode ? '#A78BFA' : '#7F56D9',
+                    textTransform: 'none',
+                    fontSize: '0.65rem',
+                    fontWeight: 500,
+                    px: 0.5,
+                    minWidth: 'auto',
+                    '&:hover': {
+                      backgroundColor: isDarkMode
+                        ? 'rgba(167,139,250,0.1)'
+                        : 'rgba(127,86,217,0.1)',
+                    },
+                  }}
+                >
+                  Subscribe for unlimited
+                </Button>
+              )}
+            </Paper>
+          )}
         </Container>
+
 
         {/* modal */}
         <UpgradeToProModal
@@ -651,6 +681,7 @@ const Generation = () => {
               <SimpleMode
                 formState={formState}
                 handleChange={handleChange}
+
                 handleGenerate={handleGenerate}
                 isDarkMode={isDarkMode}
                 isGenerating={isGenerating}

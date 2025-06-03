@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { Box, Button, Container, Typography, Paper, useMediaQuery } from '@mui/material';
+import { Box, Button, Container, Typography, Paper, useMediaQuery, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,10 +35,12 @@ const Landing = () => {
   const [mounted, setMounted] = useState(false);
   const isThemeChanging = false;
   const session = useAuthStore((state) => state.session);
+  const [loading, setLoading] = useState(false);
 
   const [subscription, setSubscription] = useState(null);
   console.log('Subscription:', subscription);
   useEffect(() => {
+    setLoading(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -47,9 +49,10 @@ const Landing = () => {
           // Assuming you have a function to fetch subscription data
           const sub = await getSubscriptionById(session.user.id);
           setSubscription(sub);
-
+          setLoading(false);
         } catch (err) {
           console.error('Error fetching subscription:', err);
+          setLoading(false);
         }
       };
       fetchSubscription();
@@ -338,6 +341,7 @@ const Landing = () => {
             >
               <Button
                 variant="contained"
+                disabled={loading}
                 size={isMobile ? "medium" : "large"}
                 onClick={() => navigate('/generate')}
                 sx={{
@@ -379,7 +383,14 @@ const Landing = () => {
               >
 
                 {
-                  subscription?.status === 'active' ? "Generate now" : " Get Started Free"
+                  loading ? <>
+                    <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                  </> :
+                    <>
+                      {
+                        subscription?.status === 'active' ? "Generate now" : " Get Started Free"
+                      }
+                    </>
                 }
               </Button>
             </motion.div>

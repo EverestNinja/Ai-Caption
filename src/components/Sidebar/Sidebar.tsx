@@ -14,7 +14,7 @@ import { useAuthStore } from '../../store/auth';
 import { supabase } from '../../lib/supabase';
 import { getSubscriptionById } from '../../services/subscriptions';
 import { API_URL } from '../../config/const';
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 
 type SidebarLinkProps = {
   to: string;
@@ -86,8 +86,10 @@ const Sidebar = () => {
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   const [subscription, setSubscription] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
   console.log('Subscription:', subscription);
   useEffect(() => {
+    setLoadingData(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -96,14 +98,15 @@ const Sidebar = () => {
           // Assuming you have a function to fetch subscription data
           const sub = await getSubscriptionById(session.user.id);
           setSubscription(sub);
-
+          setLoadingData(false);
         } catch (err) {
+          setLoadingData(false);
           console.error('Error fetching subscription:', err);
         }
       };
       fetchSubscription();
     }
-  }, [session]);
+  }, [session, setLoadingData]);
 
   // Define sidebar navigation links
   const generalLinks: SidebarLinkProps[] = [
@@ -311,6 +314,7 @@ const Sidebar = () => {
                 <Button
                   variant="contained"
                   fullWidth
+                  disabled={loadingData || loading}
                   sx={{
                     mt: 2,
                     py: 1.5,
@@ -370,13 +374,18 @@ const Sidebar = () => {
                     }
                   }} className="upgrade-button" >
                   {
-                    subscription?.status === 'active' ? (
-                      <span>{
-                        loading ? 'Processing...' : 'Manage plan'
-                      }</span>
-                    ) : (
-                      <span>Upgrade plan</span>
-                    )
+                    loadingData ? <>
+                      <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                    </> : <>
+                      {
+                        subscription?.status === 'active' ? (
+                          <span>{
+                            loading ? 'Processing...' : 'Manage plan'
+                          }</span>
+                        ) : (
+                          <span>Upgrade plan</span>
+                        )
+                      }</>
                   }
                 </Button>
               </div>
@@ -390,7 +399,7 @@ const Sidebar = () => {
                     src={
                       // Supabase user object might have user.user_metadata.avatar_url, etc.
                       (currentUser.user_metadata?.avatar_url as string) ||
-                      'https://randomuser.me/api/portraits/men/32.jpg'
+                      'https://emedia1.nhs.wales/HEIW2/cache/file/F4C33EF0-69EE-4445-94018B01ADCF6FD4.png'
                     }
                     alt={(currentUser.user_metadata?.full_name as string) || 'User'}
                     className="user-avatar"

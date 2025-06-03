@@ -325,7 +325,7 @@ const MobileNav: React.FC = () => {
                       src={
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (currentUser.user_metadata as any)?.avatar_url ||
-                        'https://randomuser.me/api/portraits/men/32.jpg'
+                        'https://emedia1.nhs.wales/HEIW2/cache/file/F4C33EF0-69EE-4445-94018B01ADCF6FD4.png'
                       }
                       alt={
 

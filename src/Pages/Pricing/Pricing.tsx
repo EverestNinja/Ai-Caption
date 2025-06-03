@@ -20,6 +20,7 @@ import {
     Snackbar,
     Alert,
     Fade,
+    CircularProgress,
 } from '@mui/material';
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
 import GlocapLogo from '../../assets/Glocap.png';
@@ -93,11 +94,13 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
     const buttonText = session ? 'Subscribe' : plan.buttonText;
 
     const [subscription, setSubscription] = useState(null);
+    const [loadingData, setLoadingData] = useState(false);
     const { isDarkMode } = useTheme();
 
     const [error, setError] = useState('');
     console.log('Subscription:', subscription);
     useEffect(() => {
+        setLoadingData(true);
         if (session?.user) {
 
             // Fetch subscription data if user is logged in
@@ -106,8 +109,9 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                     // Assuming you have a function to fetch subscription data
                     const sub = await getSubscriptionById(session.user.id);
                     setSubscription(sub);
-
+                    setLoadingData(false)
                 } catch (err) {
+                    setLoadingData(false);
                     console.error('Error fetching subscription:', err);
                 }
             };
@@ -182,6 +186,7 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
             </Snackbar>
             <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                 <Button
+                    disabled={loadingData || loading}
                     onClick={() => {
                         if (subscription?.status === 'active') {
                             setError('You already have an active subscription.');
@@ -245,7 +250,12 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                     }}
                 >
                     {
-                        loading ? 'Processing...' : buttonText
+                        loadingData ? <>
+                            <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                        </> : <>
+                            {
+                                loading ? 'Processing...' : buttonText
+                            }</>
                     }
                 </Button>
             </CardActions>
