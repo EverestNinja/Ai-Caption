@@ -104,7 +104,7 @@ const UpgradeToProModal: React.FC<UpgradeToProModalProps> = ({ open, onClose }) 
                             },
                         }}
                     >
-                        Upgrade to Pro
+                        Upgrade Now
                     </Button>
                 </Link>
             </DialogActions>
