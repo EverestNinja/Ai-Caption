@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -17,11 +17,16 @@ import {
     createTheme,
     ThemeProvider,
     useTheme as muiUseTheme,
+    Snackbar,
+    Alert,
+    Fade,
 } from '@mui/material';
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
 import GlocapLogo from '../../assets/Glocap.png';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/auth';
+import { getSubscriptionById } from '../../services/subscriptions';
+import { API_URL } from '../../config/const';
 
 interface PricingPlan {
     title: string;
@@ -32,6 +37,7 @@ interface PricingPlan {
     buttonText: string;
     buttonVariant?: 'contained' | 'outlined';
     bestValue?: boolean;
+    priceId?: string; // Optional, used for Stripe integration
 }
 
 const pricingPlans: PricingPlan[] = [
@@ -52,6 +58,7 @@ const pricingPlans: PricingPlan[] = [
     {
         title: 'One-Time',
         subheader: 'No Commitment',
+        priceId: import.meta.env.VITE_STRIPE_PRICE_ID_FIXED,
         price: '$12',
         description: 'Unlimited access for 30 days',
         features: [
@@ -66,6 +73,7 @@ const pricingPlans: PricingPlan[] = [
     {
         title: 'Monthly',
         subheader: 'Best Value',
+        priceId: import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY,
         price: '$10/mo',
         description: 'Unlimited generations and advanced features',
         features: [
@@ -83,6 +91,31 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
     const session = useAuthStore((state) => state.session);
     // If user is logged in, override button text with "Subscribe"
     const buttonText = session ? 'Subscribe' : plan.buttonText;
+
+    const [subscription, setSubscription] = useState(null);
+    const { isDarkMode } = useTheme();
+
+    const [error, setError] = useState('');
+    console.log('Subscription:', subscription);
+    useEffect(() => {
+        if (session?.user) {
+
+            // Fetch subscription data if user is logged in
+            const fetchSubscription = async () => {
+                try {
+                    // Assuming you have a function to fetch subscription data
+                    const sub = await getSubscriptionById(session.user.id);
+                    setSubscription(sub);
+
+                } catch (err) {
+                    console.error('Error fetching subscription:', err);
+                }
+            };
+            fetchSubscription();
+        }
+    }, [session]);
+
+    const [loading, setLoading] = useState(false);
 
     return (
         <Card
@@ -122,8 +155,74 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                     ))}
                 </Box>
             </CardContent>
+            {/* Error messages */}
+            <Snackbar
+                open={!!error}
+                autoHideDuration={6000}
+                onClose={() => setError('')}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                TransitionComponent={Fade}
+            >
+                <Alert
+                    onClose={() => setError('')}
+                    severity="error"
+                    elevation={6}
+                    sx={{
+                        width: '100%',
+                        borderRadius: '12px',
+                        bgcolor: isDarkMode ? 'rgba(40, 40, 50, 0.9)' : undefined,
+                        color: isDarkMode ? '#fff' : undefined,
+                        '& .MuiAlert-icon': {
+                            color: isDarkMode ? '#ff5252' : undefined
+                        }
+                    }}
+                >
+                    {error}
+                </Alert>
+            </Snackbar>
             <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                 <Button
+                    onClick={() => {
+                        if (subscription?.status === 'active') {
+                            setError('You already have an active subscription.');
+                        } else {
+                            //call checkout session api
+                            setLoading(true);
+                            fetch(`${API_URL}/create-checkout-session`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    priceId: plan.priceId,
+                                    userId: session?.user?.id, // Pass user ID if available
+                                    email: session?.user?.email, // Pass user email if available
+                                    fixed: plan.priceId === import.meta.env.VITE_STRIPE_PRICE_ID_FIXED ? true : false, // Check if it's a fixed price
+                                }),
+                            })
+                                .then((response) => {
+                                    if (!response.ok) {
+                                        throw new Error('Network response was not ok');
+                                    }
+                                    return response.json();
+                                }
+                                )
+                                .then((data) => {
+                                    if (data.error) {
+                                        setError(data.error);
+                                    } else {
+                                        // Redirect to Stripe Checkout
+                                        window.location.href = data.url;
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error('Error during checkout:', error);
+                                    setLoading(false);
+                                    setError('An error occurred while processing your request. Please try again later.');
+                                }
+                                );
+                        }
+                    }}
                     fullWidth
                     variant={plan.buttonVariant || 'outlined'}
                     sx={{
@@ -145,7 +244,9 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                         },
                     }}
                 >
-                    {buttonText}
+                    {
+                        loading ? 'Processing...' : buttonText
+                    }
                 </Button>
             </CardActions>
         </Card>

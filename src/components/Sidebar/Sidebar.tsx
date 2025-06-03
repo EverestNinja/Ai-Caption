@@ -12,6 +12,9 @@ import { applyTheme } from '../../utils/themeColors';
 import { useSidebar } from '../../context/SidebarContext';
 import { useAuthStore } from '../../store/auth';
 import { supabase } from '../../lib/supabase';
+import { getSubscriptionById } from '../../services/subscriptions';
+import { API_URL } from '../../config/const';
+import { Button } from '@mui/material';
 
 type SidebarLinkProps = {
   to: string;
@@ -81,6 +84,26 @@ const Sidebar = () => {
   const navRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const checkboxRef = useRef<HTMLInputElement>(null);
+
+  const [subscription, setSubscription] = useState(null);
+  console.log('Subscription:', subscription);
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
 
   // Define sidebar navigation links
   const generalLinks: SidebarLinkProps[] = [
@@ -198,6 +221,8 @@ const Sidebar = () => {
     toggleSidebar();
   };
 
+  const [loading, setLoading] = useState(false);
+
   return (
     <aside
       className={`vertical-sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}
@@ -280,48 +305,124 @@ const Sidebar = () => {
 
           {/* User Profile Section */}
           {currentUser ? (
-            <div
-              className="user-profile"
-              onClick={toggleLogoutPopup}
-              data-tooltip="User Profile"
-            >
-              <div className="user-avatar-container">
-                <img
-                  src={
-                    // Supabase user object might have user.user_metadata.avatar_url, etc.
-                    (currentUser.user_metadata?.avatar_url as string) ||
-                    'https://randomuser.me/api/portraits/men/32.jpg'
-                  }
-                  alt={(currentUser.user_metadata?.full_name as string) || 'User'}
-                  className="user-avatar"
-                />
-              </div>
-              <div className="user-info">
-                <p className="user-name">
-                  {(currentUser.user_metadata?.full_name as string) || 'User'}
-                </p>
-                <p className="user-email">{(currentUser.email as string) || 'user@example.com'}</p>
-              </div>
+            <>
+              <div>
+                {/* upgrade button */}
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{
+                    mt: 2,
+                    py: 1.5,
+                    fontSize: '1rem',
+                    borderRadius: 3,
+                    background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: '-100%',
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                      animation: 'shine 3s infinite',
+                    },
+                    '@keyframes shine': {
+                      '0%': { left: '-100%' },
+                      '20%': { left: '100%' },
+                      '100%': { left: '100%' },
+                    },
+                  }}
 
-              {/* Logout Popup */}
-              {showLogoutPopup && (
-                <div className="logout-popup">
-                  <button className="logout-button" onClick={handleLogout}>
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"
-                      />
-                      <path
-                        fillRule="evenodd"
-                        d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"
-                      />
-                    </svg>
-                    <span>Logout</span>
-                  </button>
+                  onClick={() => {
+                    if (subscription?.status === 'active') {
+                      // call api for billing portal
+                      setLoading(true);
+                      fetch(`${API_URL}/create-billing-portal`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: currentUser.email })
+                      })
+                        .then(response => {
+                          if (response.ok) {
+                            return response.json();
+                          }
+                          throw new Error('Failed to create billing portal');
+                        })
+                        .then(data => {
+                          if (data.url) {
+                            window.location.href = data.url;
+                          }
+                        })
+                        .catch(error => {
+                          setLoading(false);
+                          console.error('Error:', error);
+                        });
+                    } else {
+                      setLoading(true);
+                      navigate('/pricing');
+                    }
+                  }} className="upgrade-button" >
+                  {
+                    subscription?.status === 'active' ? (
+                      <span>{
+                        loading ? 'Processing...' : 'Manage plan'
+                      }</span>
+                    ) : (
+                      <span>Upgrade plan</span>
+                    )
+                  }
+                </Button>
+              </div>
+              <div
+                className="user-profile"
+                onClick={toggleLogoutPopup}
+                data-tooltip="User Profile"
+              >
+                <div className="user-avatar-container">
+                  <img
+                    src={
+                      // Supabase user object might have user.user_metadata.avatar_url, etc.
+                      (currentUser.user_metadata?.avatar_url as string) ||
+                      'https://randomuser.me/api/portraits/men/32.jpg'
+                    }
+                    alt={(currentUser.user_metadata?.full_name as string) || 'User'}
+                    className="user-avatar"
+                  />
                 </div>
-              )}
-            </div>
+                <div className="user-info">
+                  <p className="user-name">
+                    {(currentUser.user_metadata?.full_name as string) || 'User'}
+                  </p>
+                  <p className="user-email">{(currentUser.email as string) || 'user@example.com'}</p>
+                </div>
+
+                {/* Logout Popup */}
+                {showLogoutPopup && (
+                  <div className="logout-popup">
+                    <button className="logout-button" onClick={handleLogout}>
+                      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"
+                        />
+                        <path
+                          fillRule="evenodd"
+                          d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"
+                        />
+                      </svg>
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <div className="login-button-container" data-tooltip="Login" onClick={handleLogin}>
               <div className="login-icon">

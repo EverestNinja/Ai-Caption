@@ -10,6 +10,7 @@ import Terms from './Pages/Terms/Terms';
 import AuthPage from './components/AuthPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import PricingSection from './Pages/Pricing/Pricing';
+import PaymentSuccess from './components/PaymentSuccess';
 
 interface SessionProps {
   session: unknown;
@@ -47,6 +48,9 @@ const Routes = ({ session }: SessionProps) => {
       {/* favorite page not available */}
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/pricing" element={<PricingSection />} />
+      <Route path="/success"
+        element={session ? <PaymentSuccess /> : <Navigate to="/login" replace />}
+      />
     </RouterRoutes>
   );
 };
