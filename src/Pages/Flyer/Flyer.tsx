@@ -11,6 +11,7 @@ import { clearDailyUsage } from '../../services/usageLimit';
 import themeColors from '../../utils/themeColors';
 import { useAuthStore } from '../../store/auth';
 import { getSubscriptionById } from '../../services/subscriptions';
+import UpgradeToProModal from '../../components/UpgradeToProModal';
 
 // Define transition constants
 const TRANSITION_TIMING = themeColors.transition.timing;
@@ -29,7 +30,7 @@ const Flyer = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState<number>(3);
   const session = useAuthStore((state) => state.session);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
   console.log('Subscription:', subscription);
   useEffect(() => {
@@ -99,12 +100,30 @@ const Flyer = () => {
     // Run the API health check in the background
     checkApiHealth();
 
-    // Update remaining usage count
-    setRemainingUsage(getRemainingUsage('flyers'));
 
-    // Clear old usage data
-    clearDailyUsage();
-  }, [caption, subscription?.status === 'active']);
+
+  }, [caption]);
+
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+          setRemainingUsage(await getRemainingUsage('flyers'));
+
+          // Clear old usage data
+          clearDailyUsage();
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormState(prev => ({
@@ -178,8 +197,8 @@ const Flyer = () => {
         setIsPopupOpen(true);
 
         // Increment usage after successful generation
-        incrementUsage('flyers');
-        setRemainingUsage(getRemainingUsage('flyers'));
+        await incrementUsage('flyers');
+        setRemainingUsage(await getRemainingUsage('flyers'));
       } catch (err) {
         console.error('Error in handleGenerate:', err);
         if (err instanceof Error) {
@@ -192,8 +211,9 @@ const Flyer = () => {
       }
 
     } else {
-      if (!checkUsageLimit('flyers')) {
+      if (!await checkUsageLimit('flyers')) {
         setError('You have reached your daily limit for free flyers. Please upgrade your plan to generate unlimited flyers.');
+        setIsModalOpen(true);
         return;
       }
 
@@ -212,8 +232,8 @@ const Flyer = () => {
         setIsPopupOpen(true);
 
         // Increment usage after successful generation
-        incrementUsage('flyers');
-        setRemainingUsage(getRemainingUsage('flyers'));
+        await incrementUsage('flyers');
+        setRemainingUsage(await getRemainingUsage('flyers'));
       } catch (err) {
         console.error('Error in handleGenerate:', err);
         if (err instanceof Error) {
@@ -442,6 +462,12 @@ const Flyer = () => {
             )}
           </Paper>
         </Container>
+
+        {/* modal */}
+        <UpgradeToProModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
 
         <Container
           maxWidth="md"

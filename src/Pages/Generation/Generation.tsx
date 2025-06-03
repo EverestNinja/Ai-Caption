@@ -48,6 +48,7 @@ import { useAuthStore } from '../../store/auth';
 import { FaInfoCircle } from 'react-icons/fa';
 import { getSubscriptionById } from '../../services/subscriptions';
 import { checkUsageLimit, clearDailyUsage, getRemainingUsage, incrementUsage, LIMITS } from '../../services/usageLimit';
+import UpgradeToProModal from '../../components/UpgradeToProModal';
 
 /**
  * Main Generation component that coordinates the caption generation UI
@@ -81,7 +82,8 @@ const Generation = () => {
   const [snackbarMessage] = useState<string>('');
 
   const session = useAuthStore((state) => state.session);
-  const [remainingUsage, setRemainingUsage] = useState<number>(3);
+  const [remainingUsage, setRemainingUsage] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
   const [subscription, setSubscription] = useState(null);
@@ -95,7 +97,7 @@ const Generation = () => {
           // Assuming you have a function to fetch subscription data
           const sub = await getSubscriptionById(session.user.id);
           setSubscription(sub);
-          setRemainingUsage(getRemainingUsage('captions'));
+          setRemainingUsage(await getRemainingUsage('captions'));
 
           // Clear old usage data
           clearDailyUsage();
@@ -211,8 +213,9 @@ const Generation = () => {
 
       await generateWithFormData(formState);
     } else {
-      if (!checkUsageLimit('captions')) {
+      if (!await checkUsageLimit('captions')) {
         setError('You have reached your daily limit for free flyers. Please upgrade your plan to generate unlimited captions.');
+        setIsModalOpen(true);
         return;
       }
 
@@ -263,8 +266,8 @@ const Generation = () => {
         setShowResultDialog(true);
         setCanRegenerate(true);
         // Increment usage after successful generation
-        incrementUsage('captions');
-        setRemainingUsage(getRemainingUsage('captions'));
+        await incrementUsage('captions');
+        setRemainingUsage(await getRemainingUsage('captions'));
       } else {
         setError('No captions were generated. Please try again.');
       }
@@ -292,8 +295,8 @@ const Generation = () => {
         setGeneratedCaptions(captions);
         setShowResultDialog(true);
         setCanRegenerate(true);
-        incrementUsage('captions');
-        setRemainingUsage(getRemainingUsage('captions'));
+        await incrementUsage('captions');
+        setRemainingUsage(await getRemainingUsage('captions'));
       } else {
         setError('No captions were generated. Please try again.');
       }
@@ -516,6 +519,12 @@ const Generation = () => {
             )}
           </Paper>
         </Container>
+
+        {/* modal */}
+        <UpgradeToProModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
 
         <Container
           maxWidth="md"
