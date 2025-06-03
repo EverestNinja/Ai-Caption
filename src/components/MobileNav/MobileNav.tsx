@@ -7,6 +7,9 @@ import glocapLogo from '../../assets/Glocap.png';
 import { useTheme } from '../../context/ThemeContext';
 import { supabase } from '../../lib/supabase'; // Make sure you have initialized Supabase client here
 import { User } from '@supabase/supabase-js';
+import { useAuthStore } from '../../store/auth';
+import { getSubscriptionById } from '../../services/subscriptions';
+import { API_URL } from '../../config/const';
 
 type MobileNavLinkProps = {
   to: string;
@@ -41,6 +44,8 @@ const MobileNav: React.FC = () => {
 
   // Replace Firebase-based auth state with Supabase
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const session = useAuthStore((state) => state.session);
+
   const navigate = useNavigate();
 
   // On mount, fetch current session & subscribe to auth changes
@@ -73,6 +78,26 @@ const MobileNav: React.FC = () => {
       }
     };
   }, []);
+
+  const [subscription, setSubscription] = useState(null);
+  console.log('Subscription from mobile:', subscription);
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -126,7 +151,7 @@ const MobileNav: React.FC = () => {
       setIsOpen(false);
     }
   };
-
+  const [loading, setLoading] = useState(false);
   return (
     <>
       <div className="mobile-nav">
@@ -233,6 +258,51 @@ const MobileNav: React.FC = () => {
           </nav>
 
           <div className="mobile-menu__footer">
+            {/* upgrade button */}
+            <button
+
+              style={{ backgroundColor: isDarkMode ? 'white' : 'black', color: isDarkMode ? '#fff' : '#000' }}
+              onClick={() => {
+                if (subscription?.status === 'active') {
+                  // call api for billing portal
+                  setLoading(true);
+                  fetch(`${API_URL}/create-billing-portal`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: currentUser.email })
+                  })
+                    .then(response => {
+                      if (response.ok) {
+                        return response.json();
+                      }
+                      throw new Error('Failed to create billing portal');
+                    })
+                    .then(data => {
+                      if (data.url) {
+                        window.location.href = data.url;
+                      }
+                    })
+                    .catch(error => {
+                      setLoading(false);
+                      console.error('Error:', error);
+                    });
+                } else {
+                  setLoading(true);
+                  navigate('/pricing');
+                }
+              }} className="upgrade-button" >
+              {
+                subscription?.status === 'active' ? (
+                  <span>{
+                    loading ? 'Processing...' : 'Manage plan'
+                  }</span>
+                ) : (
+                  <span>Upgrade plan</span>
+                )
+              }
+            </button>
             <div className="mobile-theme-toggle">
               <span className="theme-label">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
               <label className="theme-switch">
