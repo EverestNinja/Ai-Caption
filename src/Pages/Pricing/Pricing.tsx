@@ -116,6 +116,9 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                 }
             };
             fetchSubscription();
+        } else {
+            setLoadingData(false);
+            setSubscription(null);
         }
     }, [session]);
 
@@ -188,6 +191,11 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                 <Button
                     disabled={loadingData || loading}
                     onClick={() => {
+                        if (!session?.user) {
+                            setError('Please log in to subscribe.');
+                            window.location.href = '/login'; // Redirect to login page
+                            return;
+                        }
                         if (subscription?.status === 'active') {
                             setError('You already have an active subscription.');
                         } else {

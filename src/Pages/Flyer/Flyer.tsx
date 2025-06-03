@@ -53,6 +53,9 @@ const Flyer = () => {
         }
       };
       fetchSubscription();
+    } else {
+      setLoading(false);
+      setSubscription(null);
     }
   }, [session]);
 
@@ -111,6 +114,7 @@ const Flyer = () => {
   }, [caption]);
 
   useEffect(() => {
+    setLoadingData(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -123,11 +127,16 @@ const Flyer = () => {
 
           // Clear old usage data
           clearDailyUsage();
+          setLoadingData(false)
         } catch (err) {
           console.error('Error fetching subscription:', err);
+          setLoadingData(false)
         }
       };
       fetchSubscription();
+    } else {
+      setLoading(false);
+      setSubscription(null);
     }
   }, [session]);
 

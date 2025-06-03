@@ -10,6 +10,7 @@ import { User } from '@supabase/supabase-js';
 import { useAuthStore } from '../../store/auth';
 import { getSubscriptionById } from '../../services/subscriptions';
 import { API_URL } from '../../config/const';
+import { CircularProgress } from '@mui/material';
 
 type MobileNavLinkProps = {
   to: string;
@@ -81,7 +82,9 @@ const MobileNav: React.FC = () => {
 
   const [subscription, setSubscription] = useState(null);
   console.log('Subscription from mobile:', subscription);
+  const [loadingData, setLoadingData] = useState(false);
   useEffect(() => {
+    setLoadingData(true);
     if (session?.user) {
 
       // Fetch subscription data if user is logged in
@@ -90,12 +93,16 @@ const MobileNav: React.FC = () => {
           // Assuming you have a function to fetch subscription data
           const sub = await getSubscriptionById(session.user.id);
           setSubscription(sub);
-
+          setLoadingData(false);
         } catch (err) {
           console.error('Error fetching subscription:', err);
+          setLoadingData(false);
         }
       };
       fetchSubscription();
+    } else {
+      setLoadingData(false);
+      setSubscription(null);
     }
   }, [session]);
 
@@ -260,7 +267,7 @@ const MobileNav: React.FC = () => {
           <div className="mobile-menu__footer">
             {/* upgrade button */}
             <button
-
+              disabled={loading || loadingData}
               style={{ backgroundColor: isDarkMode ? 'white' : 'black', color: isDarkMode ? '#fff' : '#000' }}
               onClick={() => {
                 if (subscription?.status === 'active') {
@@ -294,13 +301,19 @@ const MobileNav: React.FC = () => {
                 }
               }} className="upgrade-button" >
               {
-                subscription?.status === 'active' ? (
-                  <span>{
-                    loading ? 'Processing...' : 'Manage plan'
-                  }</span>
-                ) : (
-                  <span>Upgrade plan</span>
-                )
+                loadingData ? <>
+                  <CircularProgress size={24} color="inherit" />
+                </> : <>
+                  {
+                    subscription?.status === 'active' ? (
+                      <span>{
+                        loading ? 'Processing...' : 'Manage plan'
+                      }</span>
+                    ) : (
+                      <span>Upgrade plan</span>
+                    )
+                  }
+                </>
               }
             </button>
             <div className="mobile-theme-toggle">

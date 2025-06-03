@@ -114,6 +114,9 @@ const Generation = () => {
         }
       };
       fetchSubscription();
+    } else {
+      setLoading(false);
+      setSubscription(null);
     }
   }, [session]);
 

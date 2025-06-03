@@ -56,6 +56,9 @@ const Landing = () => {
         }
       };
       fetchSubscription();
+    } else {
+      setLoading(false);
+      setSubscription(null);
     }
   }, [session]);
 
