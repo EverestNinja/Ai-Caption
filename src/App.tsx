@@ -5,7 +5,7 @@ import { SidebarProvider } from './context/SidebarContext';
 import { Analytics } from '@vercel/analytics/react';
 import Routes from './Routes';
 import GoogleAnalytics from './components/GoogleAnalytics';
-import './config/firebase'; // Initialize Firebase
+
 import Layout from './components/Layout';
 import { useState, useEffect } from 'react';
 import { Box } from '@mui/material';

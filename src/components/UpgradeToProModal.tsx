@@ -71,11 +71,11 @@ const UpgradeToProModal: React.FC<UpgradeToProModalProps> = ({ open, onClose }) 
                     color="text.primary"
                     gutterBottom
                 >
-                    Unlock premium features, advanced analytics, and priority support by upgrading to Pro.
+                    Unlock unlimited caption and flyer generation, priority support, and access to exciting upcoming features with a Pro plan—elevate your experience now!
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                {/* <Typography variant="body2" color="text.secondary">
                     Gain unlimited access to all styles, batch exports, and exclusive content—take your experience to the next level.
-                </Typography>
+                </Typography> */}
             </DialogContent>
 
             <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>

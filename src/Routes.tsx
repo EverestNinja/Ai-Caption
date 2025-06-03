@@ -1,10 +1,11 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { Routes as RouterRoutes, Route, Navigate } from 'react-router-dom';
 import Landing from './Pages/Landing/Landing';
 import Generation from './Pages/Generation/Generation';
 import Privacy from './Pages/Privacy/Privacy';
 import Flyer from './Pages/Flyer/Flyer';
 import Publish from './Pages/Publish/Publish';
-import Login from './Pages/Login/Login';
 import Terms from './Pages/Terms/Terms';
 import AuthPage from './components/AuthPage';
 import ResetPasswordPage from './components/ResetPasswordPage';

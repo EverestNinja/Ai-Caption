@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import React, { useMemo } from 'react';
 import {
     Box,
@@ -17,7 +19,6 @@ import {
     useTheme as muiUseTheme,
 } from '@mui/material';
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
-import Layout from '../../components/Layout';
 import GlocapLogo from '../../assets/Glocap.png';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/auth';

@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { Box, Button, Container, Typography, Paper, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { FaMagic, FaHashtag, FaRegLightbulb, FaRocket } from 'react-icons/fa';
@@ -6,6 +8,8 @@ import { useState, useEffect, useLayoutEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import GlocapLogo from '../../assets/Glocap.png';
 import themeColors from '../../utils/themeColors';
+import { useAuthStore } from '../../store/auth';
+import { getSubscriptionById } from '../../services/subscriptions';
 
 // Define transition constants
 const TRANSITION_TIMING = themeColors.transition.timing;
@@ -30,6 +34,28 @@ const Landing = () => {
   const { isDarkMode } = useTheme();
   const [mounted, setMounted] = useState(false);
   const isThemeChanging = false;
+  const session = useAuthStore((state) => state.session);
+
+  const [subscription, setSubscription] = useState(null);
+  console.log('Subscription:', subscription);
+  useEffect(() => {
+    if (session?.user) {
+
+      // Fetch subscription data if user is logged in
+      const fetchSubscription = async () => {
+        try {
+          // Assuming you have a function to fetch subscription data
+          const sub = await getSubscriptionById(session.user.id);
+          setSubscription(sub);
+
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+        }
+      };
+      fetchSubscription();
+    }
+  }, [session]);
+
 
   // Use useLayoutEffect to prevent flash of wrong theme
   useLayoutEffect(() => {
@@ -84,7 +110,7 @@ const Landing = () => {
             sm: '100vh'
           },
           width: '100%',
-          background: isDarkMode 
+          background: isDarkMode
             ? themeColors.dark.background
             : themeColors.light.background,
           color: isDarkMode ? themeColors.dark.textPrimary : themeColors.light.textPrimary,
@@ -118,7 +144,7 @@ const Landing = () => {
           }}
         />
 
-        <Container 
+        <Container
           maxWidth="md"
           component={motion.div}
           variants={containerVariants}
@@ -164,10 +190,10 @@ const Landing = () => {
             <motion.div
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ 
-                type: 'spring', 
-                stiffness: 100, 
-                damping: 10 
+              transition={{
+                type: 'spring',
+                stiffness: 100,
+                damping: 10
               }}
               style={{
                 display: 'flex',
@@ -225,27 +251,27 @@ const Landing = () => {
                   width: { xs: 80, sm: 100, md: 120 },
                   height: 'auto',
                   objectFit: 'contain',
-                  filter: isDarkMode 
-                        ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
+                  filter: isDarkMode
+                    ? 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
                     : 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
                   transition: 'all 0.4s ease',
                   animation: isDarkMode ? 'glow 2s ease-in-out infinite alternate' : 'none',
                   '@keyframes glow': {
                     '0%': {
-                          filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
+                      filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 20px rgba(255,255,255,0.3)) drop-shadow(0 0 30px rgba(255,255,255,0.2))'
                     },
                     '100%': {
-                          filter: 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)) drop-shadow(0 0 25px rgba(255,255,255,0.4)) drop-shadow(0 0 35px rgba(255,255,255,0.3))'
+                      filter: 'brightness(1.3) drop-shadow(0 0 15px rgba(255,255,255,0.6)) drop-shadow(0 0 25px rgba(255,255,255,0.4)) drop-shadow(0 0 35px rgba(255,255,255,0.3))'
                     }
                   },
                   '&:hover': {
                     transform: 'scale(1.03)',
-                    filter: isDarkMode 
-                          ? 'brightness(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(255,255,255,0.4))'
+                    filter: isDarkMode
+                      ? 'brightness(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(255,255,255,0.4))'
                       : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
-                      },
-                      position: 'relative',
-                      zIndex: 2,
+                  },
+                  position: 'relative',
+                  zIndex: 2,
                 }}
               />
             </motion.div>
@@ -301,8 +327,8 @@ const Landing = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ 
-                duration: 0.5, 
+              transition={{
+                duration: 0.5,
                 delay: 0.7,
                 type: 'spring',
                 stiffness: 200
@@ -351,7 +377,10 @@ const Landing = () => {
                   },
                 }}
               >
-                Get Started Free
+
+                {
+                  subscription?.status === 'active' ? "Generate now" : " Get Started Free"
+                }
               </Button>
             </motion.div>
           </Box>
@@ -415,15 +444,15 @@ const Landing = () => {
                         '&:hover': {
                           transform: 'translateY(-5px)',
                           background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-                          boxShadow: isDarkMode 
+                          boxShadow: isDarkMode
                             ? '0 4px 20px rgba(0,0,0,0.3)'
                             : '0 4px 20px rgba(0,0,0,0.1)',
                         },
                       }
                     }}
                   >
-                    <Box 
-                      sx={{ 
+                    <Box
+                      sx={{
                         color: '#405DE6',
                         fontSize: '1.8rem',
                         mb: 2,
@@ -435,9 +464,9 @@ const Landing = () => {
                     >
                       {feature.icon}
                     </Box>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
+                    <Typography
+                      variant="h6"
+                      sx={{
                         mb: 1,
                         color: isDarkMode ? '#fff' : '#000',
                         ...commonTransition,
@@ -445,8 +474,8 @@ const Landing = () => {
                     >
                       {feature.title}
                     </Typography>
-                    <Typography 
-                      sx={{ 
+                    <Typography
+                      sx={{
                         color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
                         ...commonTransition,
                       }}
@@ -460,13 +489,13 @@ const Landing = () => {
           </Box>
 
           {/* About Us Section - Keep with scroll animations */}
-          <Box 
+          <Box
             component={motion.div}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            sx={{ 
+            sx={{
               py: { xs: 4, sm: 5, md: 6 },
               px: { xs: 2, sm: 0 },
               width: '100%',

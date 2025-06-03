@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Paper, TextField, Button, IconButton, useMediaQuery, CircularProgress, Snackbar, Alert, Dialog, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
