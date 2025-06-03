@@ -478,7 +478,7 @@ const Flyer = () => {
                 <Button
                   variant="text"
                   size="small"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/pricing')}
                   sx={{
                     mt: 0.75,
                     color: isDarkMode ? '#A78BFA' : '#7F56D9',
