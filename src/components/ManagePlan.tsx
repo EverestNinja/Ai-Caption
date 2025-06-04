@@ -203,6 +203,22 @@ const ManagePlanPage: React.FC = () => {
                             : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
+                    {/* Row: Plan Name */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            py: 1,
+                            borderBottom: isDarkMode
+                                ? '1px solid rgba(255,255,255,0.12)'
+                                : '1px solid rgba(0,0,0,0.12)',
+                        }}
+                    >
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                            Plan Name
+                        </Typography>
+                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.plan_id === `${import.meta.env.VITE_STRIPE_PRICE_ID_FIXED}` ? 'One-Time' : 'Monthly'}</Typography>
+                    </Box>
                     {/* Row: Plan ID */}
                     <Box
                         sx={{
@@ -232,7 +248,7 @@ const ManagePlanPage: React.FC = () => {
                         }}
                     >
                         <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Stripe Sub ID
+                            Subscription ID
                         </Typography>
                         <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
                             {subscription.stripe_subscription_id}
@@ -251,7 +267,7 @@ const ManagePlanPage: React.FC = () => {
                         }}
                     >
                         <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Status
+                            Current Status
                         </Typography>
                         <Typography
                             variant="body1"
@@ -263,6 +279,7 @@ const ManagePlanPage: React.FC = () => {
                                         : subscription.status === 'past_due'
                                             ? 'warning.main'
                                             : 'text.secondary',
+                                fontWeight: 'bold',
                             }}
                         >
                             {subscription.status}
@@ -281,7 +298,7 @@ const ManagePlanPage: React.FC = () => {
                         }}
                     >
                         <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Created At
+                            Purchase Date
                         </Typography>
                         <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
                             {new Date(subscription.created_at).toLocaleString('en-GB', {
@@ -422,10 +439,29 @@ const ManagePlanPage: React.FC = () => {
             )}
 
             {/* Confirmation Modal */}
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>Are you sure?</DialogTitle>
+            <Dialog sx={
+
+                {
+                    '& .MuiDialog-paper': {
+                        backgroundColor: isDarkMode ? 'grey.900' : 'white',
+                        color: isDarkMode ? 'white' : 'black',
+                    },
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: 3,
+                    margin: 'auto',
+
+
+                }
+
+
+            } open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>
+                    Are you sure?
+                </DialogTitle>
                 <DialogContent>
-                    <Typography>This operation cannot be undone.</Typography>
+                    <Typography variant="body1" color="inherit">
+                        This operation cannot be undone.
+                    </Typography>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setConfirmOpen(false)} disabled={deleting}>
