@@ -331,7 +331,7 @@ const Flyer = () => {
         />
 
         {/* API Status Alert */}
-        {apiStatus === 'loading' && (
+        {/* {apiStatus === 'loading' && (
           <Box sx={{
             position: 'fixed',
             top: '10px',
@@ -384,7 +384,7 @@ const Flyer = () => {
               </Typography>
             </Alert>
           </Box>
-        )}
+        )} */}
 
         {/* Usage Limit Indicator */}
         <Container maxWidth="md" sx={{ py: 0.5 }}>
