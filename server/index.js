@@ -460,6 +460,16 @@ app.post('/create-billing-portal', async (req, res) => {
     }
 });
 
+app.get('/api/cron', async (req, res) => {
+    try {
+        // Run the deleteExpiredSubscriptions function immediately
+        await deleteExpiredSubscriptions();
+        res.status(200).json({ message: 'Expired subscriptions deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting expired subscriptions:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 
 // Home route
