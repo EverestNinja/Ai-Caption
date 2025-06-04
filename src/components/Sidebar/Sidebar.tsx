@@ -427,7 +427,7 @@ const Sidebar = () => {
                                       console.error('Error:', error);
                                     });
                                 } else {
-                                  setLoading(true);
+                                  // setLoading(true);
                                   navigate('/pricing');
                                 }
                               }}
