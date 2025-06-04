@@ -471,7 +471,7 @@ const Flyer = () => {
               >
                 {subscription?.status === 'active'
                   ? 'Unlimited flyers'
-                  : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
+                  : `${remainingUsage}/${LIMITS.flyers.daily} remaining`}
               </Typography>
 
               {subscription?.status !== 'active' && (
