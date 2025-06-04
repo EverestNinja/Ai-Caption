@@ -4,8 +4,9 @@ import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-
-
+import cron from 'node-cron';
+// Calculate expires_at = now + 30 days
+const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
 const stripeSecretKey = process.env.STRIPE_SK;
 const stripe = Stripe(stripeSecretKey);
@@ -29,6 +30,29 @@ app.use(cors());
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
 const endpointSecret = process.env.WEBHOOK_SECRET;
 
+// Runs every day at midnight
+// This is your delete function
+async function deleteExpiredSubscriptions() {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+        .from('subscriptions')
+        .delete()
+        .lt('expires_at', now)
+        .select(); // use select to see what was deleted
+
+    if (error) {
+        console.error('Error deleting expired subscriptions:', error);
+    } else {
+        console.log('Deleted expired subscriptions:', data);
+    }
+}
+
+// Test it immediately
+await deleteExpiredSubscriptions();
+
+// Schedule it normally (optional)
+cron.schedule('0 0 * * *', deleteExpiredSubscriptions);
+
 // Handle payment succeeded event
 async function handlePaymentSucceeded(event) {
     console.log(event)
@@ -37,63 +61,67 @@ async function handlePaymentSucceeded(event) {
         console.log('No subscription ID found in invoice.payment_succeeded event');
         return;
     }
-    try {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const userId = subscription.metadata?.user_id;
-        const plan_id = subscription.metadata?.plan_id;
-        const fixed = subscription.metadata?.fixed === 'true'; // Convert string to boolean
-        if (fixed) {
-            await stripe.subscriptions.update(subscriptionId, {
-                cancel_at_period_end: true,
-            });
-            console.log(`Subscription ${subscriptionId} set to cancel at period end`);
-        }
-        if (!userId) {
-            console.error('Missing user_id in subscription metadata');
-            return;
-        }
-        const { data: existingSub, error: selectError } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('stripe_subscription_id', subscriptionId)
-            .single();
-        if (selectError && selectError.code !== 'PGRST116') {
-            console.error('Error checking subscription existence:', selectError);
-            return;
-        }
-        if (existingSub) {
-            const { error: updateError } = await supabase
-                .from('subscriptions')
-                .update({
-                    status: 'active',
-                    plan_id: plan_id,
-                    email: event.data.object.customer_email,
-                })
-                .eq('stripe_subscription_id', subscriptionId);
-            if (updateError) {
-                console.error('Error updating subscription:', updateError);
-            } else {
-                console.log(`Subscription ${subscriptionId} updated`);
+    if (event.data.object.billing_reason === 'subscription_create' || event.data.object.billing_reason === 'subscription_cycle') {
+        console.log(`Handling subscription creation or cycle for subscription ID: ${subscriptionId}`);
+        try {
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            const userId = subscription.metadata?.user_id;
+            const plan_id = subscription.metadata?.plan_id;
+            const fixed = subscription.metadata?.fixed === 'true'; // Convert string to boolean
+            if (fixed) {
+                await stripe.subscriptions.update(subscriptionId, {
+                    cancel_at_period_end: true,
+                });
+                console.log(`Subscription ${subscriptionId} set to cancel at period end`);
             }
-        } else {
-            const { error: insertError } = await supabase
-                .from('subscriptions')
-                .insert([{
-                    id: userId,
-                    plan_id: plan_id,
-                    stripe_subscription_id: subscriptionId,
-                    status: 'active',
-                    email: event.data.object.customer_email,
-                }]);
-            if (insertError) {
-                console.error('Error inserting subscription:', insertError);
-            } else {
-                console.log(`Subscription ${subscriptionId} inserted for user ${userId}`);
+            if (!userId) {
+                console.error('Missing user_id in subscription metadata');
+                return;
             }
+            const { data: existingSub, error: selectError } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('stripe_subscription_id', subscriptionId)
+                .single();
+            if (selectError && selectError.code !== 'PGRST116') {
+                console.error('Error checking subscription existence:', selectError);
+                return;
+            }
+            if (existingSub) {
+                const { error: updateError } = await supabase
+                    .from('subscriptions')
+                    .update({
+                        status: 'active',
+                        plan_id: plan_id,
+                        email: event.data.object.customer_email,
+                    })
+                    .eq('stripe_subscription_id', subscriptionId);
+                if (updateError) {
+                    console.error('Error updating subscription:', updateError);
+                } else {
+                    console.log(`Subscription ${subscriptionId} updated`);
+                }
+            } else {
+                const { error: insertError } = await supabase
+                    .from('subscriptions')
+                    .insert([{
+                        id: userId,
+                        plan_id: plan_id,
+                        stripe_subscription_id: subscriptionId,
+                        status: 'active',
+                        email: event.data.object.customer_email,
+                    }]);
+                if (insertError) {
+                    console.error('Error inserting subscription:', insertError);
+                } else {
+                    console.log(`Subscription ${subscriptionId} inserted for user ${userId}`);
+                }
+            }
+        } catch (err) {
+            console.error('Error handling invoice.payment_succeeded:', err);
         }
-    } catch (err) {
-        console.error('Error handling invoice.payment_succeeded:', err);
     }
+
 }
 
 
@@ -138,6 +166,67 @@ async function handlePaymentFailed(event) {
     }
 }
 
+// Handle one-time payment succeeded event
+async function handleOnetimePayment(event) {
+    const paymentIntent = event.data.object;
+    const userId = paymentIntent.metadata?.user_id;
+    const plan_id = paymentIntent.metadata?.plan_id;
+    const email = paymentIntent.metadata?.email;
+
+    if (!userId || !plan_id) {
+        console.error('Missing user_id or plan_id in payment intent metadata');
+        return;
+    }
+
+    try {
+        const { data: existingSub, error: selectError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('stripe_subscription_id', paymentIntent.id)
+            .single();
+
+        if (selectError && selectError.code !== 'PGRST116') {
+            console.error('Error checking subscription existence:', selectError);
+            return;
+        }
+
+        if (existingSub) {
+            const { error: updateError } = await supabase
+                .from('subscriptions')
+                .update({
+                    status: 'active',
+                    plan_id: plan_id,
+                    expires_at: expiresAt,
+                    email: email,
+                })
+                .eq('stripe_subscription_id', paymentIntent.id);
+            if (updateError) {
+                console.error('Error updating subscription:', updateError);
+            } else {
+                console.log(`Subscription ${paymentIntent.id} updated`);
+            }
+        } else {
+            const { error: insertError } = await supabase
+                .from('subscriptions')
+                .insert([{
+                    id: userId,
+                    plan_id: plan_id,
+                    stripe_subscription_id: paymentIntent.id,
+                    status: 'active',
+                    expires_at: expiresAt,
+                    email: email,
+                }]);
+            if (insertError) {
+                console.error('Error inserting subscription:', insertError);
+            } else {
+                console.log(`Subscription ${paymentIntent.id} inserted for user ${userId}`);
+            }
+        }
+
+    } catch (err) {
+        console.error('Error handling payment_intent.succeeded:', err);
+    }
+}
 // Webhook endpoint
 app.post(
     "/webhook",
@@ -164,6 +253,9 @@ app.post(
                     break;
                 case 'invoice.payment_failed':
                     await handlePaymentFailed(event);
+                    break;
+                case 'payment_intent.succeeded':
+                    await handleOnetimePayment(event);
                     break;
                 default:
                     console.log(`Unhandled event type ${event.type}`);
@@ -249,30 +341,58 @@ app.post('/create-checkout-session', async (req, res) => {
             }
         }
 
-        // Create the checkout session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            customer: customerId,
-            mode: 'subscription',
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
-            subscription_data: {
-                metadata: {
-                    user_id: userId,
-                    email: email,
-                    plan_id: priceId,
-                    fixed: fixed ? 'true' : 'false', // Store fixed status as a string
-                }
-            },
-            success_url: `${process.env.FRONTEND_URL}/success`,
-            cancel_url: `${process.env.FRONTEND_URL}/pricing`,
-        });
+        if (fixed) {
 
-        return res.json({ url: session.url });
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                customer: customerId,
+                mode: 'payment',
+                line_items: [
+                    {
+                        price: priceId,
+                        quantity: 1,
+                    },
+                ],
+                payment_intent_data: {
+                    metadata: {
+                        user_id: userId,
+                        email: email,
+                        plan_id: priceId,
+                        fixed: fixed ? 'true' : 'false', // Store fixed status as a string
+                    }
+                },
+                success_url: `${process.env.FRONTEND_URL}/success`,
+                cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+            });
+            return res.json({ url: session.url });
+
+        } else {
+            // Create the checkout session
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                customer: customerId,
+                mode: 'subscription',
+                line_items: [
+                    {
+                        price: priceId,
+                        quantity: 1,
+                    },
+                ],
+                subscription_data: {
+                    metadata: {
+                        user_id: userId,
+                        email: email,
+                        plan_id: priceId,
+                        fixed: fixed ? 'true' : 'false', // Store fixed status as a string
+                    }
+                },
+                success_url: `${process.env.FRONTEND_URL}/success`,
+                cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+            });
+            return res.json({ url: session.url });
+
+        }
+
 
     } catch (error) {
         console.error('Error creating checkout session:', error);
@@ -280,7 +400,31 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 });
 
+// POST or DELETE endpoint to remove a subscription
+app.post('/delete-subscription', async (req, res) => {
+    const { subscriptionId } = req.body;
 
+    if (!subscriptionId) {
+        return res.status(400).json({ error: 'subscriptionId is required' });
+    }
+
+    const { data, error } = await supabase
+        .from('subscriptions')
+        .delete()
+        .eq('stripe_subscription_id', subscriptionId)
+        .select(); // Optional: returns deleted rows
+
+    if (error) {
+        console.error('Failed to delete subscription:', error);
+        return res.status(500).json({ error: 'Failed to delete subscription' });
+    }
+
+    if (!data.length) {
+        return res.status(404).json({ message: 'Subscription not found' });
+    }
+
+    res.status(200).json({ message: 'Subscription deleted successfully', deleted: data });
+});
 //billing portal
 app.post('/create-billing-portal', async (req, res) => {
     const { email } = req.body;

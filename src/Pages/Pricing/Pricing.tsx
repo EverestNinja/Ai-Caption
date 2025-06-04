@@ -91,7 +91,7 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
     const theme = muiUseTheme();
     const session = useAuthStore((state) => state.session);
     // If user is logged in, override button text with "Subscribe"
-    const buttonText = session ? 'Subscribe' : plan.buttonText;
+    const buttonText = plan.buttonText;
 
     const [subscription, setSubscription] = useState(null);
     const [loadingData, setLoadingData] = useState(false);
@@ -197,7 +197,7 @@ const PricingCard: React.FC<{ plan: PricingPlan }> = ({ plan }) => {
                             return;
                         }
                         if (subscription?.status === 'active') {
-                            setError('You already have an active subscription.');
+                            setError('You are already in a active plan.');
                         } else {
                             //call checkout session api
                             setLoading(true);

@@ -11,6 +11,7 @@ import AuthPage from './components/AuthPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import PricingSection from './Pages/Pricing/Pricing';
 import PaymentSuccess from './components/PaymentSuccess';
+import ManagePlanPage from './components/ManagePlan';
 
 interface SessionProps {
   session: unknown;
@@ -50,6 +51,9 @@ const Routes = ({ session }: SessionProps) => {
       <Route path="/pricing" element={<PricingSection />} />
       <Route path="/success"
         element={session ? <PaymentSuccess /> : <Navigate to="/login" replace />}
+      />
+      <Route path="/manage-plan"
+        element={session ? <ManagePlanPage /> : <Navigate to="/login" replace />}
       />
     </RouterRoutes>
   );

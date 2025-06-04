@@ -271,30 +271,7 @@ const MobileNav: React.FC = () => {
               style={{ backgroundColor: isDarkMode ? 'white' : 'black', color: isDarkMode ? '#fff' : '#000' }}
               onClick={() => {
                 if (subscription?.status === 'active') {
-                  // call api for billing portal
-                  setLoading(true);
-                  fetch(`${API_URL}/create-billing-portal`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email: currentUser.email })
-                  })
-                    .then(response => {
-                      if (response.ok) {
-                        return response.json();
-                      }
-                      throw new Error('Failed to create billing portal');
-                    })
-                    .then(data => {
-                      if (data.url) {
-                        window.location.href = data.url;
-                      }
-                    })
-                    .catch(error => {
-                      setLoading(false);
-                      console.error('Error:', error);
-                    });
+                  navigate('/manage-plan');
                 } else {
                   setLoading(true);
                   navigate('/pricing');
