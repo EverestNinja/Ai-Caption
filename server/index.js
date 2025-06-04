@@ -449,7 +449,7 @@ app.post('/create-billing-portal', async (req, res) => {
         // Create billing portal session
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: customer.id,
-            return_url: `${process.env.FRONTEND_URL || 'https://yourfrontend.com'}`
+            return_url: `${process.env.FRONTEND_URL}/manage-plan`
         });
 
         return res.json({ url: portalSession.url });

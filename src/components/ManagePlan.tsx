@@ -110,16 +110,24 @@ const ManagePlanPage: React.FC = () => {
             </Typography>
 
             {loadingData ? (
-                <Box
+                <Paper
+                    elevation={3}
                     sx={{
+                        mt: 3,
+                        p: 3,
                         display: 'flex',
+                        height: '45vh',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        mt: 6,
+                        borderRadius: 2,
+                        backgroundColor: isDarkMode ? 'grey.900' : 'grey.50',
+                        boxShadow: isDarkMode
+                            ? '0px 4px 20px rgba(0,0,0,0.6)'
+                            : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
-                    <CircularProgress />
-                </Box>
+                    <CircularProgress size={44} color='inherit' />
+                </Paper>
             ) : error ? (
                 <Typography color="error" sx={{ mt: 2 }}>
                     {error}
@@ -127,20 +135,26 @@ const ManagePlanPage: React.FC = () => {
             ) : subscription === null ? (
                 <Card
                     sx={{
-                        maxWidth: 400,
-                        margin: 'auto',
-                        mt: 5,
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                        mt: 3,
+                        p: 3,
+                        display: 'flex',
+                        height: '45vh',
+                        justifyContent: 'center',
+                        alignItems: 'center',
                         borderRadius: 2,
+                        backgroundColor: isDarkMode ? 'grey.900' : 'grey.50',
+                        boxShadow: isDarkMode
+                            ? '0px 4px 20px rgba(0,0,0,0.6)'
+                            : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
                     <CardContent sx={{ textAlign: 'center', p: 4 }}>
                         <Typography
                             variant="h6"
-                            color="textSecondary"
+                            color={isDarkMode ? 'white' : 'text.secondary'}
                             sx={{ mb: 3 }}
                         >
-                            You are not in any plan
+                            Ops! You don't have an active subscription.
                         </Typography>
                         <Link to="/pricing" style={{ textDecoration: 'none' }}>
                             <Button
@@ -200,10 +214,10 @@ const ManagePlanPage: React.FC = () => {
                                 : '1px solid rgba(0,0,0,0.12)',
                         }}
                     >
-                        <Typography variant="subtitle1" color="text.secondary">
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                             Plan ID
                         </Typography>
-                        <Typography variant="body1">{subscription.plan_id}</Typography>
+                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.plan_id}</Typography>
                     </Box>
 
                     {/* Row: Stripe Subscription ID */}
@@ -217,10 +231,10 @@ const ManagePlanPage: React.FC = () => {
                                 : '1px solid rgba(0,0,0,0.12)',
                         }}
                     >
-                        <Typography variant="subtitle1" color="text.secondary">
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                             Stripe Sub ID
                         </Typography>
-                        <Typography variant="body1">
+                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
                             {subscription.stripe_subscription_id}
                         </Typography>
                     </Box>
@@ -236,7 +250,7 @@ const ManagePlanPage: React.FC = () => {
                                 : '1px solid rgba(0,0,0,0.12)',
                         }}
                     >
-                        <Typography variant="subtitle1" color="text.secondary">
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                             Status
                         </Typography>
                         <Typography
@@ -266,10 +280,10 @@ const ManagePlanPage: React.FC = () => {
                                 : '1px solid rgba(0,0,0,0.12)',
                         }}
                     >
-                        <Typography variant="subtitle1" color="text.secondary">
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                             Created At
                         </Typography>
-                        <Typography variant="body1">
+                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
                             {new Date(subscription.created_at).toLocaleString('en-GB', {
                                 day: '2-digit',
                                 month: '2-digit',
@@ -291,10 +305,10 @@ const ManagePlanPage: React.FC = () => {
                                 : '1px solid rgba(0,0,0,0.12)',
                         }}
                     >
-                        <Typography variant="subtitle1" color="text.secondary">
+                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                             Email
                         </Typography>
-                        <Typography variant="body1">{subscription.email}</Typography>
+                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.email}</Typography>
                     </Box>
 
                     {/* Row: Expires At */}
@@ -311,10 +325,10 @@ const ManagePlanPage: React.FC = () => {
                         {
                             subscription.expires_at &&
                             <>
-                                <Typography variant="subtitle1" color="text.secondary">
+                                <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
                                     Expires At
                                 </Typography>
-                                <Typography variant="body1">
+                                <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
                                     {subscription.expires_at
                                         ? new Date(subscription.expires_at).toLocaleDateString('en-GB', {
                                             day: '2-digit',
