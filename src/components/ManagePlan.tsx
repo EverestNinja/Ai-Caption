@@ -14,6 +14,7 @@ import {
     DialogActions,
     Card,
     CardContent,
+    Grid,
 } from '@mui/material';
 import { useAuthStore } from '../store/auth';
 import { useTheme } from '../context/ThemeContext';
@@ -104,13 +105,21 @@ const ManagePlanPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 4 }}>
-            <Typography variant="h4" gutterBottom>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            <Typography
+                sx={{
+                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                    mb: 2,
+                }}
+            >
                 Manage Your Plan
             </Typography>
 
             {loadingData ? (
                 <Paper
+                    elevation={3}
                     elevation={3}
                     sx={{
                         mt: 3,
@@ -126,7 +135,7 @@ const ManagePlanPage: React.FC = () => {
                             : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
-                    <CircularProgress size={44} color='inherit' />
+                    <CircularProgress size={44} color="inherit" />
                 </Paper>
             ) : error ? (
                 <Typography color="error" sx={{ mt: 2 }}>
@@ -148,7 +157,7 @@ const ManagePlanPage: React.FC = () => {
                             : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
-                    <CardContent sx={{ textAlign: 'center', p: 4 }}>
+                    <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 4 } }}>
                         <Typography
                             variant="h6"
                             color={isDarkMode ? 'white' : 'text.secondary'}
@@ -161,7 +170,7 @@ const ManagePlanPage: React.FC = () => {
                                 component="a"
                                 fullWidth
                                 sx={{
-                                    maxWidth: 260,
+                                    maxWidth: { xs: '80%', sm: 260 },
                                     py: 1.5,
                                     px: 3,
                                     borderRadius: 3,
@@ -180,9 +189,6 @@ const ManagePlanPage: React.FC = () => {
                                         transform: 'translateY(1px)',
                                         boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
                                     },
-                                    '@media (max-width: 600px)': {
-                                        maxWidth: '80%', // Responsive design for smaller screens
-                                    },
                                 }}
                             >
                                 Upgrade Now
@@ -195,7 +201,7 @@ const ManagePlanPage: React.FC = () => {
                     elevation={3}
                     sx={{
                         mt: 3,
-                        p: 3,
+                        p: { xs: 2, sm: 3 },
                         borderRadius: 2,
                         backgroundColor: isDarkMode ? 'grey.900' : 'grey.50',
                         boxShadow: isDarkMode
@@ -203,159 +209,111 @@ const ManagePlanPage: React.FC = () => {
                             : '0px 4px 20px rgba(0,0,0,0.1)',
                     }}
                 >
-                    {/* Row: Plan Name */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Plan Name
-                        </Typography>
-                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.plan_id === `${import.meta.env.VITE_STRIPE_PRICE_ID_FIXED}` ? 'One-Time' : 'Monthly'}</Typography>
-                    </Box>
-                    {/* Row: Plan ID */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Plan ID
-                        </Typography>
-                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.plan_id}</Typography>
-                    </Box>
-
-                    {/* Row: Stripe Subscription ID */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Subscription ID
-                        </Typography>
-                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
-                            {subscription.stripe_subscription_id}
-                        </Typography>
-                    </Box>
-
-                    {/* Row: Status */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Current Status
-                        </Typography>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                textTransform: 'capitalize',
-                                color:
-                                    subscription.status === 'active'
-                                        ? 'success.main'
-                                        : subscription.status === 'past_due'
-                                            ? 'warning.main'
-                                            : 'text.secondary',
-                                fontWeight: 'bold',
-                            }}
-                        >
-                            {subscription.status}
-                        </Typography>
-                    </Box>
-
-                    {/* Row: Created At */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Purchase Date
-                        </Typography>
-                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
-                            {new Date(subscription.created_at).toLocaleString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                            })}
-                        </Typography>
-                    </Box>
-
-                    {/* Row: Email */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                            Email
-                        </Typography>
-                        <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">{subscription.email}</Typography>
-                    </Box>
-
-                    {/* Row: Expires At */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            py: 1.5,
-                            borderBottom: isDarkMode
-                                ? '1px solid rgba(255,255,255,0.12)'
-                                : '1px solid rgba(0,0,0,0.12)',
-                        }}
-                    >
-                        {
-                            subscription.expires_at &&
+                    <Grid container spacing={2}>
+                        {/* Row: Plan Name */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Plan Name
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                {subscription.plan_id === `${import.meta.env.VITE_STRIPE_PRICE_ID_FIXED}` ? 'One-Time' : 'Monthly'}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Plan ID */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Plan ID
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                {subscription.plan_id}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Subscription ID */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Subscription ID
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                {subscription.stripe_subscription_id}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Current Status */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Current Status
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    textTransform: 'capitalize',
+                                    color:
+                                        subscription.status === 'active'
+                                            ? 'success.main'
+                                            : subscription.status === 'past_due'
+                                                ? 'warning.main'
+                                                : 'text.secondary',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                {subscription.status}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Purchase Date */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Purchase Date
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                {new Date(subscription.created_at).toLocaleString('en-GB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Email */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                Email
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                {subscription.email}
+                            </Typography>
+                        </Grid>
+                        {/* Row: Expires At */}
+                        {subscription.expires_at && (
                             <>
-                                <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
-                                    Expires At
-                                </Typography>
-                                <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
-                                    {subscription.expires_at
-                                        ? new Date(subscription.expires_at).toLocaleDateString('en-GB', {
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle1" color={isDarkMode ? 'white' : 'text.secondary'}>
+                                        Expires At
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography color={isDarkMode ? 'white' : 'text.secondary'} variant="body1">
+                                        {new Date(subscription.expires_at).toLocaleDateString('en-GB', {
                                             day: '2-digit',
                                             month: '2-digit',
                                             year: 'numeric',
-                                        })
-                                        : '—'}
-                                </Typography></>
-                        }
-                    </Box>
+                                        })}
+                                    </Typography>
+                                </Grid>
+                            </>
+                        )}
+                    </Grid>
 
                     {/* Action Buttons */}
                     <Box
@@ -364,12 +322,12 @@ const ManagePlanPage: React.FC = () => {
                             justifyContent: 'center',
                             mt: 3,
                             gap: 2,
+                            flexWrap: 'wrap',
                         }}
                     >
                         <Button
                             onClick={() => {
                                 if (subscription?.status === 'active') {
-                                    // call api for billing portal
                                     setLoading(true);
                                     fetch(`${API_URL}/create-billing-portal`, {
                                         method: 'POST',
@@ -410,7 +368,7 @@ const ManagePlanPage: React.FC = () => {
                                 },
                             }}
                         >
-                            {loading ? <CircularProgress color='inherit' size={24} /> : subscription.expires_at ? 'Manage payment methods' : 'Manage subscriptions'}
+                            {loading ? <CircularProgress color="inherit" size={24} /> : subscription.expires_at ? 'Manage payment methods' : 'Manage subscriptions'}
                         </Button>
 
                         {subscription.status === 'active' && subscription.expires_at && (
@@ -439,25 +397,21 @@ const ManagePlanPage: React.FC = () => {
             )}
 
             {/* Confirmation Modal */}
-            <Dialog sx={
-
-                {
+            <Dialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                fullWidth
+                maxWidth="xs"
+                sx={{
                     '& .MuiDialog-paper': {
                         backgroundColor: isDarkMode ? 'grey.900' : 'white',
                         color: isDarkMode ? 'white' : 'black',
+                        borderRadius: 3,
                     },
                     backdropFilter: 'blur(4px)',
-                    borderRadius: 3,
-                    margin: 'auto',
-
-
-                }
-
-
-            } open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>
-                    Are you sure?
-                </DialogTitle>
+                }}
+            >
+                <DialogTitle>Are you sure?</DialogTitle>
                 <DialogContent>
                     <Typography variant="body1" color="inherit">
                         This operation cannot be undone.
