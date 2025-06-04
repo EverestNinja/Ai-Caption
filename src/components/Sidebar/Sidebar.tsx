@@ -315,7 +315,7 @@ const Sidebar = () => {
                   isExpanded ? <><Button
                     variant="contained"
                     fullWidth
-                    disabled={loadingData || loading}
+                    disabled={loadingData}
                     sx={{
                       mt: 2,
                       py: 1.5,
