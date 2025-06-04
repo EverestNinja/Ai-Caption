@@ -527,7 +527,7 @@ const Generation = () => {
                 }}
               >
                 {subscription?.status === 'active'
-                  ? 'Unlimited flyers'
+                  ? 'Unlimited Captions'
                   : `${remainingUsage}/${LIMITS.captions.daily} remaining`}
               </Typography>
 
