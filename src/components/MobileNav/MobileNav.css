@@ -1,9 +1,10 @@
 /* Mobile Navigation Styles */
 .mobile-nav {
-  display: none; /* Hide on desktop by default */
+  display: none;
+  /* Hide on desktop by default */
   position: fixed;
   top: 10px;
-  right: 10px;
+  left: 10px;
   z-index: 1000;
   background: transparent;
 }
@@ -196,7 +197,8 @@ body.dark-theme .mobile-nav__link {
 .mobile-nav__link.active {
   background-color: rgba(0, 102, 255, 0.1) !important;
   border-left: 3px solid #0066FF;
-  padding-left: 21px; /* 24px - 3px border */
+  padding-left: 21px;
+  /* 24px - 3px border */
 }
 
 body.dark-theme .mobile-nav__link.active {
@@ -265,11 +267,12 @@ body.dark-theme .mobile-menu__footer {
   background-color: #1a1a1a !important;
 }
 
-.mobile-theme-toggle, .mobile-auth-button {
+.mobile-theme-toggle,
+.mobile-auth-button {
   background-color: #EDF1FD !important;
 }
 
-body.dark-theme .mobile-theme-toggle, 
+body.dark-theme .mobile-theme-toggle,
 body.dark-theme .mobile-auth-button {
   background-color: #1a1a1a !important;
 }
@@ -322,11 +325,11 @@ body.dark-theme .theme-label {
   border-radius: 50%;
 }
 
-input:checked + .theme-slider {
+input:checked+.theme-slider {
   background-color: #0066FF;
 }
 
-input:checked + .theme-slider:before {
+input:checked+.theme-slider:before {
   transform: translateX(24px);
 }
 
@@ -402,7 +405,7 @@ body.dark-theme .mobile-login-icon svg {
   .mobile-nav {
     display: block;
   }
-  
+
   /* Remove top padding since we don't have a fixed header anymore */
   body {
     padding-top: 0;
@@ -437,7 +440,8 @@ body.dark-theme .mobile-nav__link {
 .mobile-nav__link.active {
   background-color: rgba(0, 102, 255, 0.1) !important;
   border-left: 3px solid #0066FF;
-  padding-left: 21px; /* 24px - 3px border */
+  padding-left: 21px;
+  /* 24px - 3px border */
 }
 
 body.dark-theme .mobile-nav__link.active {
@@ -453,11 +457,12 @@ body.dark-theme .mobile-nav__link:hover {
 }
 
 /* Theme toggle and login button */
-.mobile-theme-toggle, .mobile-auth-button {
+.mobile-theme-toggle,
+.mobile-auth-button {
   background-color: #EDF1FD !important;
 }
 
-body.dark-theme .mobile-theme-toggle, 
+body.dark-theme .mobile-theme-toggle,
 body.dark-theme .mobile-auth-button {
   background-color: #1a1a1a !important;
-} 
+}
