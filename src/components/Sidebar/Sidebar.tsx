@@ -390,40 +390,52 @@ const Sidebar = () => {
                     }
                   </Button></> : <>
 
-                    <img
-                      style={{ cursor: 'pointer', width: '24px', height: '24px', marginTop: '10px' }}
-                      onClick={() => {
-                        if (subscription?.status === 'active') {
-                          // call api for billing portal
-                          setLoading(true);
-                          fetch(`${API_URL}/create-billing-portal`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ email: currentUser.email })
-                          })
-                            .then(response => {
-                              if (response.ok) {
-                                return response.json();
-                              }
-                              throw new Error('Failed to create billing portal');
-                            })
-                            .then(data => {
-                              if (data.url) {
-                                window.location.href = data.url;
-                              }
-                            })
-                            .catch(error => {
-                              setLoading(false);
-                              console.error('Error:', error);
-                            });
-                        } else {
-                          setLoading(true);
-                          navigate('/pricing');
+                    {
+                      loadingData ? <>
+                        <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                      </> : <>
+                        {
+                          loading ? <>
+                            <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                          </> : <>
+                            <img
+                              style={{ cursor: 'pointer', width: '30px', height: '30px', marginTop: '10px' }}
+                              onClick={() => {
+                                if (subscription?.status === 'active') {
+                                  // call api for billing portal
+                                  setLoading(true);
+                                  fetch(`${API_URL}/create-billing-portal`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ email: currentUser.email })
+                                  })
+                                    .then(response => {
+                                      if (response.ok) {
+                                        return response.json();
+                                      }
+                                      throw new Error('Failed to create billing portal');
+                                    })
+                                    .then(data => {
+                                      if (data.url) {
+                                        window.location.href = data.url;
+                                      }
+                                    })
+                                    .catch(error => {
+                                      setLoading(false);
+                                      console.error('Error:', error);
+                                    });
+                                } else {
+                                  setLoading(true);
+                                  navigate('/pricing');
+                                }
+                              }}
+                              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFaElEQVR4nO2W6U9UVxiHT4htUNum7Yc2ti4wA5RaQfA/aFLburHJIruyyOpul2/9YppS27RpAqVqXNGOCEhXllZHUGsFiuwzMAOUNmVQUNNYkAFnfs05d+bOnbn30gsOS5o5yRP4cCd5fu9533MOIZ7lWZ7lWZ7lWf+HFVxjWrru0v0vQy/dG1l36T5mjZ/vI5TnHkJ/chBip9bBWkoN5S6Cq0dG1taMFFFXUQAqP1vSoTLSIRLCIQJhJ6ppADsjhaIAbq38dIVr/0v4LoKrHKypGh6W2gH3Cc+kytUuwgLpoKoRjh8dPH6AWa5ykIswZQ3lBw5RgPUbtuDNjWF4a1M43t4cgQ1bIrExLAqbwrdic0Q0tkTGICwqFuFb4xAevQ0RMfGIjE1AVFwitm5LQnR8MmISUhCbmIq4pO3YlrwD8SlpiE9NR8L2DCTuyERS2k4kp2chJSMbqZk52L4zFzuy8pCWnY/0nF1Iz92NjLw9yMzfi5279iFr935k7zmAnL0HkbvvHeTtfxf5B97DroPvewLAswOZbm6hkCmH7970hq9Kfvh4vh/Ga0K+c7Dazrd27jBe/caBOIAbj7ggSWF56dUKhHkq7yCwUiKAUPhT4yQ0JiwoCnommHjgxdsMcQBBdedbViMDFX+FUiERQNgW8y2qkYGK2xEFEPby4YXYQt0TCCi/jYDyIYY4gNzwKTkxpjF8PLZeDhS0hRNM1iHMKBuCvw1RAHcecYqEJaQDXKXLnKX9LzgQB3DjEae0ygFyVb5gkpT2o5SaGKIA8m3xGFWuUFZlf82fUJ8xQnVSD9WxDqiOtbO/vsd1UJ3ugfrsAC9OUZ+XCKC0LR67yoK28KPip7oRcKQB+RWHUFn/BoytK/BPtzfD2LISlfXrkVdRgIDjbVCVDDB5tUYqABWezSq79LK6pA++R1qRXfohfm9fBmsv4TDaMNjo4ei/9TKyyz+Bz0kDVJpBcQAlVZ7x8Ln0suqMEeriJnxVGwdrHyf+SE9gbiR4eJVgVMtB/zc3EDzqJLB2E1j1BMU1yVCd0IsDuPOIm2r41CX98Cm+5ZA3cuJM+rIMWgLzTQKrjqOoOlUigBuPOE7aMXS8vGYQPkc7kKU5xMuP/zKFuAvj1wnQZaOTRDgFUHzEKagyDx04Ab6njPArvI7+Nq7nzY3K5e3QnWABOkgfOsiTTgGmU2U/uSq7SNMTg0IHb9XRDuRqPuB7ftS1bbQE1oFlTpgbF4u+sbSyHaDE8AGUDJ+SKguFeb4ehG/JH1hZ2IyLV16Xr76WCzDZ9RzMTUsYY9cWiXfhV7YDQDsp4QP4lQ0NKxKWrbKzsB1fyrlB+Jzqx4ovGtDb8hLrfXbaXJYOYL711JRD/bCeD6DnA/hfMBXJDp/CKrtKO/gLPieMWP75DTzQe7MAkoJa5xaa1D2PsTov0XdjWiYPtJEHfIDg06al6lJTkbrUNDzTKoukzzpYddyA5Z/ZAhg4iVGpIW1YjPGb3pjofJaFmGh7Rhzgii1AK/mbzPWy9JBuGkCyhS4LJOu8+HkQtVAdqz4NoJv7AAZyjj4N6A076ip2bRHMLU9jvGExJm07YP5tiXiXbvABzsx5ABhILA1AnwejWnEAS+8LTNzS9yILIzUrlmYmT4me+wBN5AmLnhjo28Z8cwYX2Q2bfAvpdbrI5jREN4miDzOrjmD82jSeElf5ygPNJJzM57LoyWEagD4L2E5oFVaeq/5HZL4XQLzQRT62P87o84DesPSS4p/TdZy4oOepfAH9LVkoC50kAp3EwN429Hblblj7RWU/bai4Yd7bRm7RwaYPM/q2QTvR0RsWrQwdWkgJPW3oN1I//hdVBPF+7VZwfQAAAABJRU5ErkJggg==" alt="subscription"></img>
+                          </>
                         }
-                      }}
-                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAE8klEQVR4nO2YW08bVxCAUaX2V6TP+QG8tX+AXUspSOWxXNpGqtqqippUKQQwNOGSYHMxNoSLMba5GGNYcwkYgzc2rIPDxeZiWGPTPqTPeSAVfexUc+w1YNi1vSxLVTHSSNae8cx858zMHrug4FZu5Vb+X8IEAp+6fUEX4wt+cLNBUFMZjOnjGLePuysr+Yb+4c91VucJ41M3cfd5CNBZJ060vbbP8gZ4pO/9s6K2FR53msHp8auevNPjJ7Exh0f6vnd5A5gcM3/fb2gnDr572gn9k/OqJd8/OU9iYmzMwTg+fZI3ADpyLLDwUN9HHFXWtcLT3mGY8q1eY8lw0DLogIpaHYn5s64HRl6xZE0WgFCHeqsLKrVJpw9a0alP8eTH5ll4qOtNbZaOgJztP9kAglrcHvihqYsE+LahDbpG3Yol3+2YgfsNbcT3988MYGYWLthcGQB1YmkFaoxDJBDqE4MFJrwrshN3eVegvseW9ldtMMOEN3CprSIAghpGGfimXp/cscYuGHR78k5+aNoLPzYbiQ/0pbe6JO0VBUAdnluGBy+6z9Wsm+VyaNRkT31dl9yAn1pMYJ9dyvo9xQFQp5Y5aBwYTU+NX9r6wOF5LWo/vuiHxx0D6amG5TO5lNtUK1ASYC4QguB2FLb4BERiR6pqOHb0IcwfMTv8H9JXDKnGc3j86Ej15COnEHjSJ7Y5j/gVQ6qBf+0YAMOIG0K7vOrJh3Z5EhtzaLO53uUNMBNYA63JShw09NhgMbihWvKLwQ0SE2NjDrP+tZO8AdBRcHsf9NYJ4qiqYwDMjAe2Dq6vH8J8Auxzy1DVaSYxWy1O4CJRsiYLQKhDnCrVKacvLOOwGt5TPPngdhSv1MnN6jQTEAQS1mUDCLocCsOzvhESoNZoAeYSG7k661+DWtMQ8f3by2Hwvtm8YHNlANSN6CH0jM+SQKgmxzSs78VkJ74ePYR+13zan3FsGkJ7lw8MRQAExbdsTZeFBMWrN55Ovsmz6xFoTJ3ok65BUqZS9ooCoAa2duH5oEO0ZkUbNZbqKUOyp5oHxsC/uZP1e6IAYj/kc9nFzYM4WGe86anRZp+ENzsHovZrOwfQOcKkpxqWz+Z+PKdY4gAsNyUXQNCF4DrU99iTc7vbCq9W3l6w8XAb521WQ3nFEC8hH3fXzXLvrwJwurtT594ZeEJbGbO9PXVKm/uHYB93QXWtFsoqKqG4uBhKSkrIZ3yGa2iTFQBl8nXoDsNyTobljuUCkPrmEzC2wKbfGdgjQp/gM1wL8wkYdTHwVVk50DQtqWiDtlkBLhM5AIL63p5OGGFSLYW2SPIt+vasiZ9VjUYDz/XtoNVqP1INQJjxL52zRPEzPss3efq8NqkKkKlYCrib9CXJZYoIwD8ajebejQBgM0rVfKaI2VEU9XtpaeknqgPgRJEqj0yRsi0qKvpSdYCqmjrFACiKsqsOUFZeIZlwNsmAiOUEgD+qlQLAF5SCAH/lBsAnpv6jAMc5AeDfGeFY4r0SAOUVlYoBUBTF5wRAIOLxO5HYkTPCHx1fBQDvNgo2sa1AbcHRp/oYVVIKCws/pigqrgDAIfoquAmhafoLvA7Qal0lrkMoimqWKg9FL3PXIXglpmm6SewkxHYev5P3dfo6RaPR3JPqiTMTJ37jZSMm2Iyp6TSMsx3fsKgURR3gfQfXxBr2X9oWGaq5Rg1WAAAAAElFTkSuQmCC" alt="subscription"></img>
+                      </>
+                    }
 
                   </>
                 }
