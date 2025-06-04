@@ -311,83 +311,122 @@ const Sidebar = () => {
             <>
               <div>
                 {/* upgrade button */}
-                <Button
-                  variant="contained"
-                  fullWidth
-                  disabled={loadingData || loading}
-                  sx={{
-                    mt: 2,
-                    py: 1.5,
-                    fontSize: '1rem',
-                    borderRadius: 3,
-                    background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                      animation: 'shine 3s infinite',
-                    },
-                    '@keyframes shine': {
-                      '0%': { left: '-100%' },
-                      '20%': { left: '100%' },
-                      '100%': { left: '100%' },
-                    },
-                  }}
+                {
+                  isExpanded ? <><Button
+                    variant="contained"
+                    fullWidth
+                    disabled={loadingData || loading}
+                    sx={{
+                      mt: 2,
+                      py: 1.5,
+                      fontSize: '1rem',
+                      borderRadius: 3,
+                      background: 'linear-gradient(45deg, #405DE6, #5851DB, #833AB4)',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #833AB4, #5851DB, #405DE6)',
+                      },
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: '-100%',
+                        width: '100%',
+                        height: '100%',
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                        animation: 'shine 3s infinite',
+                      },
+                      '@keyframes shine': {
+                        '0%': { left: '-100%' },
+                        '20%': { left: '100%' },
+                        '100%': { left: '100%' },
+                      },
+                    }}
 
-                  onClick={() => {
-                    if (subscription?.status === 'active') {
-                      // call api for billing portal
-                      setLoading(true);
-                      fetch(`${API_URL}/create-billing-portal`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ email: currentUser.email })
-                      })
-                        .then(response => {
-                          if (response.ok) {
-                            return response.json();
-                          }
-                          throw new Error('Failed to create billing portal');
+                    onClick={() => {
+                      if (subscription?.status === 'active') {
+                        // call api for billing portal
+                        setLoading(true);
+                        fetch(`${API_URL}/create-billing-portal`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ email: currentUser.email })
                         })
-                        .then(data => {
-                          if (data.url) {
-                            window.location.href = data.url;
-                          }
-                        })
-                        .catch(error => {
-                          setLoading(false);
-                          console.error('Error:', error);
-                        });
-                    } else {
-                      setLoading(true);
-                      navigate('/pricing');
+                          .then(response => {
+                            if (response.ok) {
+                              return response.json();
+                            }
+                            throw new Error('Failed to create billing portal');
+                          })
+                          .then(data => {
+                            if (data.url) {
+                              window.location.href = data.url;
+                            }
+                          })
+                          .catch(error => {
+                            setLoading(false);
+                            console.error('Error:', error);
+                          });
+                      } else {
+                        setLoading(true);
+                        navigate('/pricing');
+                      }
+                    }} className="upgrade-button" >
+                    {
+                      loadingData ? <>
+                        <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
+                      </> : <>
+                        {
+                          subscription?.status === 'active' ? (
+                            <span>{
+                              loading ? 'Processing...' : 'Manage plan'
+                            }</span>
+                          ) : (
+                            <span>Upgrade plan</span>
+                          )
+                        }</>
                     }
-                  }} className="upgrade-button" >
-                  {
-                    loadingData ? <>
-                      <CircularProgress size={24} sx={{ color: isDarkMode ? '#fff' : '#000' }} />
-                    </> : <>
-                      {
-                        subscription?.status === 'active' ? (
-                          <span>{
-                            loading ? 'Processing...' : 'Manage plan'
-                          }</span>
-                        ) : (
-                          <span>Upgrade plan</span>
-                        )
-                      }</>
-                  }
-                </Button>
+                  </Button></> : <>
+
+                    <img
+                      style={{ cursor: 'pointer', width: '24px', height: '24px', marginTop: '10px' }}
+                      onClick={() => {
+                        if (subscription?.status === 'active') {
+                          // call api for billing portal
+                          setLoading(true);
+                          fetch(`${API_URL}/create-billing-portal`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email: currentUser.email })
+                          })
+                            .then(response => {
+                              if (response.ok) {
+                                return response.json();
+                              }
+                              throw new Error('Failed to create billing portal');
+                            })
+                            .then(data => {
+                              if (data.url) {
+                                window.location.href = data.url;
+                              }
+                            })
+                            .catch(error => {
+                              setLoading(false);
+                              console.error('Error:', error);
+                            });
+                        } else {
+                          setLoading(true);
+                          navigate('/pricing');
+                        }
+                      }}
+                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAE8klEQVR4nO2YW08bVxCAUaX2V6TP+QG8tX+AXUspSOWxXNpGqtqqippUKQQwNOGSYHMxNoSLMba5GGNYcwkYgzc2rIPDxeZiWGPTPqTPeSAVfexUc+w1YNi1vSxLVTHSSNae8cx858zMHrug4FZu5Vb+X8IEAp+6fUEX4wt+cLNBUFMZjOnjGLePuysr+Yb+4c91VucJ41M3cfd5CNBZJ060vbbP8gZ4pO/9s6K2FR53msHp8auevNPjJ7Exh0f6vnd5A5gcM3/fb2gnDr572gn9k/OqJd8/OU9iYmzMwTg+fZI3ADpyLLDwUN9HHFXWtcLT3mGY8q1eY8lw0DLogIpaHYn5s64HRl6xZE0WgFCHeqsLKrVJpw9a0alP8eTH5ll4qOtNbZaOgJztP9kAglrcHvihqYsE+LahDbpG3Yol3+2YgfsNbcT3988MYGYWLthcGQB1YmkFaoxDJBDqE4MFJrwrshN3eVegvseW9ldtMMOEN3CprSIAghpGGfimXp/cscYuGHR78k5+aNoLPzYbiQ/0pbe6JO0VBUAdnluGBy+6z9Wsm+VyaNRkT31dl9yAn1pMYJ9dyvo9xQFQp5Y5aBwYTU+NX9r6wOF5LWo/vuiHxx0D6amG5TO5lNtUK1ASYC4QguB2FLb4BERiR6pqOHb0IcwfMTv8H9JXDKnGc3j86Ej15COnEHjSJ7Y5j/gVQ6qBf+0YAMOIG0K7vOrJh3Z5EhtzaLO53uUNMBNYA63JShw09NhgMbihWvKLwQ0SE2NjDrP+tZO8AdBRcHsf9NYJ4qiqYwDMjAe2Dq6vH8J8Auxzy1DVaSYxWy1O4CJRsiYLQKhDnCrVKacvLOOwGt5TPPngdhSv1MnN6jQTEAQS1mUDCLocCsOzvhESoNZoAeYSG7k661+DWtMQ8f3by2Hwvtm8YHNlANSN6CH0jM+SQKgmxzSs78VkJ74ePYR+13zan3FsGkJ7lw8MRQAExbdsTZeFBMWrN55Ovsmz6xFoTJ3ok65BUqZS9ooCoAa2duH5oEO0ZkUbNZbqKUOyp5oHxsC/uZP1e6IAYj/kc9nFzYM4WGe86anRZp+ENzsHovZrOwfQOcKkpxqWz+Z+PKdY4gAsNyUXQNCF4DrU99iTc7vbCq9W3l6w8XAb521WQ3nFEC8hH3fXzXLvrwJwurtT594ZeEJbGbO9PXVKm/uHYB93QXWtFsoqKqG4uBhKSkrIZ3yGa2iTFQBl8nXoDsNyTobljuUCkPrmEzC2wKbfGdgjQp/gM1wL8wkYdTHwVVk50DQtqWiDtlkBLhM5AIL63p5OGGFSLYW2SPIt+vasiZ9VjUYDz/XtoNVqP1INQJjxL52zRPEzPss3efq8NqkKkKlYCrib9CXJZYoIwD8ajebejQBgM0rVfKaI2VEU9XtpaeknqgPgRJEqj0yRsi0qKvpSdYCqmjrFACiKsqsOUFZeIZlwNsmAiOUEgD+qlQLAF5SCAH/lBsAnpv6jAMc5AeDfGeFY4r0SAOUVlYoBUBTF5wRAIOLxO5HYkTPCHx1fBQDvNgo2sa1AbcHRp/oYVVIKCws/pigqrgDAIfoquAmhafoLvA7Qal0lrkMoimqWKg9FL3PXIXglpmm6SewkxHYev5P3dfo6RaPR3JPqiTMTJ37jZSMm2Iyp6TSMsx3fsKgURR3gfQfXxBr2X9oWGaq5Rg1WAAAAAElFTkSuQmCC" alt="subscription"></img>
+
+                  </>
+                }
               </div>
               <div
                 className="user-profile"
